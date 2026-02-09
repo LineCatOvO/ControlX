@@ -1,0 +1,62 @@
+{
+    "testUsers": [
+        {
+            "id": "test_user_1",
+            "username": "testuser1",
+            "password": "testpass123",
+            "email": "test1@example.com"
+        },
+        {
+            "id": "test_user_2",
+            "username": "testuser2",
+            "password": "testpass456",
+            "email": "test2@example.com"
+        }
+    ],
+    "testInputs": {
+        "touchEvents": [
+            {
+                "x": 540,
+                "y": 960,
+                "action": "tap",
+                "description": "Tap center of screen"
+            },
+            {
+                "x": 200,
+                "y": 300,
+                "action": "long_press",
+                "duration": 2000,
+                "description": "Long press top left"
+            }
+        ],
+        "gyroEvents": [
+            {
+                "yaw": 1.5,
+                "pitch": 0.8,
+                "roll": -0.3,
+                "duration": 1000,
+                "description": "Basic gyro movement"
+            }
+        ]
+    },
+    "testScenarios": {
+        "basicConnection": {
+            "steps": [
+                "launch_app",
+                "enter_server_address",
+                "connect_to_server",
+                "verify_connection_status"
+            ],
+            "expectedResult": "successful_connection"
+        },
+        "inputSimulation": {
+            "steps": [
+                "enable_debug_mode",
+                "bypass_overlay_permission",
+                "simulate_touch_event",
+                "verify_input_received"
+            ],
+            "expectedResult": "input_processed"
+        }
+    }
+}

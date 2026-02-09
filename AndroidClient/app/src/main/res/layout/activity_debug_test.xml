@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Debug模式测试"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_debug_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Debug状态信息"
+                android:textSize="14sp"
+                android:background="#f0f0f0"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp" />
+
+            <Button
+                android:id="@+id/btn_toggle_debug_mode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="切换Debug模式"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btn_toggle_bypass"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="切换权限绕过"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btn_toggle_simulation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="切换事件模拟"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="模拟输入事件:"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btn_simulate_touch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="模拟触摸事件"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btn_simulate_gyro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="模拟陀螺仪事件"
+                android:layout_marginBottom="16dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

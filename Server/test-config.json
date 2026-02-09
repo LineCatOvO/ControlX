@@ -1,0 +1,5 @@
+{
+  "defaultPort": 3005,
+  "portRange": 3,
+  "isTestMode": false
+}

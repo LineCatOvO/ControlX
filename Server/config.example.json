@@ -1,0 +1,10 @@
+{
+  "inputUpdateInterval": 8,
+  "heartbeatInterval": 30000,
+  "pingInterval": 10000,
+  "safeStateTimeout": 5000,
+  "enableLogging": true,
+  "defaultPort": 3000,
+  "portRange": 5,
+  "isTestMode": false
+}

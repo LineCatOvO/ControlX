@@ -1,0 +1,37 @@
+{
+    "name": "appium-e2e",
+    "version": "1.0.0",
+    "description": "Appium E2E tests for WMMT Remote Controller",
+    "main": "index.js",
+    "scripts": {
+        "test": "node helpers/test-runner.js",
+        "test:single": "node helpers/test-runner.js",
+        "test:integrated": "node helpers/test-runner.js",
+        "test:headed": "npx playwright test --headed",
+        "test:debug": "npx playwright test --debug",
+        "appium": "npx appium",
+        "appium:inspect": "npx appium inspector",
+        "backend:start": "node helpers/test-backend.js start",
+        "backend:stop": "node helpers/test-backend.js stop",
+        "backend:status": "node helpers/test-backend.js status"
+    },
+    "keywords": [
+        "appium",
+        "e2e",
+        "testing",
+        "android",
+        "remote-controller"
+    ],
+    "author": "WMMT Team",
+    "license": "MIT",
+    "devDependencies": {
+        "@playwright/test": "^1.58.2",
+        "appium": "^3.2.0",
+        "appium-uiautomator2-driver": "^6.8.0",
+        "axios": "^1.13.5"
+    },
+    "dependencies": {
+        "wd": "^1.14.0",
+        "ws": "^8.19.0"
+    }
+}
