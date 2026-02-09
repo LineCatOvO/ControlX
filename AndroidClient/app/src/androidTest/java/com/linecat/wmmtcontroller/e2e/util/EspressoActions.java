@@ -20,7 +20,7 @@ public class EspressoActions {
     public static ViewAction waitFor(final long millis) {
         return new ViewAction() {
             @Override
-            public android.view.ViewMatchers.Matcher<View> getConstraints() {
+            public org.hamcrest.Matcher<View> getConstraints() {
                 return isRoot();
             }
 

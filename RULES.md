@@ -30,3 +30,8 @@
 
 ## 终止条件
 仅在明确满足项目目标或收到停止指令时终止，否则持续循环
+
+## 构建规则
+1. **禁止使用的命令**：禁止运行 `./gradlew build` 或 `gradlew build` 命令
+2. **推荐的构建命令**：构建项目时必须使用 `./gradlew assembleDebug --no-daemon` 或 `gradlew assembleDebug --no-daemon` 命令
+3. **构建验证**：每次修改代码后，必须执行构建命令验证代码正确性

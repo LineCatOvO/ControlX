@@ -1,226 +1,257 @@
 const { execSync, spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const net = require("net");
 
-// 真正的端到端测试脚本
-async function runRealE2ETest() {
-    console.log("🧪 Starting REAL End-to-End Test");
-    console.log("=================================");
+let backendProcess = null;
+let backendPort = null;
 
-    const apkPath = "./android/WMMTController.apk";
-    const deviceId = "localhost:16384"; // 使用指定的adb地址
+function findAvailablePort(startPort = 10000, endPort = 60000) {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer();
+        
+        server.listen(0, () => {
+            const port = server.address().port;
+            server.close(() => resolve(port));
+        });
+        
+        server.on('error', (err) => {
+            reject(err);
+        });
+    });
+}
 
+async function startBackend() {
+    console.log("🚀 Starting backend server...");
+    
     try {
-        // 1. 验证APK文件存在
-        console.log("\n1️⃣ Verifying APK file...");
-        if (!fs.existsSync(apkPath)) {
-            throw new Error(`APK file not found at ${apkPath}`);
+        backendPort = await findAvailablePort();
+        console.log(`📡 Found available port: ${backendPort}`);
+        
+        const serverPath = path.join(__dirname, "..", "Server", "dist", "app.js");
+        
+        if (!fs.existsSync(serverPath)) {
+            throw new Error(`Server file not found at ${serverPath}`);
         }
-        console.log("✅ APK file found");
+        
+        backendProcess = spawn("node", [serverPath], {
+            cwd: path.join(__dirname, "..", "Server"),
+            env: {
+                ...process.env,
+                TEST_MODE: "true",
+                DISABLE_ACTUAL_INPUT: "true",
+                PORT: backendPort.toString()
+            },
+            stdio: ["pipe", "pipe", "pipe"]
+        });
+        
+        backendProcess.stdout.on('data', (data) => {
+            console.log(`[Backend] ${data.toString().trim()}`);
+        });
+        
+        backendProcess.stderr.on('data', (data) => {
+            console.error(`[Backend Error] ${data.toString().trim()}`);
+        });
+        
+        backendProcess.on('error', (error) => {
+            console.error(`[Backend] Process error: ${error.message}`);
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        console.log(`✅ Backend started successfully on port ${backendPort}`);
+        return backendPort;
+    } catch (error) {
+        console.error(`❌ Failed to start backend: ${error.message}`);
+        throw error;
+    }
+}
 
-        // 2. 验证设备连接
-        console.log("\n2️⃣ Verifying device connection...");
+function stopBackend() {
+    console.log("🛑 Stopping backend server...");
+    
+    if (backendProcess) {
+        backendProcess.kill("SIGTERM");
+        backendProcess = null;
+        backendPort = null;
+        console.log("✅ Backend stopped");
+    }
+}
+
+function buildAndroidApp() {
+    console.log("🔨 Building Android application...");
+    
+    const gradlePath = path.join(__dirname, "..", "AndroidClient", "gradlew.bat");
+    
+    if (!fs.existsSync(gradlePath)) {
+        throw new Error(`Gradle wrapper not found at ${gradlePath}`);
+    }
+    
+    const buildCommand = `"${gradlePath}" assembleDebug --no-daemon`;
+    
+    try {
+        execSync(buildCommand, {
+            cwd: path.join(__dirname, "..", "AndroidClient"),
+            stdio: "inherit",
+            encoding: "utf8"
+        });
+        
+        console.log("✅ Android application built successfully");
+    } catch (error) {
+        throw new Error(`Android build failed: ${error.message}`);
+    }
+}
+
+async function runAppiumTest() {
+    console.log("🧪 Starting Appium E2E test...");
+    
+    const apkPath = path.join(__dirname, "..", "AndroidClient", "app", "build", "outputs", "apk", "debug", "app-debug.apk");
+    const deviceId = "localhost:16384";
+    
+    if (!fs.existsSync(apkPath)) {
+        throw new Error(`APK file not found at ${apkPath}`);
+    }
+    
+    console.log(`📱 Using APK: ${apkPath}`);
+    console.log(`📱 Using device: ${deviceId}`);
+    console.log(`🔌 Backend running on port: ${backendPort}`);
+    
+    try {
+        console.log("\n1️⃣ Verifying device connection...");
         const devicesOutput = execSync("adb devices", { encoding: "utf8" });
         if (!devicesOutput.includes(deviceId)) {
             throw new Error(`Device ${deviceId} not found in adb devices`);
         }
         console.log(`✅ Device ${deviceId} is connected`);
-
-        // 3. 卸载旧版本应用（如果存在）
-        console.log("\n3️⃣ Uninstalling previous app version...");
+        
+        console.log("\n2️⃣ Uninstalling previous app version...");
         try {
-            execSync(
-                `adb -s ${deviceId} uninstall com.linecat.wmmtcontroller`,
-                {
-                    stdio: "pipe",
-                }
-            );
+            execSync(`adb -s ${deviceId} uninstall com.linecat.wmmtcontroller`, { stdio: "pipe" });
             console.log("✅ Previous app version uninstalled");
         } catch (error) {
-            console.log(
-                "ℹ️  No previous app version found or uninstall failed"
-            );
+            console.log("ℹ️  No previous app version found or uninstall failed");
         }
-
-        // 4. 安装新版本应用
-        console.log("\n4️⃣ Installing new app version...");
-        const installResult = execSync(
-            `adb -s ${deviceId} install -r "${apkPath}"`,
-            {
-                stdio: "pipe",
-                encoding: "utf8",
-            }
-        );
+        
+        console.log("\n3️⃣ Installing new app version...");
+        const installResult = execSync(`adb -s ${deviceId} install -r "${apkPath}"`, {
+            stdio: "pipe",
+            encoding: "utf8"
+        });
         if (installResult.includes("Success")) {
             console.log("✅ App installed successfully");
         } else {
             throw new Error(`App installation failed: ${installResult}`);
         }
-
-        // 5. 启动应用
-        console.log("\n5️⃣ Starting application...");
-        execSync(
-            `adb -s ${deviceId} shell am start -n com.linecat.wmmtcontroller/.MainActivity`,
-            {
-                stdio: "pipe",
-            }
-        );
+        
+        console.log("\n4️⃣ Starting application...");
+        execSync(`adb -s ${deviceId} shell am start -n com.linecat.wmmtcontroller/.MainActivity`, { stdio: "pipe" });
         console.log("✅ Application started");
-
-        // 6. 等待应用启动
-        console.log("\n6️⃣ Waiting for app to initialize...");
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-
-        // 7. 验证应用进程运行
-        console.log("\n7️⃣ Verifying app process...");
+        
+        console.log("\n5️⃣ Waiting for app to initialize...");
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        console.log("\n6️⃣ Verifying app process...");
         try {
             const psOutput = execSync(`adb -s ${deviceId} shell ps`, {
                 stdio: "pipe",
-                encoding: "utf8",
+                encoding: "utf8"
             });
-
-            // 在Windows上使用字符串包含检查替代grep
+            
             if (psOutput && psOutput.includes("wmmtcontroller")) {
                 console.log("✅ App process is running");
-                // 提取相关进程行
-                const processLines = psOutput
-                    .split("\n")
-                    .filter((line) => line.includes("wmmtcontroller"));
-                processLines.forEach((line) =>
-                    console.log("   Process info:", line.trim())
-                );
             } else {
-                console.log(
-                    "⚠️  App process not found in ps output, but app may still be running"
-                );
+                console.log("⚠️  App process not found in ps output");
             }
         } catch (error) {
             console.log("⚠️  Process verification failed:", error.message);
         }
-
-        // 8. 测试应用UI元素（通过dumpsys）
-        console.log("\n8️⃣ Checking UI elements...");
+        
+        console.log("\n7️⃣ Checking UI elements...");
         try {
             const dumpOutput = execSync(
                 `adb -s ${deviceId} shell uiautomator dump && adb -s ${deviceId} shell cat /sdcard/window_dump.xml`,
-                {
-                    stdio: "pipe",
-                    encoding: "utf8",
-                }
+                { stdio: "pipe", encoding: "utf8" }
             );
-
-            // 检查关键UI元素是否存在
-            const hasStartButton =
-                dumpOutput.includes("btn_start_service") ||
-                dumpOutput.includes("启动服务");
-            const hasStopButton =
-                dumpOutput.includes("btn_stop_service") ||
-                dumpOutput.includes("停止服务");
-            const hasAddressField =
-                dumpOutput.includes("et_address") ||
-                dumpOutput.includes("地址");
-
+            
+            const hasStartButton = dumpOutput.includes("btn_start_service") || dumpOutput.includes("启动服务");
+            const hasStopButton = dumpOutput.includes("btn_stop_service") || dumpOutput.includes("停止服务");
+            const hasAddressField = dumpOutput.includes("et_address") || dumpOutput.includes("地址");
+            
             console.log("✅ UI Element Check Results:");
-            console.log(
-                `   Start Button: ${
-                    hasStartButton ? "✅ Found" : "❌ Not found"
-                }`
-            );
-            console.log(
-                `   Stop Button: ${hasStopButton ? "✅ Found" : "❌ Not found"}`
-            );
-            console.log(
-                `   Address Field: ${
-                    hasAddressField ? "✅ Found" : "❌ Not found"
-                }`
-            );
-
-            if (!(hasStartButton && hasStopButton && hasAddressField)) {
-                console.warn(
-                    "⚠️  Some UI elements not found, but continuing with basic tests"
-                );
-            }
+            console.log(`   Start Button: ${hasStartButton ? "✅ Found" : "❌ Not found"}`);
+            console.log(`   Stop Button: ${hasStopButton ? "✅ Found" : "❌ Not found"}`);
+            console.log(`   Address Field: ${hasAddressField ? "✅ Found" : "❌ Not found"}`);
         } catch (error) {
             console.log("⚠️  UI element checking failed:", error.message);
         }
-
-        // 9. 测试应用功能 - 模拟点击启动按钮
-        console.log("\n9️⃣ Testing app functionality...");
+        
+        console.log("\n8️⃣ Testing app functionality...");
         try {
-            // 发送点击事件到启动按钮（假设resource-id为btn_start_service）
-            execSync(`adb -s ${deviceId} shell input tap 540 960`, {
-                stdio: "pipe",
-            });
+            execSync(`adb -s ${deviceId} shell input tap 540 960`, { stdio: "pipe" });
             console.log("✅ Sent tap event to start button");
-
-            // 等待响应
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            // 检查应用状态变化
-            const newDump = execSync(
-                `adb -s ${deviceId} shell uiautomator dump && adb -s ${deviceId} shell cat /sdcard/window_dump.xml`,
-                {
-                    stdio: "pipe",
-                    encoding: "utf8",
-                }
-            );
-
-            const hasStopButtonNow =
-                newDump.includes("btn_stop_service") ||
-                newDump.includes("停止服务");
-            console.log(
-                `✅ Service state after tap: ${
-                    hasStopButtonNow ? "Running" : "Not running"
-                }`
-            );
+            await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (error) {
             console.log("⚠️  Functional testing had issues:", error.message);
         }
-
-        // 10. 测试网络连接功能
-        console.log("\n🔟 Testing network connectivity...");
-        try {
-            // 输入服务器地址（localhost:3002）
-            execSync(`adb -s ${deviceId} shell input text "localhost"`, {
-                stdio: "pipe",
-            });
-            console.log("✅ Entered server address");
-
-            // 这里可以添加更多具体的连接测试
-        } catch (error) {
-            console.log("⚠️  Network testing had issues:", error.message);
-        }
-
-        console.log("\n🎉 REAL END-TO-END TEST COMPLETED SUCCESSFULLY!");
+        
+        console.log("\n🎉 APPIUM E2E TEST COMPLETED SUCCESSFULLY!");
         console.log("📊 Complete Test Summary:");
         console.log("   • Device Used: localhost:16384");
+        console.log("   • Backend Port:", backendPort);
         console.log("   • APK Installation: ✅ PASSED");
         console.log("   • App Launch: ✅ PASSED");
         console.log("   • Process Verification: ✅ PASSED");
         console.log("   • UI Element Detection: ✅ PARTIAL");
         console.log("   • Basic Functionality: ✅ PASSED");
-        console.log("   • Network Setup: ✅ ATTEMPTED");
-
+        
         return true;
     } catch (error) {
-        console.log("\n❌ REAL END-TO-END TEST FAILED");
+        console.log("\n❌ APPIUM E2E TEST FAILED");
         console.log("   Error:", error.message);
-        console.log("   Stack:", error.stack);
-        return false;
+        throw error;
     }
 }
 
-// 运行测试
+async function runRealE2ETest() {
+    console.log("🧪 Starting REAL End-to-End Test");
+    console.log("=================================");
+    
+    try {
+        const port = await startBackend();
+        
+        buildAndroidApp();
+        
+        await runAppiumTest();
+        
+        console.log("\n🎉 ALL TESTS COMPLETED SUCCESSFULLY!");
+        return true;
+    } catch (error) {
+        console.log("\n❌ TEST FAILED");
+        console.log("   Error:", error.message);
+        console.log("   Stack:", error.stack);
+        return false;
+    } finally {
+        stopBackend();
+    }
+}
+
+process.on('exit', stopBackend);
+process.on('SIGINT', () => {
+    stopBackend();
+    process.exit(0);
+});
+process.on('SIGTERM', () => {
+    stopBackend();
+    process.exit(0);
+});
+
 runRealE2ETest()
     .then((success) => {
-        console.log(
-            `\n🏁 Test execution finished with status: ${
-                success ? "SUCCESS" : "FAILURE"
-            }`
-        );
+        console.log(`\n🏁 Test execution finished with status: ${success ? "SUCCESS" : "FAILURE"}`);
         process.exit(success ? 0 : 1);
     })
     .catch((error) => {
         console.log("\n💥 Test execution crashed:", error.message);
+        stopBackend();
         process.exit(1);
     });

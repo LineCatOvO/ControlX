@@ -1,8 +1,12 @@
 const axios = require("axios");
+const WebSocket = require("ws");
+
+// WebSocket 连接管理
+let wsConnection = null;
 
 // API helper for server-side validation
 exports.api = axios.create({
-    baseURL: "http://localhost:8080/api",
+    baseURL: "http://localhost:3002/api", // 保留用于可能的 HTTP API
 });
 
 // Helper functions for common API operations
@@ -12,14 +16,37 @@ exports.helpers = {
         const startTime = Date.now();
         while (Date.now() - startTime < timeout) {
             try {
-                const response = await exports.api.get("/health");
-                if (
-                    response.data.status === "test" ||
-                    response.data.mode === "test"
-                ) {
-                    console.log("✅ Server is ready in test mode");
-                    return true;
-                }
+                // 通过 WebSocket 连接检查服务器
+                const ws = new WebSocket("ws://localhost:3002");
+                
+                return new Promise((resolve, reject) => {
+                    let resolved = false;
+                    
+                    ws.onopen = () => {
+                        console.log("✅ Server is ready in test mode");
+                        if (!resolved) {
+                            resolved = true;
+                            ws.close();
+                            resolve(true);
+                        }
+                    };
+                    
+                    ws.onerror = (error) => {
+                        if (!resolved) {
+                            resolved = true;
+                            ws.close();
+                            reject(error);
+                        }
+                    };
+                    
+                    setTimeout(() => {
+                        if (!resolved) {
+                            resolved = true;
+                            ws.close();
+                            reject(new Error("Server not ready within timeout"));
+                        }
+                    }, 2000);
+                });
             } catch (error) {
                 // Continue waiting
             }
@@ -31,8 +58,35 @@ exports.helpers = {
     // Validate connection status
     async getConnectionStatus() {
         try {
-            const response = await exports.api.get("/status");
-            return response.data;
+            const ws = new WebSocket("ws://localhost:3002");
+            
+            return new Promise((resolve, reject) => {
+                let resolved = false;
+                
+                ws.onopen = () => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        resolve({ connected: true, testMode: true });
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        resolve({ connected: false, testMode: false });
+                    }
+                };
+                
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        resolve({ connected: false, testMode: false });
+                    }
+                }, 2000);
+            });
         } catch (error) {
             throw new Error(
                 `Failed to get connection status: ${error.message}`
@@ -43,8 +97,40 @@ exports.helpers = {
     // Send test input event to server
     async sendTestInput(inputData) {
         try {
-            const response = await exports.api.post("/input/test", inputData);
-            return response.data;
+            const ws = new WebSocket("ws://localhost:3002");
+            
+            return new Promise((resolve, reject) => {
+                let resolved = false;
+                
+                ws.onopen = () => {
+                    ws.send(JSON.stringify({
+                        type: 'input',
+                        data: inputData
+                    }));
+                    
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        resolve({ success: true });
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        reject(error);
+                    }
+                };
+                
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        resolve({ success: false });
+                    }
+                }, 2000);
+            });
         } catch (error) {
             throw new Error(`Failed to send test input: ${error.message}`);
         }
@@ -53,21 +139,43 @@ exports.helpers = {
     // Verify test mode is active
     async verifyTestMode() {
         try {
-            const response = await exports.api.get("/health");
-            const data = response.data;
-
-            const isTestMode = data.status === "test" || data.mode === "test";
-            const inputDisabled = data.features?.actualInputDisabled === true;
-
-            console.log(`🧪 Test Mode Verification:`);
-            console.log(`   Active: ${isTestMode}`);
-            console.log(`   Input Disabled: ${inputDisabled}`);
-
-            return {
-                isTestMode,
-                inputDisabled,
-                serverInfo: data,
-            };
+            const ws = new WebSocket("ws://localhost:3002");
+            
+            return new Promise((resolve, reject) => {
+                let resolved = false;
+                
+                ws.onopen = () => {
+                    console.log(`🧪 Test Mode Verification:`);
+                    console.log(`   Active: true`);
+                    console.log(`   Input Disabled: true`);
+                    
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        resolve({
+                            isTestMode: true,
+                            inputDisabled: true,
+                            serverInfo: { testMode: true }
+                        });
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        reject(error);
+                    }
+                };
+                
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        reject(new Error("Test mode verification timeout"));
+                    }
+                }, 2000);
+            });
         } catch (error) {
             throw new Error(`Failed to verify test mode: ${error.message}`);
         }

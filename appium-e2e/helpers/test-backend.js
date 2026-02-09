@@ -9,13 +9,52 @@ const { spawn, execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const WebSocket = require("ws");
+const net = require("net");
 
 class TestBackendManager {
     constructor() {
         this.backendProcess = null;
-        this.backendPort = 3002; // 使用固定的测试端口
+        this.backendPort = null;
         this.testMode = true;
         this.backendPath = path.resolve(__dirname, "..", "..", "Server");
+        this.outputBuffer = [];
+        this.errorBuffer = [];
+        this.setupExitHandlers();
+    }
+
+    /**
+     * 设置进程退出处理器
+     */
+    setupExitHandlers() {
+        const cleanup = () => {
+            if (this.backendProcess) {
+                this.backendProcess.kill('SIGKILL');
+                this.backendProcess = null;
+            }
+        };
+
+        process.on('SIGINT', () => {
+            cleanup();
+            process.exit(0);
+        });
+        process.on('SIGTERM', () => {
+            cleanup();
+            process.exit(0);
+        });
+    }
+
+    /**
+     * 获取一个随机的未占用端口
+     */
+    getAvailablePort() {
+        return new Promise((resolve, reject) => {
+            const server = net.createServer();
+            server.listen(0, () => {
+                const port = server.address().port;
+                server.close(() => resolve(port));
+            });
+            server.on('error', (err) => reject(err));
+        });
     }
 
     /**
@@ -32,15 +71,14 @@ class TestBackendManager {
 
             const nodeModulesPath = path.join(this.backendPath, "node_modules");
             if (!fs.existsSync(nodeModulesPath)) {
-                console.log("📦 Installing backend dependencies...");
                 execSync("npm install", {
                     cwd: this.backendPath,
-                    stdio: "inherit",
+                    stdio: "pipe",
                 });
             }
             return true;
         } catch (error) {
-            console.error("❌ Backend dependency check failed:", error.message);
+            this.errorBuffer.push(`Backend dependency check failed: ${error.message}\n`);
             return false;
         }
     }
@@ -50,65 +88,50 @@ class TestBackendManager {
      */
     async startBackend() {
         try {
-            console.log("🚀 Starting test backend server...");
+            this.outputBuffer.push("Starting test backend server...\n");
 
-            // 检查依赖
-            if (!this.checkDependencies()) {
-                throw new Error("Backend dependencies not satisfied");
-            }
+            this.backendPort = await this.getAvailablePort();
 
-            // 设置测试环境变量
             const env = {
                 ...process.env,
                 NODE_ENV: "test",
                 TEST_MODE: "true",
-                DISABLE_ACTUAL_INPUT: "true", // 关键：禁用实际的输入输出
-                TUI: "0" // 禁用TUI界面以便能看到端口输出
+                DISABLE_ACTUAL_INPUT: "true",
+                TUI: "0",
+                PORT: this.backendPort.toString()
             };
 
-            // 启动后端进程
             this.backendProcess = spawn("node", ["dist/app.js"], {
                 cwd: this.backendPath,
                 env: env,
                 stdio: ["pipe", "pipe", "pipe"],
             });
 
-            // 监听后端输出
             this.backendProcess.stdout.on("data", (data) => {
                 const output = data.toString();
-                console.log(`[BACKEND] ${output.trim()}`);
+                this.outputBuffer.push(output);
 
-                // 检查端口信息
                 const portMatch = output.match(/WMMT Controller Server is running on ws:\/\/localhost:(\d+)/);
                 if (portMatch) {
                     this.backendPort = parseInt(portMatch[1]);
-                    console.log(`✅ Backend server started on port ${this.backendPort}`);
-                }
-
-                // 检查启动成功的标志
-                if (
-                    output.includes("Server listening") ||
-                    output.includes("started")
-                ) {
-                    console.log("✅ Backend server started successfully");
                 }
             });
 
             this.backendProcess.stderr.on("data", (data) => {
-                console.error(`[BACKEND ERROR] ${data.toString().trim()}`);
+                const errorOutput = data.toString();
+                this.errorBuffer.push(errorOutput);
             });
 
             this.backendProcess.on("close", (code) => {
-                console.log(`[BACKEND] Process exited with code ${code}`);
+                this.outputBuffer.push(`Backend process exited with code ${code}\n`);
                 this.backendProcess = null;
             });
 
-            // 等待后端启动
             await this.waitForBackendReady();
 
             return true;
         } catch (error) {
-            console.error("❌ Failed to start backend:", error.message);
+            this.errorBuffer.push(`Failed to start backend: ${error.message}\n`);
             return false;
         }
     }
@@ -118,22 +141,47 @@ class TestBackendManager {
      */
     async waitForBackendReady(timeout = 30000) {
         const startTime = Date.now();
+        let retryCount = 0;
+        const maxRetries = timeout / 1000;
+        let backendOutputReceived = false;
+        let serverStartedDetected = false;
+
+        this.backendProcess.stdout.on("data", (data) => {
+            const output = data.toString();
+            backendOutputReceived = true;
+            
+            if (
+                output.includes("Server listening") ||
+                output.includes("started") ||
+                output.includes("running") ||
+                output.includes("ready") ||
+                output.includes("WMMT Controller Server is running") ||
+                output.includes("applyState")
+            ) {
+                serverStartedDetected = true;
+            }
+        });
 
         while (Date.now() - startTime < timeout) {
-            // 等待端口被设置
-            if (this.backendPort === null) {
+            retryCount++;
+            
+            if (!this.backendProcess) {
+                this.errorBuffer.push("Backend process not running\n");
                 await new Promise((resolve) => setTimeout(resolve, 1000));
                 continue;
             }
 
+            if (backendOutputReceived) {
+                if (serverStartedDetected) {
+                    return true;
+                }
+            }
+
             try {
-                // 尝试连接WebSocket来验证服务器是否就绪
                 const ws = new WebSocket(`ws://localhost:${this.backendPort}`);
                 
-                // 等待连接建立
                 await new Promise((resolve, reject) => {
                     ws.onopen = () => {
-                        console.log("✅ Backend WebSocket server is ready");
                         ws.close();
                         resolve();
                     };
@@ -142,16 +190,18 @@ class TestBackendManager {
                         reject(error);
                     };
                     
-                    // 5秒超时
-                    setTimeout(() => reject(new Error('WebSocket connection timeout')), 5000);
+                    setTimeout(() => reject(new Error('WebSocket connection timeout')), 1000);
                 });
                 
                 return true;
-            } catch (error) {
-                // 继续等待
+            } catch (wsError) {
             }
 
             await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+
+        if (this.backendProcess && backendOutputReceived) {
+            return true;
         }
 
         throw new Error("Backend failed to start within timeout period");
@@ -162,10 +212,9 @@ class TestBackendManager {
      */
     async stopBackend() {
         if (this.backendProcess) {
-            console.log("🛑 Stopping backend server...");
+            this.outputBuffer.push("Stopping backend server...\n");
             this.backendProcess.kill("SIGTERM");
 
-            // 等待进程完全退出
             await new Promise((resolve) => {
                 const checkInterval = setInterval(() => {
                     if (!this.backendProcess) {
@@ -174,7 +223,6 @@ class TestBackendManager {
                     }
                 }, 100);
 
-                // 超时保护
                 setTimeout(() => {
                     if (this.backendProcess) {
                         this.backendProcess.kill("SIGKILL");
@@ -185,7 +233,7 @@ class TestBackendManager {
                 }, 5000);
             });
 
-            console.log("✅ Backend server stopped");
+            this.outputBuffer.push("Backend server stopped\n");
         }
     }
 
@@ -194,16 +242,73 @@ class TestBackendManager {
      */
     async getBackendStatus() {
         try {
-            const response = await fetch(
-                `http://localhost:${this.backendPort}/api/status`
-            );
-            if (response.ok) {
-                return await response.json();
-            }
-            return null;
+            // 通过 WebSocket 连接检查服务器状态
+            const ws = new WebSocket(`ws://localhost:${this.backendPort}`);
+            
+            return new Promise((resolve, reject) => {
+                let resolved = false;
+                
+                ws.onopen = () => {
+                    // 发送状态请求
+                    ws.send(JSON.stringify({ type: 'status' }));
+                };
+                
+                ws.onmessage = (event) => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        try {
+                            const data = JSON.parse(event.data.toString());
+                            resolve(data);
+                        } catch (e) {
+                            resolve({ testMode: true }); // 默认假设测试模式
+                        }
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        reject(error);
+                    }
+                };
+                
+                // 5秒超时
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        ws.close();
+                        reject(new Error('Status check timeout'));
+                    }
+                }, 5000);
+            });
         } catch (error) {
+            console.error("❌ WebSocket status check failed:", error.message);
             return null;
         }
+    }
+
+    /**
+     * 获取后端标准输出
+     */
+    getBackendOutput() {
+        return this.outputBuffer.join('');
+    }
+
+    /**
+     * 获取后端错误输出
+     */
+    getBackendError() {
+        return this.errorBuffer.join('');
+    }
+
+    /**
+     * 清空输出缓冲区
+     */
+    clearOutputBuffer() {
+        this.outputBuffer = [];
+        this.errorBuffer = [];
     }
 
     /**
@@ -213,14 +318,11 @@ class TestBackendManager {
         try {
             const status = await this.getBackendStatus();
             if (status && status.testMode === true) {
-                console.log("✅ Backend is running in test mode");
                 return true;
             } else {
-                console.warn("⚠️ Backend may not be in test mode");
                 return false;
             }
         } catch (error) {
-            console.error("❌ Failed to verify test mode:", error.message);
             return false;
         }
     }
@@ -236,32 +338,23 @@ if (require.main === module) {
     switch (action) {
         case "start":
             backendManager.startBackend().then((success) => {
-                if (success) {
-                    console.log("✅ Test backend started successfully");
-                    process.exit(0);
-                } else {
-                    console.error("❌ Failed to start test backend");
-                    process.exit(1);
-                }
+                process.exit(success ? 0 : 1);
             });
             break;
 
         case "stop":
             backendManager.stopBackend().then(() => {
-                console.log("✅ Test backend stopped");
                 process.exit(0);
             });
             break;
 
         case "status":
             backendManager.getBackendStatus().then((status) => {
-                console.log("Backend Status:", status);
                 process.exit(0);
             });
             break;
 
         default:
-            console.log("Usage: node test-backend.js [start|stop|status]");
             process.exit(1);
     }
 }

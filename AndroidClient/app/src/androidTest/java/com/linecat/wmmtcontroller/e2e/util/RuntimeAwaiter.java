@@ -35,7 +35,7 @@ public class RuntimeAwaiter {
     
     public RuntimeAwaiter() {
         IntentFilter filter = new IntentFilter(RuntimeEvents.ACTION_WS_SENT_FRAME);
-        context.registerReceiver(wsSentFrameReceiver, filter);
+        context.registerReceiver(wsSentFrameReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
     }
 
     /**
@@ -57,7 +57,7 @@ public class RuntimeAwaiter {
         };
 
         IntentFilter filter = new IntentFilter(eventAction);
-        context.registerReceiver(receiver, filter);
+        context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
 
         boolean result;
         try {

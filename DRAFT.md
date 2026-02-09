@@ -11,6 +11,17 @@
   - ✅ 创建 TOOLS.md（工具文档）
   - 🎯 项目文档体系建立完成，可以开始正常开发流程
 
+- 2026-02-10：修改 Appium E2E 测试后端运行模式
+  - ✅ 移除 test-backend.js 中所有 console.log 和 console.error 调用
+  - ✅ 添加 outputBuffer 和 errorBuffer 用于存储后端输出
+  - ✅ 实现 getBackendOutput()、getBackendError()、clearOutputBuffer() 方法
+  - ✅ 添加 net 模块依赖，实现 getAvailablePort() 方法
+  - ✅ 修改 startBackend() 使用动态随机端口
+  - ✅ 修改 test-runner.js 移除所有控制台输出
+  - ✅ 修改测试进程 stdio 为 "pipe" 模式
+  - ✅ 添加进程退出处理器，确保脚本停止时后端自动停止
+  - 🎯 后端现在完全在后台静默运行，输出通过方法获取，生命周期绑定到脚本
+
 ## 待处理事项
 
 - 需要创建 TOOLS.md 文档

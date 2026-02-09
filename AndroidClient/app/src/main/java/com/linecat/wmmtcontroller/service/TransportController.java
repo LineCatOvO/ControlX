@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.util.Log;
+import androidx.core.content.ContextCompat;
 
 import com.linecat.wmmtcontroller.model.InputState;
 import com.linecat.wmmtcontroller.service.GamepadButtonEvent;
@@ -61,11 +62,7 @@ public class TransportController {
         // 注册连接信息更新广播接收器
         IntentFilter filter = new IntentFilter();
         filter.addAction(RuntimeEvents.ACTION_CONNECTION_INFO_UPDATED);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(connectionInfoUpdateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            context.registerReceiver(connectionInfoUpdateReceiver, filter);
-        }
+        ContextCompat.registerReceiver(context, connectionInfoUpdateReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
         
         this.webSocketClient = new WebSocketClient(context, runtimeConfig.getWebSocketUrl());
     }
