@@ -4,7 +4,10 @@
     "description": "Appium E2E tests for WMMT Remote Controller",
     "main": "index.js",
     "scripts": {
-        "test": "node main-test.js"
+        "test": "node tests/main-test.js",
+        "test:complete": "node tests/complete-e2e-test.js",
+        "test:real": "node tests/real-e2e-test.js",
+        "test:core": "node tests/core-e2e-test.js"
     },
     "keywords": [
         "appium",

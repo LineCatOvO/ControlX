@@ -1,8 +1,8 @@
-const backendManager = require("./backend-manager");
-const androidBuilder = require("./android-builder");
-const deviceManager = require("./device-manager");
+const backendManager = require("../utils/backend-manager");
+const androidBuilder = require("../utils/android-builder");
+const deviceManager = require("../utils/device-manager");
 const uiTester = require("./ui-tester");
-const config = require("./config");
+const config = require("../utils/config");
 
 async function runAppiumTest() {
     console.log("🧪 Starting Appium E2E test...");
