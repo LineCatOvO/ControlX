@@ -4,10 +4,12 @@
     "description": "Appium E2E tests for WMMT Remote Controller",
     "main": "index.js",
     "scripts": {
-        "test": "node tests/main-test.js",
-        "test:complete": "node tests/complete-e2e-test.js",
-        "test:real": "node tests/real-e2e-test.js",
-        "test:core": "node tests/core-e2e-test.js"
+        "test": "tsc && node dist/tests/main-test.js",
+        "test:complete": "tsc && node dist/tests/complete-e2e-test.js",
+        "test:real": "tsc && node dist/tests/real-e2e-test.js",
+        "test:core": "tsc && node dist/tests/core-e2e-test.js",
+        "build": "tsc",
+        "typecheck": "tsc --noEmit"
     },
     "keywords": [
         "appium",
@@ -20,9 +22,12 @@
     "license": "MIT",
     "devDependencies": {
         "@playwright/test": "^1.58.2",
+        "@types/node": "^25.2.2",
+        "@types/ws": "^8.18.1",
         "appium": "^3.2.0",
         "appium-uiautomator2-driver": "^6.8.0",
-        "axios": "^1.13.5"
+        "axios": "^1.13.5",
+        "typescript": "^5.9.3"
     },
     "dependencies": {
         "wd": "^1.14.0",
