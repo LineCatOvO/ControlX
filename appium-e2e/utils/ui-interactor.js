@@ -1,4 +1,5 @@
 const { execSync } = require("child_process");
+const config = require("./config");
 
 class UIInteractor {
     constructor(deviceManager) {
@@ -94,7 +95,9 @@ class UIInteractor {
         try {
             // 1. 点击获取浮窗权限按钮
             console.log("\n1️⃣ Clicking overlay permission button...");
-            await this.clickElement(640, 390);
+            const { x, y } = config.ui.coordinates.overlayPermissionButton;
+            console.log(`   Using coordinates from config: (${x}, ${y})`);
+            await this.clickElement(x, y);
             await new Promise(resolve => setTimeout(resolve, 3000));
             
             // 2. 验证是否进入系统设置页面

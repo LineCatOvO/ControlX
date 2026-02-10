@@ -74,8 +74,8 @@ const config: Config = {
             end: 60000
         },
         startupTimeout: 3000,
-        serverPath: path.join(__dirname, "..", "Server", "dist", "app.js"),
-        serverCwd: path.join(__dirname, "..", "Server"),
+        serverPath: path.join(__dirname, "..", "..", "..", "Server", "dist", "app.js"),
+        serverCwd: path.join(__dirname, "..", "..", "..", "Server"),
         env: {
             TEST_MODE: "true",
             DISABLE_ACTUAL_INPUT: "true"
@@ -83,12 +83,12 @@ const config: Config = {
     },
 
     android: {
-        gradlePath: path.join(__dirname, "..", "AndroidClient", "gradlew.bat"),
-        gradleCwd: path.join(__dirname, "..", "AndroidClient"),
+        gradlePath: path.join(__dirname, "..", "..", "..", "AndroidClient", "gradlew.bat"),
+        gradleCwd: path.join(__dirname, "..", "..", "..", "AndroidClient"),
         buildCommand: "assembleDebug --no-daemon",
         packageName: "com.linecat.wmmtcontroller",
         mainActivity: "com.linecat.wmmtcontroller/.MainActivity",
-        apkPath: path.join(__dirname, "..", "AndroidClient", "app", "build", "outputs", "apk", "debug", "app-debug.apk"),
+        apkPath: path.join(__dirname, "..", "..", "..", "AndroidClient", "app", "build", "outputs", "apk", "debug", "app-debug.apk"),
         processName: "wmmtcontroller"
     },
 

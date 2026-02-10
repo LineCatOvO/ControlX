@@ -2,6 +2,7 @@ import { spawn, ChildProcess } from "child_process";
 import fs from "fs";
 import path from "path";
 import net from "net";
+import config from "./config";
 
 class BackendManager {
     private backendProcess: ChildProcess | null = null;
@@ -30,14 +31,14 @@ class BackendManager {
             this.backendPort = await this.findAvailablePort();
             console.log(`📡 Found available port: ${this.backendPort}`);
             
-            const serverPath = path.join(__dirname, "..", "..", "Server", "dist", "app.js");
+            const serverPath = config.backend.serverPath;
             
             if (!fs.existsSync(serverPath)) {
                 throw new Error(`Server file not found at ${serverPath}`);
             }
             
             this.backendProcess = spawn("node", [serverPath], {
-                cwd: path.join(__dirname, "..", "..", "Server"),
+                cwd: config.backend.serverCwd,
                 env: {
                     ...process.env,
                     TEST_MODE: "true",
