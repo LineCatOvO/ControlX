@@ -2,7 +2,7 @@
 
 /*
 修改总结：
-
+test change
 1. MainActivity.java 修改：
    - 删除了自动浮窗权限检查逻辑
    - 移除了 checkOverlayPermission() 方法
