@@ -122,6 +122,15 @@
   - 编写完整的Appium测试脚本：✅ 完成
   - 完整Appium测试设计文档：✅ 已生成 (COMPLETE_APPIUM_TEST_DESIGN.md)
   - 完整Appium测试脚本：✅ 已生成 (complete-e2e-test.js)
+- [x] 为安卓端主活动添加浮窗权限按钮
+  - 在activity_main.xml中添加"获取浮窗权限"按钮
+  - 在MainActivity.java中实现浮窗权限检查和跳转逻辑
+  - 添加requestOverlayPermission()方法
+  - 添加onActivityResult()方法处理权限结果
+- [x] 为端到端测试添加浮窗权限自动化逻辑
+  - 在real-e2e-test.js中添加浮窗权限按钮点击逻辑
+  - 使用uiautomator自动检测并点击浮窗权限的"允许"按钮
+  - 实现自动返回app的逻辑
 
 ## 任务优先级
 

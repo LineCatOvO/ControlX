@@ -22,6 +22,23 @@
   - ✅ 添加进程退出处理器，确保脚本停止时后端自动停止
   - 🎯 后端现在完全在后台静默运行，输出通过方法获取，生命周期绑定到脚本
 
+- 2026-02-10：为安卓端主活动添加浮窗权限按钮
+  - ✅ 在 activity_main.xml 中添加"获取浮窗权限"按钮
+  - ✅ 在 MainActivity.java 中添加 overlayPermissionButton 组件
+  - ✅ 添加 REQUEST_OVERLAY_PERMISSION 常量
+  - ✅ 实现 requestOverlayPermission() 方法，跳转到系统设置页面
+  - ✅ 实现 onActivityResult() 方法处理权限结果
+  - ✅ 构建验证成功（28秒）
+  - 🎯 用户现在可以通过点击按钮手动获取浮窗权限
+
+- 2026-02-10：为端到端测试添加浮窗权限自动化逻辑
+  - ✅ 在 real-e2e-test.js 中添加浮窗权限按钮点击逻辑
+  - ✅ 使用 uiautomator dump 检测浮窗权限页面
+  - ✅ 自动解析"允许"按钮的坐标
+  - ✅ 自动点击"允许"按钮
+  - ✅ 实现自动返回 app 的逻辑（使用 KEYCODE_BACK）
+  - 🎯 测试现在可以自动化完成浮窗权限授予流程
+
 ## 待处理事项
 
 - 需要创建 TOOLS.md 文档

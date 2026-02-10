@@ -5,7 +5,7 @@ async function testServiceWithoutOverlayPermission() {
     console.log("🧪 Testing Service Startup Without Overlay Permission");
     console.log("=====================================================");
 
-    const deviceId = "localhost:16384";
+    const deviceId = "emulator-5554";
 
     try {
         // 1. 验证设备连接

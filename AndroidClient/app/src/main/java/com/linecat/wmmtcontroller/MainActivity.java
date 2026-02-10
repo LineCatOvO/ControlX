@@ -20,14 +20,14 @@ import com.linecat.wmmtcontroller.service.InputRuntimeService;
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private static final int REQUEST_OVERLAY_PERMISSION = 1001;
     
     // UI组件
     private TextView statusText;
     private Button startButton;
     private Button stopButton;
+    private Button overlayPermissionButton;
     private boolean isServiceRunning = false;
-    
-    // 移除了REQUEST_OVERLAY_PERMISSION常量，不再需要浮窗权限检查
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,10 +38,12 @@ public class MainActivity extends AppCompatActivity {
         statusText = findViewById(R.id.status_text);
         startButton = findViewById(R.id.btn_start_service);
         stopButton = findViewById(R.id.btn_stop_service);
+        overlayPermissionButton = findViewById(R.id.btn_overlay_permission);
         
         // 设置按钮点击事件
         startButton.setOnClickListener(v -> startInputService());
         stopButton.setOnClickListener(v -> stopInputService());
+        overlayPermissionButton.setOnClickListener(v -> requestOverlayPermission());
         
         // 不再自动检查浮窗权限，允许服务在无权限下启动
         Log.d(TAG, "Skipping automatic overlay permission check - service can start without overlay permission");
@@ -50,8 +52,35 @@ public class MainActivity extends AppCompatActivity {
         updateStatus();
     }
     
-    // 移除了浮窗权限检查和请求的相关方法
-    // 应用现在可以在无浮窗权限的情况下正常启动核心服务
+    /**
+     * 检查并请求浮窗权限
+     */
+    private void requestOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION);
+                Log.d(TAG, "Requesting overlay permission");
+            } else {
+                Log.d(TAG, "Overlay permission already granted");
+            }
+        }
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_OVERLAY_PERMISSION) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (Settings.canDrawOverlays(this)) {
+                    Log.d(TAG, "Overlay permission granted");
+                } else {
+                    Log.d(TAG, "Overlay permission denied");
+                }
+            }
+        }
+    }
     
     /**
      * 启动输入运行时服务
