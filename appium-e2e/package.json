@@ -4,10 +4,11 @@
     "description": "Appium E2E tests for WMMT Remote Controller",
     "main": "index.js",
     "scripts": {
-        "test": "tsc && node dist/tests/main-test.js",
-        "test:complete": "tsc && node dist/tests/complete-e2e-test.js",
-        "test:real": "tsc && node dist/tests/real-e2e-test.js",
-        "test:core": "tsc && node dist/tests/core-e2e-test.js",
+        "test": "node tests/run-e2e.js",
+        "test:full": "node tests/run-e2e.js",
+        "test:verbose": "node tests/run-e2e.js -v",
+        "test:quick": "node tests/run-e2e.js --skip-build",
+        "test:input": "tsc && node dist/tests/input-e2e-test.js",
         "build": "tsc",
         "typecheck": "tsc --noEmit"
     },

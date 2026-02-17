@@ -1,2 +1,8 @@
 /appium-e2e/node_modules/
 /node_modules/
+/appium-e2e/dist/test-results/
+/appium-e2e/android/
+/AndroidClient/.gradle/
+/AndroidClient/app/build/
+/AndroidClient/local.properties
+/Server/dist/
