@@ -455,6 +455,247 @@ WMMT Remote Controller
 
 **结论**：项目完整且可用，可以部署使用
 
+## 服务端Dry Run模式（2026-02-17新增）
+
+### 概述
+
+Dry Run模式是一种调试和测试模式，在此模式下，服务端会记录所有输入事件但不执行实际的系统输入。这对于调试输入处理逻辑、验证输入数据格式、以及进行无副作用的测试非常有用。
+
+### 启用方式
+
+通过环境变量启用Dry Run模式：
+
+```bash
+# 方式1：直接设置DRY_RUN环境变量
+DRY_RUN=true node dist/app.js
+
+# 方式2：在测试模式下自动启用
+TEST_MODE=true DISABLE_ACTUAL_INPUT=true node dist/app.js
+```
+
+### 功能特性
+
+1. **完整输入类型支持**：
+   - 键盘输入（按键按下/释放）
+   - 鼠标输入（移动、点击）
+   - 游戏手柄输入（按钮、摇杆、扳机）
+   - 摇杆输入（轴、按钮）
+
+2. **详细事件日志**：
+   - 每个输入事件都会被记录
+   - 包含事件前后的状态快照
+   - 时间戳精确到毫秒
+
+3. **统计信息收集**：
+   - 总事件数
+   - 各类型事件计数
+   - 运行时长
+
+4. **摘要报告**：
+   - 服务关闭时自动打印摘要
+   - 显示当前输入状态
+   - 显示事件统计
+
+### 相关文件
+
+- [dryRunExecutor.ts](file:///c:\Users\15013\Project\agent-workspace\projects\ControlX\Server\src\input\dryRunExecutor.ts) - Dry Run执行器实现
+- [executor.ts](file:///c:\Users\15013\Project\agent-workspace\projects\ControlX\Server\src\input\executor.ts) - 执行器管理器
+
+## 输入端到端测试模块（2026-02-17新增）
+
+### 概述
+
+新增的输入端到端测试模块用于测试WebSocket通信和输入事件处理，包括键盘输入、游戏手柄输入和输入增量。
+
+### 测试用例
+
+1. **键盘输入测试**：
+   - 单键按下
+   - 多键同时按下
+   - 修饰键组合
+   - 释放所有按键
+
+2. **游戏手柄输入测试**：
+   - 单按钮按下
+   - 多按钮同时按下
+   - 左摇杆移动
+   - 右摇杆移动
+   - 扳机输入
+   - 组合输入
+   - 释放所有按钮
+
+3. **输入增量测试**：
+   - 键盘增量按下
+   - 键盘增量释放
+   - 游戏手柄按钮增量
+
+4. **Ping/Pong测试**：
+   - WebSocket心跳检测
+
+### 运行方式
+
+```bash
+cd appium-e2e
+npm run test:input
+```
+
+### 相关文件
+
+- [input-e2e-test.ts](file:///c:\Users\15013\Project\agent-workspace\projects\ControlX\appium-e2e\tests\input-e2e-test.ts) - 输入测试脚本
+
+## 测试报告生成器（2026-02-17新增）
+
+### 概述
+
+测试报告生成器用于生成详细的测试报告，支持JSON、HTML和JUnit XML格式。
+
+### 功能特性
+
+1. **多格式输出**：
+   - JSON格式：便于程序处理
+   - HTML格式：可视化展示
+   - JUnit XML格式：CI/CD集成
+
+2. **详细测试信息**：
+   - 测试步骤记录
+   - 验证点记录
+   - 错误信息
+   - 执行时间
+
+3. **环境信息**：
+   - 操作系统
+   - Node版本
+   - 设备信息
+   - 后端端口
+
+### 使用方式
+
+```typescript
+import { TestReportGenerator } from "./utils/test-report-generator";
+
+const generator = new TestReportGenerator();
+generator.setEnvironment({ deviceId: "localhost:16384", backendPort: 57128 });
+generator.addTestResult({
+    testCaseId: "TC001",
+    name: "键盘输入测试",
+    status: "passed",
+    duration: 1500,
+    steps: [...],
+    verificationPoints: [...],
+    timestamp: new Date().toISOString()
+});
+
+// 保存报告
+generator.saveToFile("./test-results", ["json", "html", "junit"]);
+```
+
+### 相关文件
+
+- [test-report-generator.ts](file:///c:\Users\15013\Project\agent-workspace\projects\ControlX\appium-e2e\utils\test-report-generator.ts) - 测试报告生成器实现
+
+## 布局界面交互模块（2026-02-17新增）
+
+### 概述
+
+布局界面交互模块（LayoutInteractor）提供了与Android应用UI界面交互的能力，支持UI元素查找、点击、滑动、按键等操作。
+
+### 功能特性
+
+1. **UI元素解析**：
+   - 解析Android UI Dump XML
+   - 提取元素属性（ID、类型、位置、可见性等）
+   - 缓存元素信息提高性能
+
+2. **布局方案支持**：
+   - 加载JSON格式的布局方案文件
+   - 支持默认坐标映射
+   - 兼容应用内置布局方案
+
+3. **交互操作**：
+   - `clickElement(elementId)` - 点击指定元素
+   - `longPressElement(elementId, duration)` - 长按元素
+   - `swipe(direction, distance)` - 滑动屏幕
+   - `inputText(text)` - 输入文本
+   - `pressKey(keyCode)` - 按键操作
+
+4. **状态验证**：
+   - `verifyElementState(elementId, expectedState)` - 验证元素状态
+   - `findElement(elementId)` - 查找元素
+
+5. **辅助功能**：
+   - `takeScreenshot(savePath)` - 截图
+   - `getInteractionLog()` - 获取交互日志
+   - `printInteractionSummary()` - 打印交互摘要
+
+### 使用示例
+
+```typescript
+import { LayoutInteractor } from "./utils/layout-interactor";
+import DeviceManager from "./utils/device-manager";
+
+const deviceManager = new DeviceManager();
+await deviceManager.getAvailableDevice();
+
+const interactor = new LayoutInteractor(deviceManager);
+
+// 加载布局方案
+await interactor.loadLayoutScheme();
+
+// 查找并点击元素
+const element = await interactor.findElement("btn_start_service");
+if (element) {
+    await interactor.clickElement("btn_start_service");
+}
+
+// 滑动屏幕
+await interactor.swipe("up", 500);
+
+// 按键操作
+await interactor.pressKey("back");
+```
+
+### 相关文件
+
+- [layout-interactor.ts](file:///c:\Users\15013\Project\agent-workspace\projects\ControlX\appium-e2e\utils\layout-interactor.ts) - 布局交互模块实现
+- [layout-interaction-test.ts](file:///c:\Users\15013\Project\agent-workspace\projects\ControlX\appium-e2e\tests\layout-interaction-test.ts) - 布局交互测试脚本
+
+## 完整端到端测试脚本（2026-02-17新增）
+
+### 概述
+
+完整端到端测试脚本集成了所有测试模块，提供一键运行完整测试流程的能力。
+
+### 测试流程
+
+1. **初始化** - 获取设备、设置环境
+2. **启动后端** - 启动WebSocket服务器
+3. **安装应用** - 安装并启动Android应用
+4. **服务生命周期测试** - 测试启动/停止服务
+5. **WebSocket通信测试** - 测试消息收发
+6. **输入模拟测试** - 测试键盘、触摸输入
+
+### 运行方式
+
+```bash
+cd appium-e2e
+
+# 运行输入测试
+npm run test:input
+
+# 运行布局交互测试
+npm run test:layout
+
+# 运行完整端到端测试
+npm run test:complete
+
+# 运行所有测试
+npm run test:all
+```
+
+### 相关文件
+
+- [complete-e2e-test.ts](file:///c:\Users\15013\Project\agent-workspace\projects\ControlX\appium-e2e\tests\complete-e2e-test.ts) - 完整端到端测试脚本
+
 ## 端到端测试流程技术细节（2026-02-10重构）
 
 ### 重构后的测试架构
