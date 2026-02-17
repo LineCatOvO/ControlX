@@ -7,10 +7,15 @@ import { GamepadExecutor } from "./gamepad";
 import { SafetyController } from "./safetyController";
 import { InputExecutor, InputExecutorManager } from "./interfaces";
 import { TestModeKeyboardExecutor } from "./test-keyboard";
+import { DryRunExecutor } from "./dryRunExecutor";
 
-// 检查测试模式
+// 检查运行模式
 const isTestMode = process.env.TEST_MODE === "true";
 const disableActualInput = process.env.DISABLE_ACTUAL_INPUT === "true";
+const isDryRunMode = process.env.DRY_RUN === "true" || (isTestMode && disableActualInput);
+
+// Dry Run执行器实例（用于调试和测试）
+let dryRunExecutor: DryRunExecutor | null = null;
 
 /**
  * 输入执行器管理器实现
@@ -79,10 +84,13 @@ export class DefaultInputExecutorManager implements InputExecutorManager {
 const executorManager = new DefaultInputExecutorManager();
 
 // 根据模式添加适当的执行器
-if (isTestMode && disableActualInput) {
+if (isDryRunMode) {
+    console.log("🏃 Using DRY RUN mode executors (no actual input, full logging)");
+    dryRunExecutor = new DryRunExecutor({ verbose: true, logToFile: false });
+    executorManager.addExecutor(dryRunExecutor);
+} else if (isTestMode && disableActualInput) {
     console.log("🧪 Using test mode executors (no actual input)");
     executorManager.addExecutor(new TestModeKeyboardExecutor());
-    // 在测试模式下也可以添加其他测试执行器
 } else {
     console.log("🎮 Using production mode executors");
     executorManager.addExecutor(new KeyboardExecutor());
@@ -216,4 +224,51 @@ export function getTestLogs(): any[] {
             ? (executor as any).getTestLog()
             : [],
     }));
+}
+
+/**
+ * 获取Dry Run执行器实例
+ * @returns Dry Run执行器实例或null
+ */
+export function getDryRunExecutor(): DryRunExecutor | null {
+    return dryRunExecutor;
+}
+
+/**
+ * 获取Dry Run日志
+ * @returns Dry Run日志数组
+ */
+export function getDryRunLogs(): any[] {
+    if (dryRunExecutor) {
+        return dryRunExecutor.getLogs();
+    }
+    return [];
+}
+
+/**
+ * 获取Dry Run统计信息
+ * @returns Dry Run统计信息
+ */
+export function getDryRunStats(): any {
+    if (dryRunExecutor) {
+        return dryRunExecutor.getStats();
+    }
+    return null;
+}
+
+/**
+ * 打印Dry Run摘要
+ */
+export function printDryRunSummary(): void {
+    if (dryRunExecutor) {
+        dryRunExecutor.printSummary();
+    }
+}
+
+/**
+ * 检查是否为Dry Run模式
+ * @returns 是否为Dry Run模式
+ */
+export function isDryRun(): boolean {
+    return isDryRunMode;
 }

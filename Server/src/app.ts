@@ -1,7 +1,7 @@
 // 入口文件，启动服务
 
 import { startWsServer } from "./ws/server";
-import { startInputExecutor, getExecutorManager } from "./input/executor";
+import { startInputExecutor, getExecutorManager, isDryRun, printDryRunSummary } from "./input/executor";
 import { StateStore } from "./input/stateStore";
 import { ApplyScheduler } from "./input/applyScheduler";
 import { inputState } from "./input/state";
@@ -11,15 +11,24 @@ import dotenv from "dotenv";
 // 加载环境变量
 dotenv.config();
 
-// 检查测试模式
+// 检查运行模式
 const isTestMode = process.env.TEST_MODE === "true";
 const disableActualInput = process.env.DISABLE_ACTUAL_INPUT === "true";
+const dryRunMode = process.env.DRY_RUN === "true";
 
-// 测试模式下的特殊配置
-if (isTestMode) {
-    console.log("🧪 Server starting in TEST MODE");
-    console.log(`📝 Actual input disabled: ${disableActualInput}`);
-    console.log("🔒 No real keyboard/mouse/gamepad events will be generated");
+// 运行模式下的特殊配置
+if (isTestMode || dryRunMode) {
+    console.log("=".repeat(60));
+    if (dryRunMode) {
+        console.log("🏃 Server starting in DRY RUN MODE");
+        console.log("📝 All inputs will be logged but not executed");
+        console.log("🔍 Useful for debugging and testing");
+    } else {
+        console.log("🧪 Server starting in TEST MODE");
+        console.log(`📝 Actual input disabled: ${disableActualInput}`);
+        console.log("🔒 No real keyboard/mouse/gamepad events will be generated");
+    }
+    console.log("=".repeat(60));
 }
 
 // 启动blessed终端Viewer（通过TUI环境变量控制）
@@ -115,7 +124,14 @@ if (viewerEnabled) {
 }
 
 // 启动日志
-if (isTestMode) {
+if (dryRunMode) {
+    console.log("🏃 WMMT Controller Server started in DRY RUN MODE");
+    console.log("📋 Dry run features:");
+    console.log("   • All inputs logged for verification");
+    console.log("   • No actual system events generated");
+    console.log("   • Full state tracking and statistics");
+    console.log("   • Safe for debugging and testing");
+} else if (isTestMode) {
     console.log("🎮 WMMT Controller Server started in TEST MODE");
     console.log("📋 Test mode features:");
     console.log("   • No actual keyboard/mouse events generated");
@@ -148,6 +164,11 @@ setTimeout(() => {
 try {
     process.on("SIGINT", () => {
         console.log("\nShutting down server...");
+
+        // 如果是dry run模式，打印摘要
+        if (isDryRun()) {
+            printDryRunSummary();
+        }
 
         // 恢复原始console
         console.log = rawConsole.log;
