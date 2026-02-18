@@ -148,6 +148,13 @@ export function handleState(ws: any, message: StateMessage) {
                 console.error('Error sending error stateAck:', error);
             }
             return;
+            // 触发安全清零
+            const safetyController = (global as any).safetyController;
+            if (safetyController && typeof safetyController.triggerExceptionClear === "function") {
+                safetyController.triggerExceptionClear(
+                    `Validation failed: ${validationResult.errors[0]?.message || "Invalid state"}`
+                );
+            }
         }
 
         // 存储状态
