@@ -1,0 +1,8 @@
+packages:
+  - appium-e2e
+  - Server
+
+ignoredBuiltDependencies:
+  - appium
+  - sharp
+  - wd
