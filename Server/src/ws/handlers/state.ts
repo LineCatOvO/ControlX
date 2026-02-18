@@ -6,6 +6,57 @@ import { InputValidator, ValidationError } from '../../input/validator';
 // 创建验证器实例
 const validator = new InputValidator();
 
+// ACK 统计
+const ackStats = {
+  total: 0,
+  success: 0,
+  rejected: 0,
+  errors: 0,
+  timestamps: [] as number[],
+};
+
+/**
+ * 更新 ACK 统计
+ * @param status ACK 状态
+ * @param serverApplyTs 服务端应用时间
+ */
+function updateAckStats(status: 'success' | 'rejected' | 'error', serverApplyTs: number) {
+  ackStats.total++;
+
+  if (status === 'success') {
+    ackStats.success++;
+  } else if (status === 'rejected') {
+    ackStats.rejected++;
+  } else {
+    ackStats.errors++;
+  }
+
+  ackStats.timestamps.push(serverApplyTs);
+
+  // 只保留最近 1000 个时间戳
+  if (ackStats.timestamps.length > 1000) {
+    ackStats.timestamps.shift();
+  }
+
+  // 每 100 个 ACK 输出一次统计
+  if (ackStats.total % 100 === 0) {
+    console.log('ACK Stats:', {
+      total: ackStats.total,
+      success: ackStats.success,
+      rejected: ackStats.rejected,
+      errors: ackStats.errors,
+      successRate: `${((ackStats.success / ackStats.total) * 100).toFixed(2)}%`,
+    });
+  }
+}
+
+/**
+ * 获取 ACK 统计
+ */
+function getAckStats() {
+  return { ...ackStats };
+}
+
 /**
  * 处理状态通道消息
  * @param ws WebSocket连接
@@ -29,6 +80,7 @@ export function handleState(ws: any, message: StateMessage) {
 
         try {
             ws.send(JSON.stringify(errorAckMessage));
+            updateAckStats('error', Date.now());
         } catch (error) {
             console.error('Error sending stateAck:', error);
         }
@@ -113,6 +165,7 @@ export function handleState(ws: any, message: StateMessage) {
 
         try {
             ws.send(JSON.stringify(ackMessage));
+            updateAckStats(stored ? 'success' : 'rejected', Date.now());
         } catch (error) {
             console.error('Error sending stateAck:', error);
         }
@@ -131,6 +184,7 @@ export function handleState(ws: any, message: StateMessage) {
 
         try {
             ws.send(JSON.stringify(errorAckMessage));
+            updateAckStats('error', Date.now());
         } catch (error) {
             console.error('Error sending error stateAck:', error);
         }
