@@ -22,7 +22,7 @@
 - [ ] 1.1.2 安装 Windows Build Tools
 - [ ] 1.1.3 安装 node-vigemclient 包
 - [ ] 1.1.4 配置 VIGEM_CLIENT_PATH 环境变量
-- [ ] 1.1.5 创建 docs/dependencies.md 文档
+- [x] 1.1.5 创建 docs/dependencies.md 文档
 
 #### 1.2 实现 GamepadXInputAdapter 类
 - [ ] 1.2.1 创建 src/input/adapters/ 目录结构
