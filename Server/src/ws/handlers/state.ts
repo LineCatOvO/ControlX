@@ -1,6 +1,10 @@
 // 状态消息处理器
 
 import { StateMessage, StateAckMessage } from '../../types/ws';
+import { InputValidator, ValidationError } from '../../input/validator';
+
+// 创建验证器实例
+const validator = new InputValidator();
 
 /**
  * 处理状态通道消息
@@ -22,7 +26,7 @@ export function handleState(ws: any, message: StateMessage) {
             status: 'rejected',
             reason: 'StateStore not available'
         };
-        
+
         try {
             ws.send(JSON.stringify(errorAckMessage));
         } catch (error) {
@@ -58,6 +62,42 @@ export function handleState(ws: any, message: StateMessage) {
             }
         };
 
+        // 验证输入状态
+        const validationResult = validator.validate(inputState);
+
+        if (!validationResult.valid) {
+            // 验证失败，记录错误
+            validationResult.errors.forEach(error => {
+                console.error(`Validation error: ${error.message}`);
+                if (error.field) {
+                    console.error(`  Field: ${error.field}`);
+                }
+                if (error.expected) {
+                    console.error(`  Expected: ${error.expected}`);
+                }
+                if (error.actual) {
+                    console.error(`  Actual: ${error.actual}`);
+                }
+            });
+
+            // 发送错误ACK消息
+            const errorAckMessage: StateAckMessage = {
+                type: 'stateAck',
+                ackStateId: message.stateId,
+                serverRecvTs: Date.now(),
+                serverApplyTs: Date.now(),
+                status: 'rejected',
+                reason: `Validation failed: ${validationResult.errors[0]?.message || 'Invalid state'}`
+            };
+
+            try {
+                ws.send(JSON.stringify(errorAckMessage));
+            } catch (error) {
+                console.error('Error sending error stateAck:', error);
+            }
+            return;
+        }
+
         // 存储状态
         const stored = stateStore.storeState(inputState);
 
@@ -78,7 +118,7 @@ export function handleState(ws: any, message: StateMessage) {
         }
     } catch (error) {
         console.error('Error handling state message:', error);
-        
+
         // 发送错误ACK消息
         const errorAckMessage: StateAckMessage = {
             type: 'stateAck',
@@ -88,7 +128,7 @@ export function handleState(ws: any, message: StateMessage) {
             status: 'rejected',
             reason: 'Internal error'
         };
-        
+
         try {
             ws.send(JSON.stringify(errorAckMessage));
         } catch (error) {
