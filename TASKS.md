@@ -135,11 +135,11 @@
 ### 4. WebSocket 协议完整实现
 
 #### 4.1 实现状态消息处理器
-- [ ] 4.1.1 创建 src/ws/handlers/state.ts
-- [ ] 4.1.2 实现 handleState 方法
-- [ ] 4.1.3 转换 StateMessage 为 InputState
-- [ ] 4.1.4 调用 StateStore 存储
-- [ ] 4.1.5 发送 ACK 消息
+- [x] 4.1.1 创建 src/ws/handlers/state.ts
+- [x] 4.1.2 实现 handleState 方法
+- [x] 4.1.3 转换 StateMessage 为 InputState
+- [x] 4.1.4 调用 StateStore 存储
+- [x] 4.1.5 发送 ACK 消息
 
 #### 4.2 实现输入事件处理器
 - [ ] 4.2.1 创建 src/ws/handlers/inputEvent.ts
