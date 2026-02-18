@@ -10,13 +10,40 @@ const keySender = require("node-key-sender");
 export class KeyboardExecutor implements InputExecutor {
     // 记录当前键盘状态
     private currentKeyboardState: Set<string> = new Set();
+    // 记录所有已发送过的按键（用于累积历史）
+    private sentKeys: Set<string> = new Set();
+    // 记录按键的发送顺序
+    private keyOrder: string[] = [];
+    // 记录上一次的键盘状态（用于计算差异）
+    private previousKeyboardState: Set<string> = new Set();
 
     /**
      * 应用完整输入状态
      * @param state 输入状态
      */
     applyState(state: InputState): void {
-        this.updateKeyboardState(state.keyboard);
+        const newState = state.keyboard || new Set();
+
+        // 计算与上一次状态的差异（差集计算）
+        const keysToRelease = new Set(
+            [...this.previousKeyboardState].filter((key) => !newState.has(key))
+        );
+
+        const keysToPress = new Set(
+            [...newState].filter((key) => !this.previousKeyboardState.has(key))
+        );
+
+        // 更新当前键盘状态为上一次状态
+        this.previousKeyboardState = new Set(this.currentKeyboardState);
+
+        // 将新按键加入已发送集合和顺序列表
+        keysToPress.forEach((key) => {
+            this.sentKeys.add(key);
+            this.keyOrder.push(key);
+        });
+
+        // 更新当前键盘状态
+        this.updateKeyboardState(newState, keysToRelease, keysToPress);
     }
 
     /**
@@ -70,63 +97,65 @@ export class KeyboardExecutor implements InputExecutor {
     reset(): void {
         // 释放所有按键
         this.updateKeyboardState(new Set());
+
+        // 清空已发送集合
+        this.sentKeys.clear();
     }
 
     /**
      * 更新键盘状态
      * @param newState 新的键盘状态
+     * @param keysToRelease 需要释放的键
+     * @param keysToPress 需要按下的键
      */
-    private updateKeyboardState(newState: Set<string>): void {
-        // 找出新增的按键（需要按下）
-        const keysToPress = new Set(
-            [...newState].filter((key) => !this.currentKeyboardState.has(key))
-        );
+    private updateKeyboardState(
+        newState: Set<string>,
+        keysToRelease?: Set<string>,
+        keysToPress?: Set<string>
+    ): void {
+        // 如果没有提供差异信息，则重新计算
+        if (!keysToRelease || !keysToPress) {
+            keysToRelease = new Set(
+                [...this.currentKeyboardState].filter((key) => !newState.has(key))
+            );
 
-        // 找出移除的按键（需要释放）
-        const keysToRelease = new Set(
-            [...this.currentKeyboardState].filter((key) => !newState.has(key))
-        );
+            keysToPress = new Set(
+                [...newState].filter((key) => !this.currentKeyboardState.has(key))
+            );
+        }
 
         // 只在状态有变化时记录日志
         if (keysToPress.size > 0 || keysToRelease.size > 0) {
-            // 先释放需要释放的键
+            // 先释放不需要的键
             if (keysToRelease.size > 0) {
-                // 注意：对于需要持续按住的按键，我们需要使用不同的方法
-                // 当前使用的node-key-sender库不支持持续按键，这里我们先清空所有按键，然后重新按下需要的键
-                console.log(
-                    "KeyboardEvent: Releasing keys:",
-                    Array.from(keysToRelease)
-                );
-
                 try {
-                    keySender.releaseKey(Array.from(keysToRelease));
+                    keySender.sendKey(Array.from(keysToRelease));
                 } catch (error) {
-                    console.error(
-                        "KeyboardError: Error releasing keys:",
-                        error
-                    );
+                    console.error("KeyboardError: Error releasing keys:", error);
                 }
             }
 
-            // 然后按下需要按下的键
-            if (keysToPress.size > 0) {
-                // 如果需要按下新键，或者当前状态为空（刚刚清空），则重新按下所有需要的键
-                const keysToPressAll = Array.from(keysToPress);
+            // 然后按下新增的键（用于累积历史）
+            const newKeysToPress = new Set(
+                [...keysToPress].filter((key) => !this.sentKeys.has(key))
+            );
 
-                // 只记录非空状态变化
-                if (keysToPressAll.length > 0) {
-                    console.log(
-                        "KeyboardEvent: Pressing keys:",
-                        keysToPressAll
-                    );
-                }
+            if (newKeysToPress.size > 0) {
+                // 将新按键添加到已发送集合和顺序列表
+                newKeysToPress.forEach((key) => {
+                    this.sentKeys.add(key);
+                    this.keyOrder.push(key);
+                });
+
+                const allKeysToPress = Array.from(this.keyOrder);
+
+                console.log(
+                    "KeyboardEvent: Pressing keys:",
+                    allKeysToPress
+                );
 
                 try {
-                    // 对于持续按键，我们需要使用不同的库或方法
-                    // 这里使用node-key-sender的sendKey方法，它会自动释放，但对于某些游戏可能有效
-                    if (keysToPressAll.length > 0) {
-                        keySender.sendKey(keysToPressAll);
-                    }
+                    keySender.sendKey(allKeysToPress);
                 } catch (error) {
                     console.error("KeyboardError: Error pressing keys:", error);
                 }
