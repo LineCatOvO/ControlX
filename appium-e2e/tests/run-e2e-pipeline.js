@@ -150,23 +150,49 @@ async function startAppium() {
             stdio: ["pipe", "pipe", "pipe"]
         });
 
+        let outputBuffer = "";
+        let isResolved = false;
+
         state.appiumProcess.stdout?.on("data", (data) => {
             const output = data.toString();
-            if (output.includes("Appium REST http interface listener")) {
+            outputBuffer += output;
+            
+            // 检查 Appium 是否启动
+            if (!isResolved && output.includes("Appium REST http interface listener")) {
+                isResolved = true;
                 log(`Appium 已启动 (端口 ${CONFIG.appiumPort})`, "✅");
-                // Appium 启动后等待 2 秒确保完全就绪
-                setTimeout(resolve, 2000);
+                // Appium 启动后等待 3 秒确保完全就绪
+                setTimeout(() => resolve(), 3000);
             }
         });
 
-        state.appiumProcess.on("error", reject);
+        state.appiumProcess.stderr?.on("data", (data) => {
+            const errorOutput = data.toString();
+            console.error("Appium stderr:", errorOutput);
+        });
 
-        // 超时处理
+        state.appiumProcess.on("error", (err) => {
+            if (!isResolved) {
+                isResolved = true;
+                reject(new Error(`Appium 启动失败：${err.message}`));
+            }
+        });
+
+        state.appiumProcess.on("exit", (code) => {
+            if (!isResolved) {
+                isResolved = true;
+                reject(new Error(`Appium 异常退出，退出码：${code}`));
+            }
+        });
+
+        // 超时处理 - 20 秒后如果还没启动就尝试继续
         setTimeout(() => {
-            if (state.appiumProcess && state.appiumProcess.pid) {
+            if (!isResolved) {
+                isResolved = true;
+                log("Appium 启动超时，尝试继续...", "⚠️");
                 resolve();
             }
-        }, 15000);
+        }, 20000);
     });
 }
 
@@ -219,7 +245,7 @@ async function initAppiumDriver() {
     log("初始化 Appium 驱动...", "🔧");
 
     const axios = require("axios");
-    
+
     const capabilities = {
         platformName: "Android",
         automationName: "UiAutomator2",
@@ -234,8 +260,37 @@ async function initAppiumDriver() {
 
     // Appium v3 REST API: POST /session
     const sessionUrl = `http://${CONFIG.appiumHost}:${CONFIG.appiumPort}/session`;
+
+    // 先检查 Appium 是否可访问
+    log("检查 Appium 服务器状态...", "🔍");
+    let retries = 5;
     
+    while (retries > 0) {
+        try {
+            const statusUrl = `http://${CONFIG.appiumHost}:${CONFIG.appiumPort}/status`;
+            await axios.get(statusUrl, { timeout: 5000 });
+            log("Appium 服务器可访问", "✅");
+            break;
+        } catch (error) {
+            retries--;
+            if (retries === 0) {
+                log(`Appium 服务器不可达，已尝试 ${5 - retries} 次`, "❌");
+                throw new Error("Appium 服务器不可达");
+            }
+            log(`等待 Appium 启动... (剩余 ${retries} 次重试，间隔 2 秒)`, "⏳");
+            await delay(2000);
+        }
+    }
+
     try {
+        log(`创建 Appium 会话：${sessionUrl}`, "🔗");
+        log(`请求参数：${JSON.stringify({
+            capabilities: {
+                alwaysMatch: capabilities,
+                firstMatch: [{}]
+            }
+        })}`, "📝");
+        
         const response = await axios.post(sessionUrl, {
             capabilities: {
                 alwaysMatch: capabilities,
@@ -247,7 +302,7 @@ async function initAppiumDriver() {
             },
             timeout: 60000
         });
-        
+
         state.sessionId = response.data.sessionId;
         state.appiumClient = axios.create({
             baseURL: sessionUrl + '/' + state.sessionId,
@@ -256,13 +311,19 @@ async function initAppiumDriver() {
             },
             timeout: 30000
         });
-        
+
         log(`Appium 会话已创建 (sessionId: ${state.sessionId})`, "✅");
     } catch (error) {
         if (error.response) {
             log(`Appium 错误 (${error.response.status}): ${JSON.stringify(error.response.data)}`, "❌");
+            throw new Error(`Appium 会话创建失败：${JSON.stringify(error.response.data)}`);
+        } else if (error.code === 'ECONNRESET' || error.message.includes('socket hang up')) {
+            log("Appium 连接被重置，可能是服务器未完全启动", "❌");
+            throw new Error("Appium 连接被重置");
+        } else {
+            log(`Appium 错误：${error.message}`, "❌");
+            throw error;
         }
-        throw error;
     }
 }
 
