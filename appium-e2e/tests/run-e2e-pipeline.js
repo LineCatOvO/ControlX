@@ -130,6 +130,11 @@ async function checkDevice() {
     const lines = devices.split("\n").filter(line => line.includes("\tdevice"));
 
     if (lines.length === 0) {
+        log("未找到任何 ADB 设备", "❌");
+        log("请检查:", "💡");
+        log("  1. USB 调试已启用", "💡");
+        log("  2. 设备已连接并授权", "💡");
+        log("  3. 运行 'adb devices' 确认设备可见", "💡");
         throw new Error("未找到设备");
     }
 
