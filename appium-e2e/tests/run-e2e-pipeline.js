@@ -306,7 +306,14 @@ async function initAppiumDriver() {
             timeout: 60000
         });
 
-        state.sessionId = response.data.sessionId;
+        // Appium 3.x 响应格式：sessionId 在顶层或 response.data 中
+        state.sessionId = response.data.sessionId || response.data.value?.sessionId;
+        
+        if (!state.sessionId) {
+            log(`Appium 响应：${JSON.stringify(response.data)}`, "⚠️");
+            throw new Error("无法获取 sessionId");
+        }
+        
         state.appiumClient = axios.create({
             baseURL: sessionUrl + '/' + state.sessionId,
             headers: {
