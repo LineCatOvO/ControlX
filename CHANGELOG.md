@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-02-19] fix: 修复验证器集成中的安全清零触发 bug
+
+### Changes
+- Server/src/ws/handlers/state.ts: 添加验证统计功能（updateValidationStats、getValidationStats），修复验证失败时安全清零触发代码在 return 之后无法执行的问题
+
+### Impact
+- 验证失败时现在会正确触发安全清零，确保系统回到安全状态
+- 新增验证统计功能，每 100 次验证输出一次统计报告
+- 统计信息包括总验证次数、通过率、错误分布等指标
+
 ## [2026-02-19] test: 添加游戏手柄 ViGEmBus 测试跳过机制
 
 ### Changes

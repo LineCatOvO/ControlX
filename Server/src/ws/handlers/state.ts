@@ -15,6 +15,15 @@ const ackStats = {
   timestamps: [] as number[],
 };
 
+// 验证统计
+const validationStats = {
+  total: 0,
+  passed: 0,
+  failed: 0,
+  errorsByField: {} as Record<string, number>,
+  timestamps: [] as number[],
+};
+
 /**
  * 更新 ACK 统计
  * @param status ACK 状态
@@ -51,6 +60,46 @@ function updateAckStats(status: 'success' | 'rejected' | 'error', serverApplyTs:
 }
 
 /**
+ * 更新验证统计
+ * @param valid 验证是否通过
+ * @param errors 验证错误列表
+ */
+function updateValidationStats(valid: boolean, errors: ValidationError[]) {
+  validationStats.total++;
+  validationStats.timestamps.push(Date.now());
+
+  // 只保留最近 1000 个时间戳
+  if (validationStats.timestamps.length > 1000) {
+    validationStats.timestamps.shift();
+  }
+
+  if (valid) {
+    validationStats.passed++;
+  } else {
+    validationStats.failed++;
+
+    // 统计各字段的错误数量
+    errors.forEach(error => {
+      if (error.field) {
+        validationStats.errorsByField[error.field] =
+          (validationStats.errorsByField[error.field] || 0) + 1;
+      }
+    });
+  }
+
+  // 每 100 次验证输出一次统计
+  if (validationStats.total % 100 === 0) {
+    console.log('Validation Stats:', {
+      total: validationStats.total,
+      passed: validationStats.passed,
+      failed: validationStats.failed,
+      passRate: `${((validationStats.passed / validationStats.total) * 100).toFixed(2)}%`,
+      errorsByField: validationStats.errorsByField,
+    });
+  }
+}
+
+/**
  * 获取 ACK 统计
  */
 function getAckStats() {
@@ -58,8 +107,15 @@ function getAckStats() {
 }
 
 /**
+ * 获取验证统计
+ */
+function getValidationStats() {
+  return { ...validationStats };
+}
+
+/**
  * 处理状态通道消息
- * @param ws WebSocket连接
+ * @param ws WebSocket 连接
  * @param message 状态消息
  */
 export function handleState(ws: any, message: StateMessage) {
@@ -68,7 +124,7 @@ export function handleState(ws: any, message: StateMessage) {
 
     // 检查状态存储是否可用
     if (!stateStore) {
-        // 发送错误ACK消息
+        // 发送错误 ACK 消息
         const errorAckMessage: StateAckMessage = {
             type: 'stateAck',
             ackStateId: message.stateId,
@@ -88,7 +144,7 @@ export function handleState(ws: any, message: StateMessage) {
     }
 
     try {
-        // 将StateMessage转换为InputState格式
+        // 将 StateMessage 转换为 InputState 格式
         const inputState = {
             frameId: message.stateId,
             keyboard: new Set(message.keyboardState
@@ -117,6 +173,9 @@ export function handleState(ws: any, message: StateMessage) {
         // 验证输入状态
         const validationResult = validator.validate(inputState);
 
+        // 更新验证统计
+        updateValidationStats(validationResult.valid, validationResult.errors);
+
         if (!validationResult.valid) {
             // 验证失败，记录错误
             validationResult.errors.forEach(error => {
@@ -132,7 +191,15 @@ export function handleState(ws: any, message: StateMessage) {
                 }
             });
 
-            // 发送错误ACK消息
+            // 触发安全清零（在发送 ACK 之前）
+            const safetyController = (global as any).safetyController;
+            if (safetyController && typeof safetyController.triggerExceptionClear === "function") {
+                safetyController.triggerExceptionClear(
+                    `Validation failed: ${validationResult.errors[0]?.message || "Invalid state"}`
+                );
+            }
+
+            // 发送错误 ACK 消息
             const errorAckMessage: StateAckMessage = {
                 type: 'stateAck',
                 ackStateId: message.stateId,
@@ -144,23 +211,17 @@ export function handleState(ws: any, message: StateMessage) {
 
             try {
                 ws.send(JSON.stringify(errorAckMessage));
+                updateAckStats('rejected', Date.now());
             } catch (error) {
                 console.error('Error sending error stateAck:', error);
             }
             return;
-            // 触发安全清零
-            const safetyController = (global as any).safetyController;
-            if (safetyController && typeof safetyController.triggerExceptionClear === "function") {
-                safetyController.triggerExceptionClear(
-                    `Validation failed: ${validationResult.errors[0]?.message || "Invalid state"}`
-                );
-            }
         }
 
         // 存储状态
         const stored = stateStore.storeState(inputState);
 
-        // 发送ACK消息
+        // 发送 ACK 消息
         const ackMessage: StateAckMessage = {
             type: 'stateAck',
             ackStateId: message.stateId,
@@ -179,7 +240,7 @@ export function handleState(ws: any, message: StateMessage) {
     } catch (error) {
         console.error('Error handling state message:', error);
 
-        // 发送错误ACK消息
+        // 发送错误 ACK 消息
         const errorAckMessage: StateAckMessage = {
             type: 'stateAck',
             ackStateId: message.stateId,
@@ -197,3 +258,6 @@ export function handleState(ws: any, message: StateMessage) {
         }
     }
 }
+
+// 导出统计函数供外部使用
+export { getAckStats, getValidationStats };

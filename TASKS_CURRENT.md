@@ -1,214 +1,134 @@
-# 当前任务：虚拟手柄相关处理
+# 当前任务：输入验证器集成
 
 **开始时间**: 2026-02-19
-**目标**: 实现游戏手柄 ViGEmBus 检测、连接管理和降级方案
+**目标**: 完成任务 3.5 - 集成验证器到消息处理流程，实现安全清零触发和验证统计
 
-## 任务策略
+## 任务 3.5 完成记录
 
-**核心目标**：
-1. 实现完善的 ViGEmBus 检测和连接管理
-2. 当 ViGEmBus 驱动不可用时提供友好的错误处理和降级方案
-3. 提示用户安装 ViGEmBus，未安装时只能使用键盘映射
-4. vigemclient 作为普通依赖，但代码需优雅处理驱动未安装的情况
+### 完成时间：2026-02-19
 
-## 执行记录
+**任务目标**：
+- 3.5.4 触发安全清零（可选）
+- 3.5.5 添加验证统计
 
-### 2026-02-19 完成的工作
+### 修改的文件
 
-**1. 重构 GamepadXInputAdapter.ts**
-- ✅ 移除了循环导入（之前从自身导入自己）
-- ✅ 实现了 ViGEmBus 动态加载（try-catch 处理模块加载失败）
-- ✅ 实现了 detect() 方法检测驱动可用性
-- ✅ 实现了 connect()/disconnect() 连接管理
-- ✅ 实现了完整的 XInput 状态映射（4 轴、14 按钮、2 扳机）
-- ✅ 实现了状态提交（submitState 通过 vigemclient.sendState）
-- ✅ 实现了值范围限制（轴 [-1.0, 1.0]，扳机 [0.0, 1.0]）
+**1. `src/ws/handlers/state.ts`**
 
-**2. 创建 GamepadAdapter.ts**
-- ✅ 封装 GamepadXInputAdapter
-- ✅ 实现 initialize() 检测和连接
-- ✅ 实现降级逻辑（ViGEmBus 不可用时禁用）
-- ✅ 提供友好的用户提示信息
-- ✅ 实现 applyState() 和 reset() 方法
+#### 添加验证统计功能
+- ✅ 创建 `validationStats` 统计对象
+  - `total`: 总验证次数
+  - `passed`: 通过验证次数
+  - `failed`: 失败验证次数
+  - `errorsByField`: 按字段统计的错误数量
+  - `timestamps`: 时间戳列表（保留最近 1000 个）
 
-**3. 更新 GamepadExecutor.ts**
-- ✅ 集成 GamepadAdapter
-- ✅ 实现启用状态检查 isEnabled()
-- ✅ ViGEmBus 不可用时优雅降级（跳过游戏手柄，键盘仍可用）
-- ✅ 添加详细的日志输出
+- ✅ 实现 `updateValidationStats()` 函数
+  - 更新验证统计
+  - 统计各字段错误数量
+  - 每 100 次验证输出一次统计报告
 
-**4. 更新 package.json**
-- ✅ 添加 vigemclient: "^1.0.3" 为依赖
+- ✅ 实现 `getValidationStats()` 函数
+  - 导出验证统计供外部使用
 
-**5. 更新 adapters/index.ts**
-- ✅ 修正导出路径
+#### 修复安全清零触发逻辑
+- ✅ 修复 bug：原代码中 `triggerExceptionClear` 在 `return` 之后永远不会执行
+- ✅ 将安全清零触发移到发送 ACK 之前
+- ✅ 验证失败时触发 `safetyController.triggerExceptionClear()`
+- ✅ 传递验证错误信息作为清零原因
 
-**6. 编译验证**
-- ✅ 游戏手柄相关代码编译通过
-
-### 代码关键点
-
-**GamepadXInputAdapter 检测流程**：
+#### 验证流程
 ```typescript
-// 1. 尝试动态加载 vigemclient 模块
-try {
-    this.vigemClient = require('vigemclient');
-    console.log('🎮 GamepadXInputAdapter: ViGEmClient loaded successfully');
-} catch (error: any) {
-    console.warn('⚠️  GamepadXInputAdapter: ViGEmClient not available');
-    // 记录警告，但不抛出异常
-}
+// 1. 验证输入状态
+const validationResult = validator.validate(inputState);
 
-// 2. 检测驱动是否可用
-detect(): ViGEmDetectionResult {
-    if (!this.vigemClient) {
-        return { available: false, error: 'ViGEmClient module not loaded' };
+// 2. 更新验证统计
+updateValidationStats(validationResult.valid, validationResult.errors);
+
+// 3. 验证失败处理
+if (!validationResult.valid) {
+    // 3.1 记录错误日志
+    validationResult.errors.forEach(error => {
+        console.error(`Validation error: ${error.message}`);
+    });
+
+    // 3.2 触发安全清零（在发送 ACK 之前）
+    const safetyController = (global as any).safetyController;
+    if (safetyController && typeof safetyController.triggerExceptionClear === "function") {
+        safetyController.triggerExceptionClear(
+            `Validation failed: ${validationResult.errors[0]?.message || "Invalid state"}`
+        );
     }
-    try {
-        const testController = this.vigemClient.createX360Controller();
-        return { available: true };
-    } catch (error) {
-        return { available: false, error: error.message };
-    }
+
+    // 3.3 发送错误 ACK 消息
+    const errorAckMessage: StateAckMessage = {
+        type: 'stateAck',
+        ackStateId: message.stateId,
+        serverRecvTs: Date.now(),
+        serverApplyTs: Date.now(),
+        status: 'rejected',
+        reason: `Validation failed: ${validationResult.errors[0]?.message || 'Invalid state'}`
+    };
+    ws.send(JSON.stringify(errorAckMessage));
+    return;
 }
 ```
 
-**降级策略**：
+### 验证统计输出示例
+
 ```
-┌─────────────────────────────────────┐
-│   Server 启动                       │
-└─────────────┬───────────────────────┘
-              │
-              ▼
-┌─────────────────────────────────────┐
-│   GamepadExecutor 初始化            │
-│   → 创建 GamepadXInputAdapter       │
-│   → 创建 GamepadAdapter             │
-│   → 调用 initialize()               │
-└─────────────┬───────────────────────┘
-              │
-              ▼
-    ┌─────────────────────┐
-    │ ViGEmBus 可用？     │
-    └────┬────────────┬───┘
-         │ 是         │ 否
-         │            │
-         ▼            ▼
-    ┌─────────┐  ┌────────────────────┐
-    │ 连接    │  │ 记录警告日志       │
-    │ 启用    │  │ 显示安装说明       │
-    │ 游戏手柄│  │ 禁用游戏手柄       │
-    └─────────┘  │ 键盘映射继续工作   │
-                 └────────────────────┘
+Validation Stats: {
+  total: 100,
+  passed: 95,
+  failed: 5,
+  passRate: '95.00%',
+  errorsByField: {
+    'keyboard': 2,
+    'gamepad': 1,
+    'frameId': 2
+  }
+}
 ```
 
-**用户提示信息**：
-```
-⚠️  GamepadAdapter: ViGEmBus not available
-   ViGEmClient module not loaded. Please install vigemclient package.
-   Gamepad functionality will be disabled.
-   To enable gamepad support:
-   1. Install ViGEmBus driver: https://github.com/ViGEm/ViGEmBus/releases
-   2. Run: npm install vigemclient
-   3. Restart the server
-```
+### 知识沉淀
 
-## 知识沉淀
+#### 验证器集成要点
 
-### ViGEmBus 架构
-- ViGEmBus 驱动创建虚拟 Xbox 360 控制器
-- node-vigemclient 提供 Node.js 绑定
-- 通过 XInput 接口提交控制器状态
+1. **验证时机**：在状态存储之前进行验证
+2. **失败处理**：
+   - 记录详细错误日志
+   - 触发安全清零
+   - 发送错误 ACK 给客户端
+3. **统计功能**：
+   - 每 100 次验证输出一次统计
+   - 记录各字段的错误分布
+   - 保留最近 1000 个时间戳
 
-### XInput 按钮映射
-```typescript
-const XINPUT_BUTTON = {
-    A: 0x0001, B: 0x0002, X: 0x0004, Y: 0x0008,
-    LB: 0x0100, RB: 0x0200,
-    Start: 0x0010, Back: 0x0020, Guide: 0x0400,
-    L3: 0x0040, R3: 0x0080,
-    DPadUp: 0x00010000, DPadDown: 0x00020000,
-    DPadLeft: 0x00040000, DPadRight: 0x00080000
-};
-```
+#### 安全清零触发条件
 
-### 状态提交流程
-```
-InputState (WebSocket)
-    ↓
-GamepadExecutor.applyState()
-    ↓
-GamepadAdapter.applyState()
-    ↓
-GamepadXInputAdapter.applyState()
-    ↓
-vigemclient.sendState()
-    ↓
-Virtual Xbox 360 Controller
-    ↓
-Windows Input System
-    ↓
-Game
-```
+| 条件 | 说明 |
+|------|------|
+| 验证失败 | 输入状态不合法 |
+| 超时 | 超过 500ms 未收到有效状态 |
+| WebSocket 断开 | 连接断开 |
+| 显式清零 | 收到零状态消息 |
+
+#### 验证统计指标
+
+- **总验证次数**：累计验证次数
+- **通过率**：passed / total * 100%
+- **错误分布**：按字段统计错误数量
+- **时间戳**：用于分析验证频率
 
 ### 注意事项
-- vigemclient 是 native addon，需要 Windows 环境编译
-- ViGEmBus 驱动安装需要管理员权限
-- 代码需要优雅处理模块加载失败和驱动未安装两种情况
-- 当前开发环境是 Linux，无法实际测试 ViGEmBus 功能
-- 在 Windows 上运行时，需要先安装 ViGEmBus 驱动
+
+1. **验证器是轻量级的**：只进行基本的数据格式和范围检查
+2. **安全清零是最后的防线**：验证失败时确保系统回到安全状态
+3. **统计功能不影响性能**：只保留最近 1000 个时间戳，避免内存泄漏
+4. **错误日志要详细**：便于排查问题
 
 ## 待办事项
 
-- [x] 修复 GamepadXInputAdapter 循环导入
-- [x] 实现 ViGEmBus 检测模块
-- [x] 实现连接管理器
-- [x] 实现降级方案（键盘映射 fallback）
-- [x] 添加用户友好的提示信息
-- [x] 将 vigemclient 添加为依赖
-- [x] 验证代码编译通过（游戏手柄相关）
-- [x] 更新 TASKS.md 任务状态
-- [x] 在手柄相关测试中引入 jest.skip()，用于在非 Windows/无 ViGEmBus 环境下跳过测试 ✅
-- [ ] 在 Windows 环境下测试 ViGEmBus 功能
-
-## 新增任务：手柄测试跳过机制 ✅
-
-**完成时间**: 2026-02-19
-
-**目标**：在游戏手柄测试中使用 `test.skip()` 或运行时检测，使得在没有 ViGEmBus 的环境下自动跳过相关测试
-
-**实现方案**：
-1. ✅ 创建测试工具函数检测 ViGEmBus 可用性
-2. ✅ 在手柄测试中使用 `test.skip()` 或条件跳过
-3. ✅ 添加清晰的跳过原因说明
-
-**创建的文件**：
-- `tests/common/vigemDetector.ts` - ViGEmBus 检测工具
-- `tests/cases/gamepad.test.ts` - 游戏手柄集成测试
-
-**测试结果**（Linux 环境）：
-```
-Test Suites: 1 passed, 1 total
-Tests:       7 skipped, 10 passed, 17 total
-```
-
-**跳过测试列表**：
-- `should detect availability - SKIPPED: ViGEmBus not available`
-- `should connect to virtual controller - SKIPPED: ViGEmBus not available`
-- `should apply state - SKIPPED: ViGEmBus not available`
-- `should reset state - SKIPPED: ViGEmBus not available`
-- `should initialize successfully - SKIPPED: ViGEmBus not available`
-- `should apply gamepad state - SKIPPED: ViGEmBus not available`
-- `should reset gamepad state - SKIPPED: ViGEmBus not available`
-
-**通过测试列表**：
-- `should detect platform correctly`
-- `should detect ViGEmBus availability`
-- `should provide reason when ViGEmBus is unavailable`
-- `should handle disconnect gracefully when not connected`
-- `should handle applyState gracefully when not initialized`
-- `should handle reset gracefully when not initialized`
-- `should handle cleanup gracefully when not initialized`
-- `should return enabled status after initialize`
-- `should handle ViGEmBus unavailable gracefully`
-- `should provide meaningful error messages`
+- [x] 3.5.4 触发安全清零
+- [x] 3.5.5 添加验证统计
+- [ ] 4.2 实现输入事件处理器
