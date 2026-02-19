@@ -1,0 +1,85 @@
+{
+  "performance": {
+    "inputLatency": {
+      "threshold": 50,
+      "unit": "ms",
+      "severity": "error"
+    },
+    "endToEndLatency": {
+      "threshold": 100,
+      "unit": "ms",
+      "severity": "error"
+    },
+    "frameRate": {
+      "threshold": 60,
+      "unit": "fps",
+      "severity": "warning"
+    },
+    "cpuUsage": {
+      "threshold": 20,
+      "unit": "percent",
+      "severity": "warning"
+    },
+    "memoryUsage": {
+      "threshold": 100,
+      "unit": "MB",
+      "severity": "warning"
+    },
+    "networkBandwidth": {
+      "threshold": 10,
+      "unit": "KB/s",
+      "severity": "info"
+    },
+    "errorRate": {
+      "threshold": 0.01,
+      "unit": "ratio",
+      "severity": "error"
+    },
+    "crashRate": {
+      "threshold": 0.001,
+      "unit": "ratio",
+      "severity": "error"
+    },
+    "anrRate": {
+      "threshold": 0.005,
+      "unit": "ratio",
+      "severity": "error"
+    }
+  },
+  
+  "reliability": {
+    "testPassRate": {
+      "threshold": 0.95,
+      "unit": "ratio",
+      "severity": "error"
+    },
+    "codeCoverage": {
+      "threshold": 0.85,
+      "unit": "ratio",
+      "severity": "warning"
+    },
+    "flakeyTestRate": {
+      "threshold": 0.02,
+      "unit": "ratio",
+      "severity": "warning"
+    }
+  },
+  
+  "compatibility": {
+    "minAndroidVersion": {
+      "threshold": 28,
+      "unit": "api_level",
+      "severity": "error"
+    },
+    "targetAndroidVersion": {
+      "threshold": 34,
+      "unit": "api_level",
+      "severity": "info"
+    },
+    "supportedDevices": {
+      "threshold": 5,
+      "unit": "count",
+      "severity": "warning"
+    }
+  }
+}

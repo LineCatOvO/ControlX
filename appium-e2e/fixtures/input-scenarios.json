@@ -1,0 +1,397 @@
+{
+  "keyboard": {
+    "single_key": {
+      "description": "单键按下",
+      "input": {
+        "keys": ["W"]
+      },
+      "expected": {
+        "received": true,
+        "keyCount": 1
+      }
+    },
+    "multi_key": {
+      "description": "多键组合",
+      "input": {
+        "keys": ["W", "A", "S"]
+      },
+      "expected": {
+        "received": true,
+        "keyCount": 3
+      }
+    },
+    "wasd": {
+      "description": "WASD 方向键",
+      "input": {
+        "keys": ["W", "A", "S", "D"]
+      },
+      "expected": {
+        "received": true,
+        "keyCount": 4
+      }
+    },
+    "arrow_keys": {
+      "description": "方向键",
+      "input": {
+        "keys": ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]
+      },
+      "expected": {
+        "received": true,
+        "keyCount": 4
+      }
+    },
+    "rapid_fire": {
+      "description": "快速连击",
+      "input": {
+        "key": "W",
+        "count": 10,
+        "interval": 50
+      },
+      "expected": {
+        "minReceived": 8
+      }
+    },
+    "long_press": {
+      "description": "长按 2 秒",
+      "input": {
+        "key": "W",
+        "duration": 2000
+      },
+      "expected": {
+        "minFrames": 2
+      }
+    }
+  },
+  
+  "gamepad": {
+    "button_a": {
+      "description": "A 按钮",
+      "input": {
+        "buttons": ["A"]
+      },
+      "expected": {
+        "xinputMask": "0x1000"
+      }
+    },
+    "button_b": {
+      "description": "B 按钮",
+      "input": {
+        "buttons": ["B"]
+      },
+      "expected": {
+        "xinputMask": "0x2000"
+      }
+    },
+    "abxy": {
+      "description": "ABXY 同时按下",
+      "input": {
+        "buttons": ["A", "B", "X", "Y"]
+      },
+      "expected": {
+        "xinputMask": "0xF000"
+      }
+    },
+    "left_stick": {
+      "description": "左摇杆",
+      "input": {
+        "axes": {
+          "leftX": 0.5,
+          "leftY": -0.5
+        }
+      },
+      "expected": {
+        "xinputLeftX": 16384,
+        "xinputLeftY": -16384
+      }
+    },
+    "right_stick": {
+      "description": "右摇杆",
+      "input": {
+        "axes": {
+          "rightX": -0.3,
+          "rightY": 0.7
+        }
+      },
+      "expected": {
+        "xinputRightX": -9830,
+        "xinputRightY": 22937
+      }
+    },
+    "triggers": {
+      "description": "左右扳机",
+      "input": {
+        "triggers": {
+          "left": 0.5,
+          "right": 1.0
+        }
+      },
+      "expected": {
+        "xinputLeftTrigger": 128,
+        "xinputRightTrigger": 255
+      }
+    },
+    "full_state": {
+      "description": "完整手柄状态",
+      "input": {
+        "buttons": ["A", "LB"],
+        "axes": {
+          "leftX": 0.0,
+          "leftY": 0.0,
+          "rightX": 0.0,
+          "rightY": 0.0
+        },
+        "triggers": {
+          "left": 0.0,
+          "right": 0.0
+        }
+      },
+      "expected": {
+        "received": true
+      }
+    }
+  },
+  
+  "mouse": {
+    "move": {
+      "description": "鼠标移动",
+      "input": {
+        "x": 100,
+        "y": 200
+      },
+      "expected": {
+        "received": true,
+        "x": 100,
+        "y": 200
+      }
+    },
+    "left_click": {
+      "description": "左键点击",
+      "input": {
+        "x": 0,
+        "y": 0,
+        "left": true
+      },
+      "expected": {
+        "received": true,
+        "left": true
+      }
+    },
+    "right_click": {
+      "description": "右键点击",
+      "input": {
+        "x": 0,
+        "y": 0,
+        "right": true
+      },
+      "expected": {
+        "received": true,
+        "right": true
+      }
+    },
+    "middle_click": {
+      "description": "中键点击",
+      "input": {
+        "x": 0,
+        "y": 0,
+        "middle": true
+      },
+      "expected": {
+        "received": true,
+        "middle": true
+      }
+    },
+    "drag": {
+      "description": "拖拽操作",
+      "input": [
+        { "x": 0, "y": 0, "left": true },
+        { "x": 100, "y": 100, "left": true },
+        { "x": 200, "y": 200, "left": true },
+        { "x": 200, "y": 200, "left": false }
+      ],
+      "expected": {
+        "received": true
+      }
+    }
+  },
+  
+  "joystick": {
+    "up": {
+      "description": "摇杆向上",
+      "input": {
+        "x": 0,
+        "y": 1
+      },
+      "expected": {
+        "received": true,
+        "y": 1
+      }
+    },
+    "down": {
+      "description": "摇杆向下",
+      "input": {
+        "x": 0,
+        "y": -1
+      },
+      "expected": {
+        "received": true,
+        "y": -1
+      }
+    },
+    "left": {
+      "description": "摇杆向左",
+      "input": {
+        "x": -1,
+        "y": 0
+      },
+      "expected": {
+        "received": true,
+        "x": -1
+      }
+    },
+    "right": {
+      "description": "摇杆向右",
+      "input": {
+        "x": 1,
+        "y": 0
+      },
+      "expected": {
+        "received": true,
+        "x": 1
+      }
+    },
+    "diagonal": {
+      "description": "斜向输入",
+      "input": {
+        "x": 0.707,
+        "y": 0.707
+      },
+      "expected": {
+        "received": true
+      }
+    },
+    "deadzone": {
+      "description": "死区测试",
+      "input": {
+        "x": 0.1,
+        "y": 0.1
+      },
+      "expected": {
+        "ignored": true
+      }
+    }
+  },
+  
+  "combined": {
+    "keyboard_mouse": {
+      "description": "键盘 + 鼠标同时输入",
+      "input": {
+        "keyboard": ["W", "A"],
+        "mouse": {
+          "x": 100,
+          "y": 200,
+          "left": true
+        }
+      },
+      "expected": {
+        "received": true
+      }
+    },
+    "gamepad_joystick": {
+      "description": "手柄 + 摇杆同时输入",
+      "input": {
+        "gamepad": ["A", "B"],
+        "joystick": {
+          "x": 0.5,
+          "y": -0.5
+        }
+      },
+      "expected": {
+        "received": true
+      }
+    },
+    "full_input": {
+      "description": "全量输入",
+      "input": {
+        "keyboard": ["W", "A", "S", "D"],
+        "mouse": {
+          "x": 500,
+          "y": 300,
+          "left": true,
+          "right": false,
+          "middle": false
+        },
+        "gamepad": ["A", "X"],
+        "joystick": {
+          "x": 0.3,
+          "y": -0.3,
+          "deadzone": 0.1,
+          "smoothing": 0.5
+        }
+      },
+      "expected": {
+        "received": true,
+        "allChannels": true
+      }
+    }
+  },
+  
+  "edge_cases": {
+    "empty_input": {
+      "description": "空输入状态",
+      "input": {
+        "keyboard": [],
+        "mouse": {
+          "x": 0,
+          "y": 0,
+          "left": false,
+          "right": false,
+          "middle": false
+        },
+        "gamepad": [],
+        "joystick": {
+          "x": 0,
+          "y": 0,
+          "deadzone": 0,
+          "smoothing": 0
+        }
+      },
+      "expected": {
+        "received": true
+      }
+    },
+    "all_keys": {
+      "description": "所有键同时按下",
+      "input": {
+        "keyboard": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+      },
+      "expected": {
+        "received": true,
+        "keyCount": 26
+      }
+    },
+    "rapid_state_change": {
+      "description": "快速状态切换",
+      "input": [
+        { "keyboard": ["W"] },
+        { "keyboard": [] },
+        { "keyboard": ["W"] },
+        { "keyboard": [] },
+        { "keyboard": ["W"] }
+      ],
+      "expected": {
+        "transitions": 5
+      }
+    },
+    "large_frame_id": {
+      "description": "大帧 ID",
+      "input": {
+        "frameId": 999999999,
+        "keyboard": ["W"]
+      },
+      "expected": {
+        "received": true,
+        "frameId": 999999999
+      }
+    }
+  }
+}
