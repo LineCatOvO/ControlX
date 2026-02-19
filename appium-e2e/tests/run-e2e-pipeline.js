@@ -474,10 +474,11 @@ async function testServiceStart() {
     let startButtonFound = false;
     for (const element of textViews) {
         try {
-            const textResult = await appiumCommand('GET', `/element/${element.ELEMENT || element.element-6066-11e4-a52e-4f735466cecf}/text`);
+            const elementId = element.ELEMENT || element['element-6066-11e4-a52e-4f735466cecf'];
+            const textResult = await appiumCommand('GET', `/element/${elementId}/text`);
             const text = textResult.value || '';
             if (text.includes("启动") || text.includes("Start") || text.includes("开始")) {
-                await appiumCommand('POST', '/element/' + (element.ELEMENT || element['element-6066-11e4-a52e-4f735466cecf']) + '/click', {});
+                await appiumCommand('POST', `/element/${elementId}/click`, {});
                 startButtonFound = true;
                 break;
             }
@@ -610,10 +611,11 @@ async function testServiceStop() {
     let stopButtonFound = false;
     for (const element of textViews) {
         try {
-            const textResult = await appiumCommand('GET', `/element/${element.ELEMENT || element['element-6066-11e4-a52e-4f735466cecf']}/text`);
+            const elementId = element.ELEMENT || element['element-6066-11e4-a52e-4f735466cecf'];
+            const textResult = await appiumCommand('GET', `/element/${elementId}/text`);
             const text = textResult.value || '';
             if (text.includes("停止") || text.includes("Stop") || text.includes("结束")) {
-                await appiumCommand('POST', '/element/' + (element.ELEMENT || element['element-6066-11e4-a52e-4f735466cecf']) + '/click', {});
+                await appiumCommand('POST', `/element/${elementId}/click`, {});
                 stopButtonFound = true;
                 break;
             }
