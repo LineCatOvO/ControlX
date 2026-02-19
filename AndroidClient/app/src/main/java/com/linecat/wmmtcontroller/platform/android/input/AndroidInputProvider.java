@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.linecat.wmmtcontroller.platform.api.IInputProvider;
 import com.linecat.wmmtcontroller.platform.api.ISensorProvider;
+import com.linecat.wmmtcontroller.platform.android.sensor.AndroidSensorProvider;
 
 import java.util.ArrayList;
 import java.util.List;

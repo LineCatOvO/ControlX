@@ -1,4 +1,5 @@
 package com.linecat.wmmtcontroller.core.script;
+import com.linecat.wmmtcontroller.input.GameInputEvent;
 
 import com.linecat.wmmtcontroller.model.InputState;
 import com.linecat.wmmtcontroller.model.RawInput;

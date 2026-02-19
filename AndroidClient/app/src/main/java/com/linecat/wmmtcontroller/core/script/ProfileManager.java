@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import com.linecat.wmmtcontroller.input.JsInputScriptEngine;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,7 +33,7 @@ public class ProfileManager {
     
     private Context context;
     private InputScriptEngine scriptEngine;
-    private LayoutEngine layoutEngine;
+    private Object layoutEngine; // TODO: LayoutEngine
     private AtomicReference<ScriptProfile> currentProfile = new AtomicReference<>();
     private AtomicReference<ScriptProfile> previousProfile = new AtomicReference<>();
     private List<ScriptProfile> availableProfiles = new ArrayList<>();
@@ -60,7 +61,7 @@ public class ProfileManager {
      * 设置布局引擎
      * @param layoutEngine 布局引擎
      */
-    public void setLayoutEngine(LayoutEngine layoutEngine) {
+    public void setLayoutEngine(Object layoutEngine) {
         this.layoutEngine = layoutEngine;
     }
     
@@ -68,7 +69,7 @@ public class ProfileManager {
      * 获取布局引擎
      * @return 布局引擎
      */
-    public LayoutEngine getLayoutEngine() {
+    public Object getLayoutEngine() {
         return layoutEngine;
     }
     
@@ -609,7 +610,7 @@ public class ProfileManager {
     private boolean testProfileScript(ScriptProfile profile) {
         try {
             // 临时初始化一个脚本引擎
-            InputScriptEngine tempEngine = new JsInputScriptEngine(context);
+            JsInputScriptEngine tempEngine = new JsInputScriptEngine(context);
             tempEngine.init();
             
             // 加载脚本

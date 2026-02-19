@@ -1,4 +1,5 @@
 package com.linecat.wmmtcontroller.core;
+import java.util.List;
 
 import android.util.Log;
 
@@ -118,7 +119,7 @@ public class RuntimeFacade implements IInputProvider.RawInputListener {
      * 处理原始输入数据（由 Platform 层回调）
      */
     @Override
-    public void onRawInput(IInputProvider.PointerData pointers,
+    public void onRawInput(List<IInputProvider.PointerData> pointers,
                           float gyroPitch, float gyroRoll, float gyroYaw,
                           long timestampNs) {
         if (!isRunning) {
@@ -163,7 +164,7 @@ public class RuntimeFacade implements IInputProvider.RawInputListener {
     /**
      * 创建 RawInput 对象
      */
-    private RawInput createRawInput(IInputProvider.PointerData pointers,
+    private RawInput createRawInput(List<IInputProvider.PointerData> pointers,
                                    float gyroPitch, float gyroRoll, float gyroYaw) {
         RawInput rawInput = new RawInput();
         

@@ -1,6 +1,7 @@
 package com.linecat.wmmtcontroller.service;
 
 import android.app.Service;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
@@ -9,7 +10,7 @@ import androidx.annotation.Nullable;
 
 import com.linecat.wmmtcontroller.core.RuntimeFacade;
 import com.linecat.wmmtcontroller.core.script.InputScriptEngine;
-import com.linecat.wmmtcontroller.core.script.JsInputScriptEngine;
+import com.linecat.wmmtcontroller.input.JsInputScriptEngine;
 import com.linecat.wmmtcontroller.platform.api.PlatformProviders;
 
 /**
@@ -41,7 +42,7 @@ public class NewInputRuntimeService extends Service {
         providers = new PlatformProviders(this);
         
         // 初始化脚本引擎
-        scriptEngine = new JsInputScriptEngine(this);
+        scriptEngine = (InputScriptEngine) new JsInputScriptEngine(this);
         
         // 创建运行时外观
         runtimeFacade = new RuntimeFacade(providers, scriptEngine);
