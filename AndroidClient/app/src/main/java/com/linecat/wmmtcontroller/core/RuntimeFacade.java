@@ -42,10 +42,10 @@ public class RuntimeFacade implements IInputProvider.RawInputListener {
         this.providers = providers;
         this.inputPipeline = new InputPipeline();
         this.controlManager = new ThreeTierControlManager();
-        this.safetyController = new SafetyController(null); // TODO: 需要 InputStateController
+        this.safetyController = new SafetyController();
         this.scriptEngine = scriptEngine;
         this.profileManager = new ProfileManager(null, scriptEngine);
-        
+
         Log.d(TAG, "RuntimeFacade initialized");
     }
     
@@ -147,7 +147,7 @@ public class RuntimeFacade implements IInputProvider.RawInputListener {
         frameId++;
         
         // 使用三层控制架构处理输入
-        InputState state = controlManager.processInput(rawInput, frameId);
+        InputState state = controlManager.processInputFlow(rawInput, frameId);
         
         // 验证状态
         if (!validateState(state)) {

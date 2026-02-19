@@ -8,11 +8,32 @@ import android.util.Log;
  */
 public class SafetyController {
     private static final String TAG = "SafetyController";
-    private final InputStateController inputStateController;
     private boolean isSafetyState = false;
+    private boolean isEnabled = false;
 
-    public SafetyController(InputStateController inputStateController) {
-        this.inputStateController = inputStateController;
+    public SafetyController() {
+    }
+
+    /**
+     * 启用安全控制器
+     */
+    public void enable() {
+        synchronized (this) {
+            isEnabled = true;
+            isSafetyState = false;
+            Log.d(TAG, "Safety controller enabled");
+        }
+    }
+
+    /**
+     * 禁用安全控制器
+     */
+    public void disable() {
+        synchronized (this) {
+            isEnabled = false;
+            isSafetyState = false;
+            Log.d(TAG, "Safety controller disabled");
+        }
     }
 
     /**
@@ -22,10 +43,6 @@ public class SafetyController {
         synchronized (this) {
             if (!isSafetyState) {
                 Log.d(TAG, "Triggering safety clear");
-
-                // 立即清零所有输出
-                inputStateController.clearAllOutputs();
-
                 isSafetyState = true;
             }
         }
@@ -53,26 +70,20 @@ public class SafetyController {
     }
 
     /**
-     * 处理异常情况
+     * 检查是否安全（可用于运行时检查）
      */
-    public void handleException(Exception e) {
-        Log.e(TAG, "Exception handled, triggering safety clear: " + e.getMessage(), e);
-        triggerSafetyClear();
+    public boolean isSafe() {
+        synchronized (this) {
+            return isEnabled && !isSafetyState;
+        }
     }
 
     /**
-     * 验证系统状态是否安全
+     * 检查是否启用
      */
-    public boolean verifySafeState() {
-        // 验证系统状态是否安全
-        // 返回 true 表示安全，false 表示不安全
-        return !isSafetyState && inputStateController.isOutputSafe();
-    }
-
-    /**
-     * 销毁安全控制器
-     */
-    public void destroy() {
-        triggerSafetyClear();
+    public boolean isEnabled() {
+        synchronized (this) {
+            return isEnabled;
+        }
     }
 }

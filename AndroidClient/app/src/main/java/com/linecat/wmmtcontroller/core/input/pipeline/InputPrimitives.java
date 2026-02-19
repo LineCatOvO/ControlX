@@ -1,20 +1,50 @@
 package com.linecat.wmmtcontroller.core.input.pipeline;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * 输入原语基类
- * 与Android无关的输入模型
- * 所有输入事件的基类
+ * 输入原语类
+ * 与 Android 无关的输入模型
+ * 用于在 Input Pipeline 各阶段之间传递数据
  */
-public abstract class InputPrimitives {
+public class InputPrimitives {
     protected long timestamp;  // 时间戳
     
+    // 指针事件列表
+    private List<PointerEvent> pointerEvents;
+    
+    // 陀螺仪事件
+    private GyroscopeEvent gyroscopeEvent;
+
     public InputPrimitives(long timestamp) {
         this.timestamp = timestamp;
+        this.pointerEvents = new ArrayList<>();
+    }
+
+    // Getter/Setter
+    public long getTimestamp() { return timestamp; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+    
+    public List<PointerEvent> getPointerEvents() { return pointerEvents; }
+    public void setPointerEvents(List<PointerEvent> pointerEvents) { 
+        this.pointerEvents = pointerEvents != null ? pointerEvents : new ArrayList<>();
     }
     
-    // Getter
-    public long getTimestamp() { return timestamp; }
+    public GyroscopeEvent getGyroscopeEvent() { return gyroscopeEvent; }
+    public void setGyroscopeEvent(GyroscopeEvent gyroscopeEvent) { 
+        this.gyroscopeEvent = gyroscopeEvent; 
+    }
     
+    /**
+     * 添加指针事件
+     */
+    public void addPointerEvent(PointerEvent event) {
+        if (event != null) {
+            pointerEvents.add(event);
+        }
+    }
+
     /**
      * 指针事件类型
      */
@@ -25,46 +55,30 @@ public abstract class InputPrimitives {
     }
     
     /**
-     * 按钮事件类型
-     */
-    public enum ButtonEventType {
-        PRESS,  // 按下
-        RELEASE // 释放
-    }
-    
-    /**
-     * 传感器类型
-     */
-    public enum SensorType {
-        GYROSCOPE,      // 陀螺仪
-        ACCELEROMETER,  // 加速度计
-        MAGNETOMETER,   // 磁力计
-        GRAVITY         // 重力传感器
-    }
-    
-    /**
      * 指针事件
      */
-    public static class PointerEvent extends InputPrimitives {
+    public static class PointerEvent {
         private PointerEventType type;   // 事件类型
-        private float x;                 // X坐标
-        private float y;                 // Y坐标
-        private int pointerId;           // 指针ID
-        
+        private float x;                 // X 坐标
+        private float y;                 // Y 坐标
+        private int pointerId;           // 指针 ID
+        private long timestamp;
+
         public PointerEvent(long timestamp, PointerEventType type, float x, float y, int pointerId) {
-            super(timestamp);
+            this.timestamp = timestamp;
             this.type = type;
             this.x = x;
             this.y = y;
             this.pointerId = pointerId;
         }
-        
+
         // Getters
+        public long getTimestamp() { return timestamp; }
         public PointerEventType getType() { return type; }
         public float getX() { return x; }
         public float getY() { return y; }
         public int getPointerId() { return pointerId; }
-        
+
         @Override
         public String toString() {
             return "PointerEvent{" +
@@ -78,90 +92,33 @@ public abstract class InputPrimitives {
     }
     
     /**
-     * 轴事件
+     * 陀螺仪事件
      */
-    public static class AxisEvent extends InputPrimitives {
-        private SensorType sensorType; // 传感器类型
-        private float x;             // X轴值
-        private float y;             // Y轴值
-        private float z;             // Z轴值
+    public static class GyroscopeEvent {
+        private float pitch;
+        private float roll;
+        private float yaw;
+        private long timestamp;
         
-        public AxisEvent(long timestamp, SensorType sensorType, float x, float y, float z) {
-            super(timestamp);
-            this.sensorType = sensorType;
-            this.x = x;
-            this.y = y;
-            this.z = z;
+        public GyroscopeEvent(long timestamp, float pitch, float roll, float yaw) {
+            this.timestamp = timestamp;
+            this.pitch = pitch;
+            this.roll = roll;
+            this.yaw = yaw;
         }
         
-        // Getters
-        public SensorType getSensorType() { return sensorType; }
-        public float getX() { return x; }
-        public float getY() { return y; }
-        public float getZ() { return z; }
+        public long getTimestamp() { return timestamp; }
+        public float getPitch() { return pitch; }
+        public float getRoll() { return roll; }
+        public float getYaw() { return yaw; }
         
         @Override
         public String toString() {
-            return "AxisEvent{" +
+            return "GyroscopeEvent{" +
                     "timestamp=" + timestamp +
-                    ", sensorType=" + sensorType +
-                    ", x=" + x +
-                    ", y=" + y +
-                    ", z=" + z +
-                    '}';
-        }
-    }
-    
-    /**
-     * 按钮事件
-     */
-    public static class ButtonEvent extends InputPrimitives {
-        private ButtonEventType type;    // 事件类型
-        private String buttonId;         // 按钮ID
-        
-        public ButtonEvent(long timestamp, ButtonEventType type, String buttonId) {
-            super(timestamp);
-            this.type = type;
-            this.buttonId = buttonId;
-        }
-        
-        // Getters
-        public ButtonEventType getType() { return type; }
-        public String getButtonId() { return buttonId; }
-        
-        @Override
-        public String toString() {
-            return "ButtonEvent{" +
-                    "timestamp=" + timestamp +
-                    ", type=" + type +
-                    ", buttonId='" + buttonId + "'" +
-                    '}';
-        }
-    }
-    
-    /**
-     * 逻辑轴事件
-     */
-    public static class LogicalAxisEvent extends InputPrimitives {
-        private String axisId;       // 轴ID
-        private float value;         // 轴值
-        
-        public LogicalAxisEvent(long timestamp, String axisId, float value) {
-            super(timestamp);
-            this.axisId = axisId;
-            this.value = value;
-        }
-        
-        // Getters
-        public String getAxisId() { return axisId; }
-        public float getValue() { return value; }
-        
-        @Override
-        public String toString() {
-            return "LogicalAxisEvent{" +
-                    "timestamp=" + timestamp +
-                    ", axisId='" + axisId + "'" +
-                    ", value=" + value +
+                    ", pitch=" + pitch +
+                    ", roll=" + roll +
+                    ", yaw=" + yaw +
                     '}';
         }
     }

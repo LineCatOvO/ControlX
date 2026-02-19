@@ -43,6 +43,27 @@ public interface IInputProvider {
     }
     
     /**
+     * 原始输入数据类
+     */
+    class RawInputData {
+        public final List<PointerData> pointers;
+        public final float gyroPitch;
+        public final float gyroRoll;
+        public final float gyroYaw;
+        public final long timestampNs;
+        
+        public RawInputData(List<PointerData> pointers, 
+                           float gyroPitch, float gyroRoll, float gyroYaw,
+                           long timestampNs) {
+            this.pointers = pointers;
+            this.gyroPitch = gyroPitch;
+            this.gyroRoll = gyroRoll;
+            this.gyroYaw = gyroYaw;
+            this.timestampNs = timestampNs;
+        }
+    }
+    
+    /**
      * 设置原始输入监听器
      * @param listener 原始输入监听器
      */
