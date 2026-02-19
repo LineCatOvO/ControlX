@@ -1,5 +1,23 @@
 # Changelog
 
+## [2026-02-19] feat: 实现统一输入路由抽象架构（阶段 1）
+
+### Changes
+- Server/src/input/hosts/types.ts: 新建 InputDeviceType 枚举、HostStatus 接口、平台检测工具函数
+- Server/src/input/hosts/InputHost.ts: 新建输入宿主抽象基类，定义统一 lifecycle 接口
+- Server/src/input/hosts/WindowsKeyboardHost.ts: 新建 Windows 键盘宿主实现，使用 node-key-sender
+- Server/src/input/hosts/WindowsGamepadHost.ts: 新建 Windows 游戏手柄宿主实现，使用 ViGEmBus
+- Server/src/input/hosts/index.ts: hosts 模块统一导出
+- Server/src/input/router/InputRouter.ts: 新建输入路由器，实现并行状态分发和故障隔离
+- Server/src/input/router/index.ts: router 模块统一导出
+- TASKS_CURRENT.md: 记录架构重构方案和执行进度
+
+### Impact
+- 引入策略模式 + 门面模式，解决路由逻辑分散、状态分裂、平台耦合问题
+- 为跨平台支持（Linux/Mac）奠定架构基础
+- 新架构编译通过，现有代码不受影响（阶段 1 不破坏现有代码）
+- 下一阶段将进入影子模式验证
+
 ## [2026-02-19] fix: 修复验证器集成中的安全清零触发 bug
 
 ### Changes
