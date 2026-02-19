@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-02-19] fix: 修复 E2E 测试无法结束的问题
+
+### Changes
+- appium-e2e/tests/run-e2e-pipeline.js: 修复 WebSocket 连接未关闭问题，添加进程超时强制退出机制
+- appium-e2e/tests/simple-e2e-test.js: 添加进程等待退出机制和异常处理器
+- appium-e2e/tests/run-e2e-pipeline.js: 添加 waitForProcessExit 辅助函数，确保子进程完全终止
+- appium-e2e/tests/run-e2e-pipeline.js: 添加 unhandledRejection 和 uncaughtException 处理器，防止进程挂起
+- appium-e2e/tests/run-e2e-pipeline.js: 添加 SIGINT/SIGTERM 信号处理器，实现优雅退出
+
+### Impact
+- 解决 E2E 测试完成后进程无法退出的问题
+- 改进资源清理逻辑，防止资源泄漏
+- 提高测试脚本的健壮性和可靠性
+
 ## [2026-02-19] feat: 创建跨平台 Host 空类（阶段 4-空类）
 
 ### Changes

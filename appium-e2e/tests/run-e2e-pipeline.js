@@ -35,7 +35,8 @@ const state = {
     wdDriver: null,
     wsClient: null,
     testResults: [],
-    startTime: 0
+    startTime: 0,
+    cleanupInProgress: false
 };
 
 // 工具函数
@@ -216,9 +217,8 @@ async function installApp() {
 
 async function initAppiumDriver() {
     log("初始化 Appium 驱动...", "🔧");
-    
-    const wd = require("wd");
-    state.wdDriver = wd.promiseChainRemote(CONFIG.appiumHost, CONFIG.appiumPort);
+
+    const axios = require("axios");
     
     const capabilities = {
         platformName: "Android",
@@ -231,9 +231,96 @@ async function initAppiumDriver() {
         resetKeyboard: true,
         autoGrantPermissions: true
     };
+
+    // Appium v3 REST API: POST /session
+    const sessionUrl = `http://${CONFIG.appiumHost}:${CONFIG.appiumPort}/session`;
     
-    await state.wdDriver.init(capabilities);
-    log("Appium 驱动初始化成功", "✅");
+    try {
+        const response = await axios.post(sessionUrl, {
+            capabilities: {
+                alwaysMatch: capabilities,
+                firstMatch: [{}]
+            }
+        }, {
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            },
+            timeout: 60000
+        });
+        
+        state.sessionId = response.data.sessionId;
+        state.appiumClient = axios.create({
+            baseURL: sessionUrl + '/' + state.sessionId,
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            },
+            timeout: 30000
+        });
+        
+        log(`Appium 会话已创建 (sessionId: ${state.sessionId})`, "✅");
+    } catch (error) {
+        if (error.response) {
+            log(`Appium 错误 (${error.response.status}): ${JSON.stringify(error.response.data)}`, "❌");
+        }
+        throw error;
+    }
+}
+
+// Appium 操作辅助函数
+async function appiumCommand(method, endpoint, data = null) {
+    try {
+        const response = await state.appiumClient({
+            method,
+            url: endpoint,
+            data: data ? JSON.stringify(data) : undefined,
+            transformRequest: [(data) => data], // 使用已序列化的 JSON
+            transformResponse: [(data) => {
+                try {
+                    return JSON.parse(data);
+                } catch {
+                    return data;
+                }
+            }]
+        });
+        return response.data;
+    } catch (error) {
+        if (error.response) {
+            throw new Error(`Appium 命令失败 (${method} ${endpoint}): ${JSON.stringify(error.response.data)}`);
+        }
+        throw error;
+    }
+}
+
+async function tap(x, y) {
+    await appiumCommand('POST', '/actions', {
+        actions: [{
+            type: 'pointer',
+            id: 'finger1',
+            parameters: { pointerType: 'touch' },
+            actions: [
+                { type: 'pointerMove', duration: 0, x: x, y: y },
+                { type: 'pointerDown', button: 0 },
+                { type: 'pause', duration: 100 },
+                { type: 'pointerUp', button: 0 }
+            ]
+        }]
+    });
+}
+
+async function takeScreenshot() {
+    const result = await appiumCommand('GET', '/screenshot');
+    return result.value; // base64 encoded image
+}
+
+async function quitAppium() {
+    if (state.sessionId) {
+        try {
+            await appiumCommand('DELETE', '');
+            log("Appium 会话已关闭", "✅");
+        } catch (e) {
+            log(`关闭会话时出错：${e.message}`, "⚠️");
+        }
+    }
 }
 
 async function grantPermissions() {
@@ -470,64 +557,164 @@ async function testServiceStop() {
 
 async function testBackendCommunication() {
     const WebSocket = require("ws");
-    
+
     return new Promise((resolve, reject) => {
         const ws = new WebSocket(`ws://localhost:${CONFIG.backendPort}`);
-        
+        let timeoutId = null;
+
         ws.on("open", () => {
             ws.send(JSON.stringify({ type: "ping" }));
         });
-        
+
         ws.on("message", (data) => {
             try {
                 const response = JSON.parse(data.toString());
                 if (response.type === "pong") {
                     log("后端通信正常", "✅");
+                    // 清除超时
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                    }
+                    // 先关闭 WebSocket 再 resolve
                     ws.close();
+                    state.wsClient = null;
                     resolve();
                 }
             } catch (e) {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+                ws.close();
                 reject(e);
             }
         });
-        
-        ws.on("error", reject);
-        
-        setTimeout(() => reject(new Error("后端通信超时")), 5000);
+
+        ws.on("error", (err) => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            reject(err);
+        });
+
+        ws.on("close", () => {
+            // WebSocket 已关闭
+        });
+
+        // 设置超时
+        timeoutId = setTimeout(() => {
+            ws.close();
+            reject(new Error("后端通信超时"));
+        }, 5000);
     });
 }
 
 // ==================== 阶段 3: 清理收尾 ====================
 
+// 辅助函数：等待进程完全退出
+function waitForProcessExit(process, timeout = 5000) {
+    return new Promise((resolve) => {
+        if (!process || !process.pid) {
+            resolve();
+            return;
+        }
+
+        let resolved = false;
+        const timer = setTimeout(() => {
+            if (!resolved) {
+                resolved = true;
+                // 超时后强制杀死进程
+                try {
+                    process.kill('SIGKILL');
+                    log("进程强制终止", "⚠️");
+                } catch (e) {
+                    // 进程可能已经不存在
+                }
+                resolve();
+            }
+        }, timeout);
+
+        process.on('exit', () => {
+            if (!resolved) {
+                resolved = true;
+                clearTimeout(timer);
+                resolve();
+            }
+        });
+
+        process.on('close', () => {
+            if (!resolved) {
+                resolved = true;
+                clearTimeout(timer);
+                resolve();
+            }
+        });
+    });
+}
+
 async function cleanup() {
+    // 防止重复清理
+    if (state.cleanupInProgress) {
+        log("清理已在进行中，跳过...", "⚠️");
+        return;
+    }
+    state.cleanupInProgress = true;
+
     log("开始清理阶段", "🧹");
     console.log("=".repeat(60));
-    
+
     try {
         // 停止应用
         if (CONFIG.deviceId) {
             exec(`adb -s ${CONFIG.deviceId} shell am force-stop ${CONFIG.packageName}`);
             log("应用已停止", "✅");
         }
-        
+
         // 关闭 Appium 驱动
         if (state.wdDriver) {
-            await state.wdDriver.quit();
-            log("Appium 驱动已关闭", "✅");
+            try {
+                await state.wdDriver.quit();
+                log("Appium 驱动已关闭", "✅");
+            } catch (e) {
+                log(`关闭 Appium 驱动时出错：${e.message}`, "⚠️");
+            }
+            state.wdDriver = null;
         }
-        
-        // 停止后端
+
+        // 停止后端 - 先发送 SIGTERM，等待退出，超时后 SIGKILL
         if (state.backendProcess) {
-            state.backendProcess.kill("SIGTERM");
-            log("后端已停止", "✅");
+            try {
+                state.backendProcess.kill("SIGTERM");
+                await waitForProcessExit(state.backendProcess, 3000);
+                log("后端已停止", "✅");
+            } catch (e) {
+                log(`停止后端时出错：${e.message}`, "⚠️");
+            }
+            state.backendProcess = null;
         }
-        
-        // 停止 Appium
+
+        // 停止 Appium - 先发送 SIGTERM，等待退出，超时后 SIGKILL
         if (state.appiumProcess) {
-            state.appiumProcess.kill("SIGTERM");
-            log("Appium 已停止", "✅");
+            try {
+                state.appiumProcess.kill("SIGTERM");
+                await waitForProcessExit(state.appiumProcess, 5000);
+                log("Appium 已停止", "✅");
+            } catch (e) {
+                log(`停止 Appium 时出错：${e.message}`, "⚠️");
+            }
+            state.appiumProcess = null;
         }
-        
+
+        // 关闭所有 WebSocket 连接
+        if (state.wsClient) {
+            try {
+                state.wsClient.close();
+                state.wsClient = null;
+                log("WebSocket 连接已关闭", "✅");
+            } catch (e) {
+                // 忽略错误
+            }
+        }
+
         log("清理完成", "✅");
     } catch (error) {
         log(`清理过程出错：${error.message}`, "⚠️");
@@ -593,37 +780,83 @@ function printSummary() {
 
 async function main() {
     state.startTime = Date.now();
-    
+
     log("WMMT Controller E2E 测试启动", "🚀");
     console.log("=".repeat(60));
-    
+
     try {
         // 阶段 1: 环境搭建
         const envSetup = await setupEnvironment();
         if (!envSetup) {
             throw new Error("环境搭建失败");
         }
-        
+
         // 阶段 2: 核心测试
         await runCoreTests();
-        
+
         // 阶段 3: 清理收尾
         await cleanup();
-        
+
         // 输出报告
         printSummary();
-        
+
         // 退出码
         const allPassed = state.testResults.every(r => r.passed);
-        process.exit(allPassed ? 0 : 1);
         
+        // 记录退出信息
+        log(`测试执行完成，退出码：${allPassed ? 0 : 1}`, "🏁");
+        
+        // 使用 setTimeout 确保所有 I/O 操作完成后再退出
+        setTimeout(() => {
+            log("执行 process.exit()", "🚪");
+            process.exit(allPassed ? 0 : 1);
+        }, 100);
+
     } catch (error) {
         log(`测试执行失败：${error.message}`, "❌");
         await cleanup();
         printSummary();
+        
+        // 错误情况下立即退出
+        log("执行 process.exit(1)", "🚪");
         process.exit(1);
     }
 }
 
 // 运行
 main();
+
+// 添加未处理拒绝和异常的处理器，防止进程挂起
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('未处理的 Promise 拒绝:', reason);
+    // 不退出，让主流程继续
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('未捕获的异常:', err.message);
+    // 不退出，让主流程继续
+});
+
+// 监听 SIGINT 和 SIGTERM，确保优雅退出
+let exiting = false;
+process.on('SIGINT', () => {
+    if (!exiting) {
+        exiting = true;
+        log("收到 SIGINT，开始清理...", "⚠️");
+        cleanup().then(() => {
+            log("清理完成，退出进程", "🚪");
+            process.exit(130);
+        });
+    }
+});
+
+process.on('SIGTERM', () => {
+    if (!exiting) {
+        exiting = true;
+        log("收到 SIGTERM，开始清理...", "⚠️");
+        cleanup().then(() => {
+            log("清理完成，退出进程", "🚪");
+            process.exit(143);
+        });
+    }
+});
