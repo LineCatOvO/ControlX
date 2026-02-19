@@ -2,6 +2,11 @@ package com.linecat.wmmtcontroller.platform.api;
 
 import android.content.Context;
 
+import com.linecat.wmmtcontroller.platform.android.sensor.AndroidSensorProvider;
+import com.linecat.wmmtcontroller.platform.android.touch.AndroidTouchProvider;
+import com.linecat.wmmtcontroller.platform.android.overlay.AndroidOverlayProvider;
+import com.linecat.wmmtcontroller.platform.android.input.AndroidInputProvider;
+
 /**
  * 平台提供者组合类
  * 
@@ -10,66 +15,97 @@ import android.content.Context;
  */
 public class PlatformProviders {
     
-    private final ISensorProvider sensorProvider;
-    private final ITouchProvider touchProvider;
-    private final IOverlayProvider overlayProvider;
-    private final IInputProvider inputProvider;
+    private final Context context;
+    private ISensorProvider sensorProvider;
+    private ITouchProvider touchProvider;
+    private IOverlayProvider overlayProvider;
+    private IInputProvider inputProvider;
+    
+    private boolean isInitialized = false;
     
     /**
      * 构造函数
      * @param context Android 上下文
      */
     public PlatformProviders(Context context) {
-        this.sensorProvider = createSensorProvider(context);
-        this.touchProvider = createTouchProvider(context);
-        this.overlayProvider = createOverlayProvider(context);
-        this.inputProvider = createInputProvider(context);
-    }
-    
-    /**
-     * 创建传感器提供者
-     */
-    private ISensorProvider createSensorProvider(Context context) {
-        // TODO: 实现 AndroidSensorProvider
-        return null;
-    }
-    
-    /**
-     * 创建触摸提供者
-     */
-    private ITouchProvider createTouchProvider(Context context) {
-        // TODO: 实现 AndroidTouchProvider
-        return null;
-    }
-    
-    /**
-     * 创建覆盖层提供者
-     */
-    private IOverlayProvider createOverlayProvider(Context context) {
-        // TODO: 实现 AndroidOverlayProvider
-        return null;
-    }
-    
-    /**
-     * 创建输入提供者
-     */
-    private IInputProvider createInputProvider(Context context) {
-        // TODO: 实现 AndroidInputProvider
-        return null;
+        this.context = context.getApplicationContext();
     }
     
     /**
      * 初始化所有提供者
      */
     public void initialize() {
-        // 初始化逻辑
+        if (isInitialized) {
+            return;
+        }
+        
+        // 懒加载创建提供者
+        if (sensorProvider == null) {
+            sensorProvider = createSensorProvider();
+        }
+        if (touchProvider == null) {
+            touchProvider = createTouchProvider();
+        }
+        if (overlayProvider == null) {
+            overlayProvider = createOverlayProvider();
+        }
+        if (inputProvider == null) {
+            inputProvider = createInputProvider();
+        }
+        
+        isInitialized = true;
+    }
+    
+    /**
+     * 创建传感器提供者
+     */
+    private ISensorProvider createSensorProvider() {
+        return new AndroidSensorProvider(context);
+    }
+    
+    /**
+     * 创建触摸提供者
+     */
+    private ITouchProvider createTouchProvider() {
+        return new AndroidTouchProvider(context);
+    }
+    
+    /**
+     * 创建覆盖层提供者
+     */
+    private IOverlayProvider createOverlayProvider() {
+        return new AndroidOverlayProvider(context);
+    }
+    
+    /**
+     * 创建输入提供者
+     */
+    private IInputProvider createInputProvider() {
+        return new AndroidInputProvider(context);
     }
     
     /**
      * 释放所有提供者资源
      */
     public void release() {
-        // 释放资源逻辑
+        if (!isInitialized) {
+            return;
+        }
+        
+        if (sensorProvider instanceof AndroidSensorProvider) {
+            ((AndroidSensorProvider) sensorProvider).destroy();
+        }
+        if (touchProvider instanceof AndroidTouchProvider) {
+            ((AndroidTouchProvider) touchProvider).destroy();
+        }
+        if (overlayProvider instanceof AndroidOverlayProvider) {
+            ((AndroidOverlayProvider) overlayProvider).destroy();
+        }
+        if (inputProvider instanceof AndroidInputProvider) {
+            ((AndroidInputProvider) inputProvider).destroy();
+        }
+        
+        isInitialized = false;
     }
     
     // Getter 方法
@@ -88,5 +124,13 @@ public class PlatformProviders {
     
     public IInputProvider getInputProvider() {
         return inputProvider;
+    }
+    
+    /**
+     * 检查是否已初始化
+     * @return 是否已初始化
+     */
+    public boolean isInitialized() {
+        return isInitialized;
     }
 }
