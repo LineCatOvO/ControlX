@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026-02-19] feat: 创建跨平台 Host 空类（阶段 4-空类）
+
+### Changes
+- Server/src/input/hosts/LinuxKeyboardHost.ts: 新建 Linux 键盘宿主空类（待制作，uinput 技术方案）
+- Server/src/input/hosts/LinuxGamepadHost.ts: 新建 Linux 游戏手柄宿主空类（待制作，uinput 技术方案）
+- Server/src/input/hosts/MacOSKeyboardHost.ts: 新建 MacOS 键盘宿主空类（待制作，Quartz Event Services 技术方案）
+- Server/src/input/hosts/MacOSGamepadHost.ts: 新建 MacOS 游戏手柄宿主空类（待制作，GCController 技术方案）
+- Server/src/input/hosts/index.ts: 更新导出，包含 Linux/MacOS 空类
+- TASKS_CURRENT.md: 记录阶段 4 空类创建详情和待办清单
+
+### Impact
+- 为跨平台支持奠定代码基础
+- 所有空类继承自 InputHost 抽象基类，保持架构一致性
+- 详细的 TODO 注释和技术选型说明，便于后续开发
+- 编译通过，不影响现有功能
+
 ## [2026-02-19] feat: 实现 Router-only 流量切换（阶段 3）
 
 ### Changes

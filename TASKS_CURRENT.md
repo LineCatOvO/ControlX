@@ -547,6 +547,37 @@ SHADOW_MODE=false
 
 ---
 
+### 2026-02-19 22:30 阶段 4：生态扩展（空类创建）完成 ✅
+
+**创建的文件**：
+- ✅ `src/input/hosts/LinuxKeyboardHost.ts` - Linux 键盘宿主（待制作，uinput）
+- ✅ `src/input/hosts/LinuxGamepadHost.ts` - Linux 游戏手柄宿主（待制作，uinput）
+- ✅ `src/input/hosts/MacOSKeyboardHost.ts` - MacOS 键盘宿主（待制作，Quartz）
+- ✅ `src/input/hosts/MacOSGamepadHost.ts` - MacOS 游戏手柄宿主（待制作，GCController）
+- ✅ `src/input/hosts/index.ts` - 更新导出，包含 Linux/MacOS 空类
+
+**核心功能**：
+- 所有空类均继承自 `InputHost` 抽象基类
+- 实现了完整的 lifecycle 接口（initialize/applyState/reset/destroy）
+- 详细的 TODO 注释，标注待实现功能
+- 技术选型说明和依赖安装指南
+
+**待实现功能清单**：
+
+| 平台 | 设备 | 技术方案 | 状态 |
+|------|------|----------|------|
+| Linux | Keyboard | uinput | ⏳ TODO |
+| Linux | Gamepad | uinput | ⏳ TODO |
+| MacOS | Keyboard | Quartz Event Services | ⏳ TODO |
+| MacOS | Gamepad | GCController | ⏳ TODO |
+
+**下一步**：
+- 阶段 4 剩余工作：实现 Linux/MacOS 具体功能
+- 需要安装对应平台的依赖库
+- 需要对应平台的测试环境
+
+---
+
 ## 待办事项
 
 - [ ] 阶段 1：地基搭建
