@@ -246,16 +246,19 @@ async function initAppiumDriver() {
 
     const axios = require("axios");
 
+    // Appium 3.x 要求非标准能力需要 vendor 前缀
+    // https://github.com/appium/appium/blob/master/docs/en/writing-running-appium/caps.md
     const capabilities = {
         platformName: "Android",
-        automationName: "UiAutomator2",
-        deviceName: CONFIG.deviceId,
-        appPackage: CONFIG.packageName,
-        appActivity: CONFIG.mainActivity,
-        noReset: false,
-        unicodeKeyboard: true,
-        resetKeyboard: true,
-        autoGrantPermissions: true
+        // UiAutomator2 驱动需要 appium: 前缀
+        "appium:automationName": "UiAutomator2",
+        "appium:deviceName": CONFIG.deviceId,
+        "appium:appPackage": CONFIG.packageName,
+        "appium:appActivity": CONFIG.mainActivity,
+        "appium:noReset": false,
+        "appium:unicodeKeyboard": true,
+        "appium:resetKeyboard": true,
+        "appium:autoGrantPermissions": true
     };
 
     // Appium v3 REST API: POST /session
@@ -289,7 +292,7 @@ async function initAppiumDriver() {
                 alwaysMatch: capabilities,
                 firstMatch: [{}]
             }
-        })}`, "📝");
+        }, null, 2)}`, "📝");
         
         const response = await axios.post(sessionUrl, {
             capabilities: {
