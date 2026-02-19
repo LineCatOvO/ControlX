@@ -15,6 +15,50 @@
 
 ## ✅ 测试任务完成状态（2026-02-19 更新）
 
+### 架构重构任务完成（2026-02-19 更新）✅
+
+#### 阶段 1：地基搭建 ✅ 已完成
+- [x] 创建 src/input/hosts/ 目录
+- [x] 创建 src/input/router/ 目录
+- [x] 实现 InputHost.ts 抽象基类（策略模式）
+- [x] 实现 InputDeviceType 枚举
+- [x] 实现 InputRouter.ts（门面模式）
+- [x] 实现 WindowsKeyboardHost.ts（node-key-sender）
+- [x] 实现 WindowsGamepadHost.ts（ViGEmBus）
+- [x] 创建 hosts/index.ts 统一导出
+- [x] 创建 router/index.ts 统一导出
+- [x] TypeScript 编译验证通过
+
+#### 阶段 2：影子模式 ✅ 已完成
+- [x] 创建 ShadowModeManager.ts（501 行）
+- [x] 实现双写机制（同时调用 Executor 和 Router）
+- [x] 实现一致性比对（状态/耗时/错误）
+- [x] 实现自动降级保护（连续 5 次失败切换）
+- [x] 创建 ShadowModeExecutor.ts（装饰器模式）
+- [x] 创建 initShadowMode.ts 辅助函数
+- [x] 创建 executor_shadow.ts 集成模块
+- [x] 修改 applyScheduler.ts 支持影子模式
+- [x] 修改 app.ts 添加初始化调用
+- [x] 环境变量控制：SHADOW_MODE=true
+
+#### 阶段 3：流量切换 ✅ 已完成
+- [x] 创建 RouterOnlyExecutor.ts（适配器模式）
+- [x] 实现 Router-only 执行路径
+- [x] 实现自动降级保护（连续 3 次失败切换）
+- [x] 修改 applyScheduler.ts 支持 Router-only 模式
+- [x] 修改 app.ts 添加初始化调用
+- [x] 环境变量控制：ROUTER_ONLY=true
+- [x] 三种模式优先级：Router-only > Shadow > Executor
+
+#### 阶段 4：生态扩展（空类） ✅ 已完成
+- [x] 创建 LinuxKeyboardHost.ts 空类（uinput 技术方案）
+- [x] 创建 LinuxGamepadHost.ts 空类（uinput 技术方案）
+- [x] 创建 MacOSKeyboardHost.ts 空类（Quartz 技术方案）
+- [x] 创建 MacOSGamepadHost.ts 空类（GCController 技术方案）
+- [x] 更新 hosts/index.ts 导出
+- [ ] 实现 Linux 平台具体功能（待制作，低优先级）
+- [ ] 实现 MacOS 平台具体功能（待制作，低优先级）
+
 ### 单元测试完成
 
 | 模块 | 测试文件 | 测试用例数 | 通过率 | 状态 |
@@ -487,6 +531,56 @@
 ### 源代码注释英文化
 - [ ] 将 Server/src/ 目录下 44 个 TypeScript 文件的中文注释替换为英文
 - 详见：`TASKS_CURRENT.md`（执行期间记录）
+
+---
+
+## ✅ 架构重构任务完成总结（2026-02-19）
+
+### 重构目标
+解决路由逻辑分散、状态分裂、平台耦合问题，为跨平台支持奠定基础。
+
+### 重构阶段
+
+| 阶段 | 名称 | 状态 | 文件数 | 代码行数 | 完成时间 |
+|------|------|------|--------|----------|----------|
+| 阶段 1 | 地基搭建 | ✅ 完成 | 7 | 1,316 | 2026-02-19 14:45 |
+| 阶段 2 | 影子模式 | ✅ 完成 | 6 | 1,135 | 2026-02-19 21:00 |
+| 阶段 3 | 流量切换 | ✅ 完成 | 1 | 359 | 2026-02-19 22:00 |
+| 阶段 4 | 生态扩展（空类） | ✅ 完成 | 4 | 811 | 2026-02-19 22:30 |
+
+### 设计模式应用
+
+| 模式 | 应用场景 | 价值 |
+|------|----------|------|
+| **策略模式** | InputHost 抽象 + 具体实现 | 隔离平台差异，易于扩展 |
+| **门面模式** | InputRouter 统一接口 | 简化调用方，隐藏复杂性 |
+| **装饰器模式** | ShadowModeExecutor | 透明添加影子模式功能 |
+| **适配器模式** | RouterOnlyExecutor | 将 Router 适配为 ExecutorManager 接口 |
+
+### 三种运行模式
+
+```bash
+# 普通模式（默认）- 使用旧 Executor
+# 无环境变量
+
+# 影子模式 - 双写验证
+SHADOW_MODE=true
+
+# Router-only 模式 - 直接使用 Router
+ROUTER_ONLY=true
+```
+
+### 待制作任务（低优先级）
+
+- [ ] 实现 LinuxKeyboardHost（uinput）
+- [ ] 实现 LinuxGamepadHost（uinput）
+- [ ] 实现 MacOSKeyboardHost（Quartz）
+- [ ] 实现 MacOSGamepadHost（GCController）
+
+### 相关文档
+
+- [TASKS_CURRENT.md](TASKS_CURRENT.md) - 当前任务执行记录
+- [CHANGELOG.md](CHANGELOG.md) - 架构重构变更日志
 
 ---
 
