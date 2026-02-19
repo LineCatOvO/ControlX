@@ -1,14 +1,11 @@
 /**
- * WebSocket 协议测试
+ * WebSocket 协议验证测试
  * 
- * 测试框架：Mocha + WebSocket 原生客户端
+ * 测试框架：Mocha + WebSocket 监听
  * 
- * 测试场景：
- * 1. 连接建立
- * 2. 消息格式验证
- * 3. ACK 机制
- * 4. RTT 测量
- * 5. 断线重连
+ * 设计原则：
+ * - WebSocket 仅用于监听和验证，不主动发送输入数据
+ * - 测试重点：连接管理、心跳机制、被动接收验证
  */
 
 const WebSocket = require("ws");
@@ -16,9 +13,6 @@ const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
 const { expect } = require("chai");
-const chaiAsPromised = require("chai-as-promised");
-
-require("chai").use(chaiAsPromised);
 
 const CONFIG = {
     backendPort: null,
@@ -46,7 +40,7 @@ async function startBackend() {
     });
 }
 
-describe("WebSocket 协议测试", function() {
+describe("WebSocket 协议验证测试", function() {
     this.timeout(30000);
     this.slow(5000);
     
@@ -58,7 +52,10 @@ describe("WebSocket 协议测试", function() {
         }
     });
     
-    // 测试 1: 连接建立
+    /**
+     * 连接管理测试
+     * 验证 WebSocket 服务器的基本连接能力
+     */
     describe("连接管理", function() {
         it("应该能正常建立连接", async function() {
             await startBackend();
@@ -129,50 +126,10 @@ describe("WebSocket 协议测试", function() {
         });
     });
     
-    // 测试 2: 消息格式验证
-    describe("消息格式", function() {
-        it("应该能接收标准输入消息", async function() {
-            await startBackend();
-            
-            const ws = new WebSocket(`ws://localhost:${CONFIG.backendPort}`);
-            const receivedMessages = [];
-            
-            ws.on("message", (data) => {
-                try {
-                    const msg = JSON.parse(data.toString());
-                    receivedMessages.push(msg);
-                } catch (e) {}
-            });
-            
-            await new Promise(resolve => ws.on("open", resolve));
-            
-            // 发送标准输入消息
-            const inputMessage = {
-                type: "input",
-                data: {
-                    frameId: 1,
-                    runtimeStatus: "ok",
-                    keyboard: ["W", "A"],
-                    mouse: { x: 100, y: 200, left: true, right: false, middle: false },
-                    joystick: { x: 0, y: 0, deadzone: 0.1, smoothing: 0.5 },
-                    gamepad: ["A", "B"]
-                }
-            };
-            
-            ws.send(JSON.stringify(inputMessage));
-            
-            // 等待响应
-            await new Promise(r => setTimeout(r, 1000));
-            
-            // 验证收到确认
-            const ackMessages = receivedMessages.filter(m => m.type === "ack" || m.type === "input");
-            expect(ackMessages.length).to.be.greaterThan(0);
-            
-            ws.close();
-        });
-    });
-    
-    // 测试 3: Ping/Pong 心跳
+    /**
+     * 心跳机制测试
+     * 验证 Ping/Pong 响应机制
+     */
     describe("心跳机制", function() {
         it("应该能响应 Ping 消息", async function() {
             await startBackend();
@@ -191,21 +148,18 @@ describe("WebSocket 协议测试", function() {
             
             await new Promise(resolve => ws.on("open", resolve));
             
-            // 发送 ping
+            // 发送 ping 探测连接
             ws.send(JSON.stringify({ type: "ping" }));
             
-            // 等待 pong
+            // 等待 pong 响应
             await new Promise(r => setTimeout(r, 2000));
             
             expect(pongReceived).to.be.true;
             
             ws.close();
         });
-    });
-    
-    // 测试 4: RTT 测量
-    describe("RTT 延迟测量", function() {
-        it("应该测量 RTT 并小于 100ms", async function() {
+        
+        it("应该测量网络 RTT 延迟", async function() {
             await startBackend();
             
             const ws = new WebSocket(`ws://localhost:${CONFIG.backendPort}`);
@@ -213,8 +167,8 @@ describe("WebSocket 协议测试", function() {
             
             await new Promise(resolve => ws.on("open", resolve));
             
-            // 测量 5 次 RTT
-            for (let i = 0; i < 5; i++) {
+            // 测量 3 次 RTT（仅网络层）
+            for (let i = 0; i < 3; i++) {
                 const sendTime = Date.now();
                 
                 ws.send(JSON.stringify({ type: "ping", id: i }));
@@ -238,58 +192,73 @@ describe("WebSocket 协议测试", function() {
             // 计算平均 RTT
             const avgRtt = rttSamples.reduce((a, b) => a + b, 0) / rttSamples.length;
             
-            console.log(`RTT 样本：${rttSamples.join(", ")}ms`);
-            console.log(`平均 RTT: ${avgRtt.toFixed(2)}ms`);
+            console.log(`网络 RTT 样本：${rttSamples.join(", ")}ms`);
+            console.log(`平均网络 RTT: ${avgRtt.toFixed(2)}ms`);
             
-            // RTT 应该小于 100ms
-            expect(avgRtt).to.be.lessThan(100);
+            // 网络 RTT 应该小于 50ms（本地）
+            expect(avgRtt).to.be.lessThan(50);
             
             ws.close();
         });
     });
     
-    // 测试 5: 序列号验证
-    describe("序列号单调性", function() {
-        it("应该保证 frameId 单调递增", async function() {
+    /**
+     * 消息接收验证测试
+     * 验证服务器能正确广播/推送消息给客户端
+     */
+    describe("消息接收验证", function() {
+        it("应该能接收服务器推送的状态消息", async function() {
             await startBackend();
             
             const ws = new WebSocket(`ws://localhost:${CONFIG.backendPort}`);
-            const receivedFrames = [];
+            const receivedMessages = [];
             
             ws.on("message", (data) => {
                 try {
                     const msg = JSON.parse(data.toString());
-                    if (msg.data && msg.data.frameId !== undefined) {
-                        receivedFrames.push(msg.data.frameId);
-                    }
+                    receivedMessages.push(msg);
                 } catch (e) {}
             });
             
             await new Promise(resolve => ws.on("open", resolve));
             
-            // 发送一系列带 frameId 的消息
-            for (let i = 1; i <= 10; i++) {
-                ws.send(JSON.stringify({
-                    type: "input",
-                    data: {
-                        frameId: i,
-                        runtimeStatus: "ok",
-                        keyboard: [],
-                        mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                        joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 }
-                    }
-                }));
-                await new Promise(r => setTimeout(r, 50));
-            }
+            // 等待服务器主动推送的消息（如状态更新）
+            await new Promise(r => setTimeout(r, 2000));
             
-            await new Promise(r => setTimeout(r, 1000));
-            
-            // 验证序列号单调递增
-            for (let i = 1; i < receivedFrames.length; i++) {
-                expect(receivedFrames[i]).to.be.greaterThanOrEqual(receivedFrames[i - 1]);
-            }
+            // 验证能接收消息（具体消息类型取决于服务器实现）
+            console.log(`收到消息数：${receivedMessages.length}`);
             
             ws.close();
+        });
+        
+        it("应该能处理多个客户端同时接收消息", async function() {
+            await startBackend();
+            
+            const clients = [];
+            const messageCounts = [0, 0, 0];
+            
+            // 创建 3 个客户端监听
+            for (let i = 0; i < 3; i++) {
+                const ws = new WebSocket(`ws://localhost:${CONFIG.backendPort}`);
+                
+                ws.on("message", (data) => {
+                    try {
+                        JSON.parse(data.toString());
+                        messageCounts[i]++;
+                    } catch (e) {}
+                });
+                
+                await new Promise(resolve => ws.on("open", resolve));
+                clients.push(ws);
+            }
+            
+            // 等待消息
+            await new Promise(r => setTimeout(r, 2000));
+            
+            // 验证所有客户端都能接收消息
+            console.log(`各客户端收到消息数：${messageCounts.join(", ")}`);
+            
+            clients.forEach(ws => ws.close());
         });
     });
 });

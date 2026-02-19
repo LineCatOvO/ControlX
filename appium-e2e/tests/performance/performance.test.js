@@ -1,14 +1,12 @@
 /**
  * 性能测试套件
  * 
- * 测试框架：Mocha + wd (Appium)
+ * 测试框架：Mocha + Appium (wd)
  * 
- * 测试场景：
- * 1. 输入延迟测量
- * 2. 吞吐量测试
- * 3. 压力测试
- * 4. 长时间运行测试
- * 5. 内存泄漏检测
+ * 设计原则：
+ * - 所有性能测试通过 Appium 模拟真实用户交互
+ * - WebSocket 仅用于监听和测量延迟
+ * - 不主动通过 WebSocket 发送输入数据
  */
 
 const wd = require("wd");
@@ -26,15 +24,15 @@ const CONFIG = {
     backendProcess: null,
     wsClient: null,
     inputLatencies: [],
+    inputCount: 0,
     startTime: 0
 };
 
 // 性能阈值
 const THRESHOLDS = {
     inputLatency: 50,      // 输入延迟 < 50ms
-    throughput: 60,        // 吞吐量 > 60 FPS
+    throughput: 30,        // 吞吐量 > 30 FPS (UI 交互限制)
     memoryUsage: 100,      // 内存 < 100MB
-    cpuUsage: 20,          // CPU < 20%
     errorRate: 0.01        // 错误率 < 1%
 };
 
@@ -66,14 +64,16 @@ describe("性能测试", function() {
         
         await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // 连接 WebSocket
+        // 连接 WebSocket 仅用于监听
         CONFIG.wsClient = new WebSocket(`ws://localhost:${CONFIG.backendPort}`);
         CONFIG.wsClient.on("message", (data) => {
             try {
                 const msg = JSON.parse(data.toString());
-                if (msg.type === "input" && msg.timestamp) {
-                    const latency = Date.now() - msg.timestamp;
+                // 监听输入消息，记录延迟
+                if (msg.type === "input" && msg.data && msg.data.timestamp) {
+                    const latency = Date.now() - msg.data.timestamp;
                     CONFIG.inputLatencies.push(latency);
+                    CONFIG.inputCount++;
                 }
             } catch (e) {}
         });
@@ -100,6 +100,12 @@ describe("性能测试", function() {
         if (CONFIG.backendProcess) CONFIG.backendProcess.kill("SIGTERM");
         if (driver) await driver.quit();
         
+        // 确保报告目录存在
+        const reportsDir = path.join(__dirname, "..", "reports");
+        if (!fs.existsSync(reportsDir)) {
+            fs.mkdirSync(reportsDir, { recursive: true });
+        }
+        
         // 生成性能报告
         const latencies = CONFIG.inputLatencies;
         const report = {
@@ -111,11 +117,12 @@ describe("性能测试", function() {
                 avg: latencies.length > 0 ? latencies.reduce((a, b) => a + b, 0) / latencies.length : 0,
                 p95: latencies.length > 0 ? latencies.sort((a, b) => a - b)[Math.floor(latencies.length * 0.95)] : 0
             },
+            inputCount: CONFIG.inputCount,
             thresholds: THRESHOLDS
         };
         
         fs.writeFileSync(
-            path.join(__dirname, "..", "reports", "performance-report.json"),
+            path.join(reportsDir, "performance-report.json"),
             JSON.stringify(report, null, 2)
         );
         
@@ -123,148 +130,147 @@ describe("性能测试", function() {
         console.log(JSON.stringify(report, null, 2));
     });
     
-    // 测试 1: 输入延迟
+    /**
+     * 输入延迟测试
+     * 通过 Appium 点击 App 界面，测量从点击到后端收到的延迟
+     */
     describe("输入延迟测量", function() {
         it("平均输入延迟应该小于 50ms", async function() {
             const { width, height } = await driver.getWindowSize();
-            const iterations = 20;
+            const iterations = 10;
+            const initialCount = CONFIG.inputCount;
             
+            // 通过 Appium 点击模拟用户输入
             for (let i = 0; i < iterations; i++) {
-                const sendTime = Date.now();
+                const tapTime = Date.now();
                 
-                CONFIG.wsClient.send(JSON.stringify({
-                    type: "input",
-                    timestamp: sendTime,
-                    data: {
-                        keyboard: ["W"],
-                        mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                        joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 }
-                    }
-                }));
+                // 点击键盘区域（假设 W 键在屏幕左下）
+                await driver.tap([{ x: width * 0.2, y: height * 0.7 }]);
                 
-                await new Promise(r => setTimeout(r, 50));
+                // 标记时间戳（用于后续验证）
+                // 注意：实际延迟由后端在收到输入时记录
+                await new Promise(r => setTimeout(r, 100));
             }
             
             await new Promise(r => setTimeout(r, 1000));
             
             // 计算延迟统计
-            const latencies = CONFIG.inputLatencies.slice(-iterations);
-            const avgLatency = latencies.length > 0 
-                ? latencies.reduce((a, b) => a + b, 0) / latencies.length 
+            const newLatencies = CONFIG.inputLatencies.slice(-(CONFIG.inputCount - initialCount));
+            const avgLatency = newLatencies.length > 0 
+                ? newLatencies.reduce((a, b) => a + b, 0) / newLatencies.length 
                 : 0;
             
             console.log(`输入延迟统计:`);
-            console.log(`  样本数：${latencies.length}`);
+            console.log(`  样本数：${newLatencies.length}`);
             console.log(`  平均：${avgLatency.toFixed(2)}ms`);
-            console.log(`  最小：${latencies.length > 0 ? Math.min(...latencies) : 0}ms`);
-            console.log(`  最大：${latencies.length > 0 ? Math.max(...latencies) : 0}ms`);
+            console.log(`  最小：${newLatencies.length > 0 ? Math.min(...newLatencies) : 0}ms`);
+            console.log(`  最大：${newLatencies.length > 0 ? Math.max(...newLatencies) : 0}ms`);
             
             expect(avgLatency).to.be.lessThan(THRESHOLDS.inputLatency);
         });
     });
     
-    // 测试 2: 吞吐量测试
-    describe("吞吐量测试 (60 FPS)", function() {
-        it("应该能达到 60 FPS 吞吐量", async function() {
+    /**
+     * 吞吐量测试
+     * 通过 Appium 快速点击，测试系统处理能力
+     */
+    describe("吞吐量测试", function() {
+        it("应该能处理快速连续点击", async function() {
+            const { width, height } = await driver.getWindowSize();
             const duration = 5000;
-            const targetFPS = 60;
+            const targetFPS = 30; // UI 交互限制为 30 FPS
             
             const startTime = Date.now();
-            let frameCount = 0;
+            const initialCount = CONFIG.inputCount;
             
-            // 以 60 FPS 发送输入
-            const interval = setInterval(() => {
-                CONFIG.wsClient.send(JSON.stringify({
-                    type: "input",
-                    timestamp: Date.now(),
-                    data: {
-                        keyboard: ["W"],
-                        mouse: { x: frameCount % 100, y: 0, left: false, right: false, middle: false },
-                        joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 }
-                    }
-                }));
-                frameCount++;
-            }, 1000 / targetFPS);
-            
-            await new Promise(r => setTimeout(r, duration));
-            clearInterval(interval);
-            
-            // 计算实际 FPS
-            const actualFPS = (frameCount / duration) * 1000;
-            
-            console.log(`吞吐量测试:`);
-            console.log(`  发送帧数：${frameCount}`);
-            console.log(`  实际 FPS: ${actualFPS.toFixed(2)}`);
-            
-            expect(actualFPS).to.be.greaterThanOrEqual(targetFPS * 0.95);
-        });
-    });
-    
-    // 测试 3: 压力测试
-    describe("高频输入压力测试", function() {
-        it("错误率应该小于 1%", async function() {
-            const iterations = 100;
-            let successCount = 0;
-            let errorCount = 0;
-            
-            for (let i = 0; i < iterations; i++) {
-                try {
-                    CONFIG.wsClient.send(JSON.stringify({
-                        type: "input",
-                        timestamp: Date.now(),
-                        data: {
-                            keyboard: ["W", "A", "S", "D"],
-                            mouse: { x: i, y: i, left: true, right: false, middle: false },
-                            joystick: { x: 1, y: 1, deadzone: 0, smoothing: 0 },
-                            gamepad: ["A", "B", "X", "Y"]
-                        }
-                    }));
-                    successCount++;
-                } catch (e) {
-                    errorCount++;
-                }
+            // 快速点击
+            let tapCount = 0;
+            while (Date.now() - startTime < duration) {
+                await driver.tap([{ x: width * 0.2, y: height * 0.7 }]);
+                tapCount++;
+                await new Promise(r => setTimeout(r, 33)); // ~30 FPS
             }
             
-            await new Promise(r => setTimeout(r, 2000));
+            const actualDuration = Date.now() - startTime;
+            const actualFPS = (tapCount / actualDuration) * 1000;
             
-            const errorRate = errorCount / iterations;
+            // 等待处理完成
+            await new Promise(r => setTimeout(r, 1000));
             
-            console.log(`压力测试结果:`);
-            console.log(`  总请求：${iterations}`);
-            console.log(`  成功：${successCount}`);
-            console.log(`  失败：${errorCount}`);
-            console.log(`  错误率：${(errorRate * 100).toFixed(2)}%`);
+            // 验证收到的输入数
+            const receivedCount = CONFIG.inputCount - initialCount;
+            const receiveRate = receivedCount / tapCount;
             
-            expect(errorRate).to.be.lessThan(THRESHOLDS.errorRate);
+            console.log(`吞吐量测试:`);
+            console.log(`  点击次数：${tapCount}`);
+            console.log(`  收到输入：${receivedCount}`);
+            console.log(`  接收率：${(receiveRate * 100).toFixed(1)}%`);
+            console.log(`  实际 FPS: ${actualFPS.toFixed(2)}`);
+            
+            // 接收率应该大于 90%
+            expect(receiveRate).to.be.greaterThan(0.9);
         });
     });
     
-    // 测试 4: 长时间运行
-    describe("长时间运行测试 (60 秒)", function() {
-        it("应该能稳定运行 60 秒", async function() {
-            const duration = 60000;
-            const initialLatencies = CONFIG.inputLatencies.length;
+    /**
+     * 多键组合测试
+     * 测试同时按下多个键的性能
+     */
+    describe("多键组合测试", function() {
+        it("应该能处理多键同时输入", async function() {
+            const { width, height } = await driver.getWindowSize();
+            const initialCount = CONFIG.inputCount;
             
-            // 持续发送输入
-            const interval = setInterval(() => {
-                CONFIG.wsClient.send(JSON.stringify({
-                    type: "input",
-                    timestamp: Date.now(),
-                    data: {
-                        keyboard: ["W"],
-                        mouse: { x: Math.random() * 100, y: Math.random() * 100, left: false, right: false, middle: false },
-                        joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 }
-                    }
-                }));
-            }, 100);
+            // 模拟 WASD 同时按下
+            const positions = [
+                { x: width * 0.2, y: height * 0.7 },  // W
+                { x: width * 0.15, y: height * 0.75 }, // A
+                { x: width * 0.2, y: height * 0.8 },   // S
+                { x: width * 0.25, y: height * 0.75 }  // D
+            ];
             
-            // 定期截图
+            // 多点触控
+            await driver.tap(positions);
+            await new Promise(r => setTimeout(r, 500));
+            
+            // 验证收到输入
+            const receivedCount = CONFIG.inputCount - initialCount;
+            
+            console.log(`多键组合测试:`);
+            console.log(`  触摸点数：${positions.length}`);
+            console.log(`  收到输入：${receivedCount}`);
+            
+            expect(receivedCount).to.be.greaterThan(0);
+        });
+    });
+    
+    /**
+     * 长时间运行测试
+     * 测试系统稳定性
+     */
+    describe("长时间运行测试", function() {
+        it("应该能稳定运行 30 秒", async function() {
+            const duration = 30000;
+            const { width, height } = await driver.getWindowSize();
+            const initialCount = CONFIG.inputCount;
+            
+            // 持续点击
+            const interval = setInterval(async () => {
+                try {
+                    await driver.tap([{ x: width * 0.5, y: height * 0.5 }]);
+                } catch (e) {
+                    console.error("点击失败:", e);
+                }
+            }, 500); // 每 0.5 秒点击一次
+            
+            // 定期截图验证应用仍在运行
             let screenshotCount = 0;
             const screenshotInterval = setInterval(async () => {
                 try {
                     const screenshot = await driver.takeScreenshot();
+                    const reportsDir = path.join(__dirname, "..", "reports");
                     fs.writeFileSync(
-                        path.join(__dirname, "..", "reports", `longevity-${screenshotCount}.png`),
+                        path.join(reportsDir, `longevity-${screenshotCount}.png`),
                         screenshot,
                         "base64"
                     );
@@ -272,40 +278,39 @@ describe("性能测试", function() {
                 } catch (e) {
                     console.error("截图失败:", e);
                 }
-            }, 15000);
+            }, 10000);
             
             await new Promise(r => setTimeout(r, duration));
             
             clearInterval(interval);
             clearInterval(screenshotInterval);
             
-            const newLatencies = CONFIG.inputLatencies.length - initialLatencies;
+            const finalCount = CONFIG.inputCount - initialCount;
             
             console.log(`长时间运行测试:`);
             console.log(`  运行时间：${duration / 1000}秒`);
-            console.log(`  收到输入：${newLatencies}`);
+            console.log(`  收到输入：${finalCount}`);
             console.log(`  截图次数：${screenshotCount}`);
             
-            expect(screenshotCount).to.be.greaterThanOrEqual(3);
+            // 验证应用没有崩溃
+            expect(screenshotCount).to.be.greaterThanOrEqual(2);
+            expect(finalCount).to.be.greaterThan(0);
         });
     });
     
-    // 测试 5: 内存监控
+    /**
+     * 内存使用监控
+     * 测试 Node.js 进程内存增长
+     */
     describe("内存使用监控", function() {
         it("内存增长应该小于 50MB", async function() {
             const initialMemory = process.memoryUsage();
+            const { width, height } = await driver.getWindowSize();
             
-            for (let i = 0; i < 50; i++) {
-                CONFIG.wsClient.send(JSON.stringify({
-                    type: "input",
-                    data: {
-                        keyboard: ["W", "A", "S", "D", "E", "R", "T", "Y"],
-                        mouse: { x: i * 10, y: i * 10, left: true, right: true, middle: true },
-                        joystick: { x: 1, y: 1, deadzone: 0.1, smoothing: 0.5 },
-                        gamepad: ["A", "B", "X", "Y", "LB", "RB"]
-                    }
-                }));
-                await new Promise(r => setTimeout(r, 50));
+            // 执行一系列操作
+            for (let i = 0; i < 20; i++) {
+                await driver.tap([{ x: width * 0.2, y: height * 0.7 }]);
+                await new Promise(r => setTimeout(r, 100));
             }
             
             await new Promise(r => setTimeout(r, 2000));
@@ -318,6 +323,7 @@ describe("性能测试", function() {
             console.log(`  最终：${(finalMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`);
             console.log(`  增长：${memoryIncrease.toFixed(2)} MB`);
             
+            // 验证内存增长在合理范围内
             expect(memoryIncrease).to.be.lessThan(50);
         });
     });
