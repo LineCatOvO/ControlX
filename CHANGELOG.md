@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-02-19] test: 添加游戏手柄 ViGEmBus 测试跳过机制
+
+### Changes
+- Server/tests/common/vigemDetector.ts: 新建 ViGEmBus 检测工具，提供平台检测、可用性检测、跳过原因说明
+- Server/tests/cases/gamepad.test.ts: 新建游戏手柄集成测试，使用 test.skip() 在非 Windows 环境下自动跳过相关测试
+- TASKS.md: 更新任务 1.6 为完成状态
+- TASKS_CURRENT.md: 记录手柄测试跳过机制实现详情和测试结果
+
+### Impact
+- 在 Linux/macOS 等非 Windows 环境下运行测试时，手柄相关测试会自动跳过并显示清晰原因
+- 避免了在没有 ViGEmBus 驱动的环境下测试失败
+- 测试报告清晰显示 7 个跳过、10 个通过
+
 ## [2026-02-19] feat: 实现游戏手柄 ViGEmBus 检测和降级方案
 
 ### Changes

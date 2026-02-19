@@ -168,38 +168,47 @@ Game
 - [x] 将 vigemclient 添加为依赖
 - [x] 验证代码编译通过（游戏手柄相关）
 - [x] 更新 TASKS.md 任务状态
+- [x] 在手柄相关测试中引入 jest.skip()，用于在非 Windows/无 ViGEmBus 环境下跳过测试 ✅
 - [ ] 在 Windows 环境下测试 ViGEmBus 功能
-- [ ] 在手柄相关测试中引入 jest.skip()，用于在非 Windows/无 ViGEmBus 环境下跳过测试
 
-## 新增任务：手柄测试跳过机制
+## 新增任务：手柄测试跳过机制 ✅
+
+**完成时间**: 2026-02-19
 
 **目标**：在游戏手柄测试中使用 `test.skip()` 或运行时检测，使得在没有 ViGEmBus 的环境下自动跳过相关测试
 
 **实现方案**：
-1. 创建测试工具函数检测 ViGEmBus 可用性
-2. 在手柄测试中使用 `test.skip()` 或条件跳过
-3. 添加清晰的跳过原因说明
+1. ✅ 创建测试工具函数检测 ViGEmBus 可用性
+2. ✅ 在手柄测试中使用 `test.skip()` 或条件跳过
+3. ✅ 添加清晰的跳过原因说明
 
-**示例代码**：
-```typescript
-// tests/utils/vigemDetector.ts
-export function detectViGEmBus(): boolean {
-    return process.platform === 'win32';
-}
+**创建的文件**：
+- `tests/common/vigemDetector.ts` - ViGEmBus 检测工具
+- `tests/cases/gamepad.test.ts` - 游戏手柄集成测试
 
-// tests/cases/gamepad.test.ts
-import { detectViGEmBus } from '../utils/vigemDetector';
-
-describe('Gamepad ViGEmBus Tests', () => {
-    if (!detectViGEmBus()) {
-        test.skip('should connect to ViGEmBus - requires Windows with ViGEmBus driver', () => {
-            // 测试逻辑
-        });
-        return;
-    }
-
-    test('should connect to ViGEmBus', () => {
-        // 实际测试逻辑
-    });
-});
+**测试结果**（Linux 环境）：
 ```
+Test Suites: 1 passed, 1 total
+Tests:       7 skipped, 10 passed, 17 total
+```
+
+**跳过测试列表**：
+- `should detect availability - SKIPPED: ViGEmBus not available`
+- `should connect to virtual controller - SKIPPED: ViGEmBus not available`
+- `should apply state - SKIPPED: ViGEmBus not available`
+- `should reset state - SKIPPED: ViGEmBus not available`
+- `should initialize successfully - SKIPPED: ViGEmBus not available`
+- `should apply gamepad state - SKIPPED: ViGEmBus not available`
+- `should reset gamepad state - SKIPPED: ViGEmBus not available`
+
+**通过测试列表**：
+- `should detect platform correctly`
+- `should detect ViGEmBus availability`
+- `should provide reason when ViGEmBus is unavailable`
+- `should handle disconnect gracefully when not connected`
+- `should handle applyState gracefully when not initialized`
+- `should handle reset gracefully when not initialized`
+- `should handle cleanup gracefully when not initialized`
+- `should return enabled status after initialize`
+- `should handle ViGEmBus unavailable gracefully`
+- `should provide meaningful error messages`
