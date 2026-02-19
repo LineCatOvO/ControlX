@@ -6,10 +6,10 @@
 
 | 优先级 | 任务数 | 子任务数 | 预计工作量 |
 |--------|--------|----------|------------|
-| 🔴 P0 | 4 | 40+ | 2-3 周 |
-| 🟡 P1 | 3 | 20+ | 1-2 周 |
-| 🟢 P2 | 3 | 20+ | 1 周 |
-| **总计** | **10** | **80+** | **4-6 周** |
+| 🔴 P0 | 6 | 60+ | 3-4 周 |
+| 🟡 P1 | 4 | 25+ | 1-2 周 |
+| 🟢 P2 | 4 | 25+ | 1 周 |
+| **总计** | **14** | **110+** | **5-7 周** |
 
 ---
 
@@ -523,6 +523,278 @@
   - （可选）低频状态快照（防长期漂移）
 
 这样既能保证最低输入延迟，又能维持系统稳定性与状态一致性，符合远程控制场景的核心需求。
+
+---
+
+## 🔵 长期任务
+
+### 源代码注释英文化
+- [ ] 将 Server/src/ 目录下 44 个 TypeScript 文件的中文注释替换为英文
+- 详见：`TASKS_CURRENT.md`（执行期间记录）
+
+---
+
+## ✅ 架构重构任务完成总结（2026-02-19）
+
+### 重构目标
+解决路由逻辑分散、状态分裂、平台耦合问题，为跨平台支持奠定基础。
+
+### 重构阶段
+
+| 阶段 | 名称 | 状态 | 文件数 | 代码行数 | 完成时间 |
+|------|------|------|--------|----------|----------|
+| 阶段 1 | 地基搭建 | ✅ 完成 | 7 | 1,316 | 2026-02-19 14:45 |
+| 阶段 2 | 影子模式 | ✅ 完成 | 6 | 1,135 | 2026-02-19 21:00 |
+| 阶段 3 | 流量切换 | ✅ 完成 | 1 | 359 | 2026-02-19 22:00 |
+| 阶段 4 | 生态扩展（空类） | ✅ 完成 | 4 | 811 | 2026-02-19 22:30 |
+
+### 设计模式应用
+
+| 模式 | 应用场景 | 价值 |
+|------|----------|------|
+| **策略模式** | InputHost 抽象 + 具体实现 | 隔离平台差异，易于扩展 |
+| **门面模式** | InputRouter 统一接口 | 简化调用方，隐藏复杂性 |
+| **装饰器模式** | ShadowModeExecutor | 透明添加影子模式功能 |
+| **适配器模式** | RouterOnlyExecutor | 将 Router 适配为 ExecutorManager 接口 |
+
+### 三种运行模式
+
+```bash
+# 普通模式（默认）- 使用旧 Executor
+# 无环境变量
+
+# 影子模式 - 双写验证
+SHADOW_MODE=true
+
+# Router-only 模式 - 直接使用 Router
+ROUTER_ONLY=true
+```
+
+### 待制作任务（低优先级）
+
+- [ ] 实现 LinuxKeyboardHost（uinput）
+- [ ] 实现 LinuxGamepadHost（uinput）
+- [ ] 实现 MacOSKeyboardHost（Quartz）
+- [ ] 实现 MacOSGamepadHost（GCController）
+
+---
+
+## 🔴 P0 - 构建与部署（必须完成）
+
+### 5. 服务端构建配置
+
+#### 5.1 Node.js 环境配置
+- [ ] 5.1.1 安装 Node.js 20+ LTS 版本
+- [ ] 5.1.2 安装 pnpm 包管理器（`npm install -g pnpm`）
+- [ ] 5.1.3 配置 .nvmrc 文件指定 Node 版本
+- [ ] 5.1.4 创建 .tool-versions 文件（ASDF 支持）
+
+#### 5.2 TypeScript 编译配置
+- [ ] 5.2.1 验证 tsconfig.json 配置正确
+- [ ] 5.2.2 配置生产环境编译选项（noEmit: false, sourceMap: false）
+- [ ] 5.2.3 添加编译脚本 `npm run build`
+- [ ] 5.2.4 添加类型检查脚本 `npm run type-check`
+
+#### 5.3 依赖管理
+- [ ] 5.3.1 运行 `pnpm install` 安装所有依赖
+- [ ] 5.3.2 验证 pnpm-lock.yaml 已提交
+- [ ] 5.3.3 清理未使用的依赖（`pnpm prune`）
+- [ ] 5.3.4 添加依赖审计脚本 `npm run audit`
+
+#### 5.4 生产环境配置
+- [ ] 5.4.1 创建 .env.example 模板文件
+- [ ] 5.4.2 配置环境变量验证逻辑
+- [ ] 5.4.3 添加进程管理配置（PM2 或 systemd）
+- [ ] 5.4.4 创建 Dockerfile（可选）
+
+#### 5.5 构建验证
+- [ ] 5.5.1 运行完整编译 `pnpm run build`
+- [ ] 5.5.2 验证输出目录结构正确
+- [ ] 5.5.3 运行生产环境测试
+- [ ] 5.5.4 添加 CI/CD 构建脚本
+
+### 6. 安卓客户端构建配置
+
+#### 6.1 ARM64 Android SDK 环境配置
+- [ ] 6.1.1 安装 JetBrains Runtime (JBR) linux-aarch64 版本
+- [ ] 6.1.2 配置 JAVA_HOME 环境变量
+- [ ] 6.1.3 下载 Android SDK Command Line Tools (linux-aarch64)
+- [ ] 6.1.4 配置 ANDROID_HOME 环境变量
+- [ ] 6.1.5 配置 PATH 包含 sdkmanager 和 platform-tools
+
+#### 6.2 SDK 组件安装
+- [ ] 6.2.1 接受 SDK 许可证 `sdkmanager --licenses`
+- [ ] 6.2.2 安装 platform-tools (adb, fastboot)
+- [ ] 6.2.3 安装 Android 平台 (android-34 或更高)
+- [ ] 6.2.4 安装 Build Tools (34.0.0 或更高)
+- [ ] 6.2.5 安装 NDK（如需 native 编译）
+
+#### 6.3 安卓客户端项目配置
+- [ ] 6.3.1 验证 Android/client/ 目录结构
+- [ ] 6.3.2 配置 gradle.properties（SDK 路径、JVM 参数）
+- [ ] 6.3.3 配置 local.properties（sdk.dir 路径）
+- [ ] 6.3.4 验证 build.gradle.kts 配置正确
+
+#### 6.4 构建脚本配置
+- [ ] 6.4.1 创建 gradlew 包装器脚本
+- [ ] 6.4.2 添加 debug 构建任务 `./gradlew assembleDebug`
+- [ ] 6.4.3 添加 release 构建任务 `./gradlew assembleRelease`
+- [ ] 6.4.4 配置签名密钥（release 构建）
+
+#### 6.5 ARM64 架构优化
+- [ ] 6.5.1 配置 ABI 过滤器（仅 arm64-v8a）
+- [ ] 6.5.2 优化 JVM 参数 for ARM64
+- [ ] 6.5.3 配置 Gradle Daemon 内存限制
+- [ ] 6.5.4 添加 ARM64 特定构建参数
+
+#### 6.6 构建验证
+- [ ] 6.6.1 运行 clean 构建 `./gradlew clean`
+- [ ] 6.6.2 运行 debug 构建 `./gradlew assembleDebug`
+- [ ] 6.6.3 验证 APK 输出路径正确
+- [ ] 6.6.4 添加构建时间统计
+
+---
+
+## 🟡 P1 - ARM64 Android SDK 配置指南
+
+### 7. ARM64 架构 Android SDK 完整配置
+
+#### 7.1 背景与可行性分析
+- [x] 7.1.1 调研 ARM64 架构支持情况
+- [x] 7.1.2 验证官方命令行工具支持
+- [x] 7.1.3 确认主流生产环境方案成熟度
+
+**核心结论**：
+- ✅ Android SDK 完全支持 arm64 架构（linux-aarch64 / darwin-aarch64）
+- ✅ 无需 x86 转译（Rosetta 2 / QEMU），原生性能
+- ✅ Apple Silicon (M1/M2/M3) 和 ARM Linux 服务器均为成熟生产环境
+
+#### 7.2 第一步：安装 JDK (关键)
+
+**推荐**：使用 JetBrains Runtime (JBR) linux-aarch64 版本（Android Studio 依赖）
+
+```bash
+# 下载 JBR 21.0.8 linux-aarch64
+wget https://cache-redirector.jetbrains.com/intellij-jbr/jbr_jcef-21.0.8-linux-aarch64-b1163.59.tar.gz
+
+# 解压
+tar -zxvf jbr_jcef-21.0.8-linux-aarch64-b1163.59.tar.gz
+
+# 移动到合适位置
+sudo mv jbr_jcef-21.0.8-linux-aarch64-b1163.59 /opt/jbr
+
+# 配置环境变量（添加到 ~/.bashrc 或 ~/.zshrc）
+export JAVA_HOME=/opt/jbr
+export PATH=$JAVA_HOME/bin:$PATH
+
+# 验证
+java -version
+```
+
+#### 7.3 第二步：下载 Command Line Tools
+
+```bash
+# 创建 Android SDK 目录（不要放在 / 或 /root 下）
+mkdir -p $HOME/Android/Sdk/cmdline-tools
+
+# 下载 Command Line Tools（选择 Linux 版本）
+# 访问：https://developer.android.com/studio#command-tools
+wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+
+# 解压到 cmdline-tools/latest 目录（重要！目录结构必须如此）
+unzip commandlinetools-linux-11076708_latest.zip
+mv cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
+
+# 配置环境变量（添加到 ~/.bashrc 或 ~/.zshrc）
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+```
+
+#### 7.4 第三步：安装 SDK 组件
+
+```bash
+# 接受许可证
+sdkmanager --licenses
+
+# 安装核心组件
+sdkmanager "platform-tools"
+sdkmanager "platforms;android-34"
+sdkmanager "build-tools;34.0.0"
+
+# 可选：安装 NDK（如需 native 编译）
+sdkmanager "ndk;26.1.10909125"
+
+# 可选：安装 ARM64 系统镜像（用于模拟器）
+sdkmanager "system-images;android-34;google_apis;arm64-v8a"
+```
+
+#### 7.5 第四步：验证安装
+
+```bash
+# 验证 adb
+adb --version
+
+# 验证 sdkmanager
+sdkmanager --version
+
+# 列出已安装的包
+sdkmanager --list_installed
+```
+
+#### 7.6 第五步：常见坑点处理
+
+**坑点 1：SDK 路径权限问题**
+```
+错误：The android sdk location cannot be at the filesystem root
+解决：将 SDK 放在用户目录下，如 $HOME/Android/Sdk
+```
+
+**坑点 2：模拟器 GPU 加速（ARM Linux）**
+```bash
+# 使用 SwiftShader 软件渲染启动模拟器
+emulator -avd <your_avd_name> -gpu swiftshader_indirect -no-snapshot
+```
+
+**坑点 3：NDK 交叉编译配置**
+```bash
+# ARM64 主机上编译 ARM64 目标（原生编译，速度快）
+export NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125
+export PATH=$PATH:$NDK_HOME/toolchains/llvm/prebuilt/linux-aarch64/bin
+```
+
+#### 7.7 性能优势
+
+| 优势 | 说明 |
+|------|------|
+| **架构一致性** | 宿主 (arm64) + 模拟器 (arm64) 无需指令集翻译 |
+| **能效比** | ARM 服务器功耗远低于 x86，适合 24 小时 CI/CD |
+| **真机调试** | USB 直连 arm64 真机，链路最短 |
+| **原生编译** | NDK 编译 arm64 代码无需交叉编译 |
+
+#### 7.8 限制与注意事项
+
+| 限制 | 影响 | 解决方案 |
+|------|------|----------|
+| 第三方插件兼容性 | 部分插件可能失效 | 使用主流插件（Gradle/Kotlin 已支持） |
+| x86 镜像无法运行 | 只能运行 arm64-v8a 镜像 | 99% 真机都是 arm64，影响很小 |
+| 旧版工具链 | 老版本可能只有 x86 | 使用最新版 Command Line Tools |
+
+---
+
+## 🟢 P2 - 文档与优化
+
+### 8. 构建文档完善
+- [ ] 8.1 创建 BUILDING.md 构建指南
+- [ ] 8.2 创建 ANDROID_SDK_ARM64_SETUP.md ARM64 配置指南
+- [ ] 8.3 更新 README.md 添加构建章节
+- [ ] 8.4 创建 CI/CD 配置文档
+
+### 待制作任务（低优先级）
+
+- [ ] 实现 LinuxKeyboardHost（uinput）
+- [ ] 实现 LinuxGamepadHost（uinput）
+- [ ] 实现 MacOSKeyboardHost（Quartz）
+- [ ] 实现 MacOSGamepadHost（GCController）
 
 ---
 
