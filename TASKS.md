@@ -61,14 +61,14 @@
 #### 1.1 安装和配置系统级依赖
 - [ ] 1.1.1 下载并安装 ViGEmBus 驱动（管理员权限）
 - [ ] 1.1.2 安装 Windows Build Tools
-- [ ] 1.1.3 安装 node-vigemclient 包
+- [x] 1.1.3 安装 node-vigemclient 包 - 已添加到 package.json
 - [ ] 1.1.4 配置 VIGEM_CLIENT_PATH 环境变量
 - [x] 1.1.5 创建 docs/dependencies.md 文档
 
 #### 1.2 实现 GamepadXInputAdapter 类
-- [ ] 1.2.1 创建 src/input/adapters/ 目录结构
+- [x] 1.2.1 创建 src/input/adapters/ 目录结构
 - [x] 1.2.2 定义 XInput 状态数据结构（4轴、14按钮、2扳机）
-- [x] 1.2.3 实现 ViGEmClient 初始化和连接管理
+- [x] 1.2.3 实现 ViGEmClient 初始化和连接管理（含优雅降级）
 - [x] 1.2.4 实现虚拟控制器创建（Xbox 360）
 - [x] 1.2.5 实现设备连接状态检测
 
@@ -476,145 +476,11 @@
 
 ---
 
-## 🔵 长期任务：将源代码注释替换为英文
+## 🔵 长期任务
 
-**任务描述**: 将 ControlX Server 端所有源代码文件中的中文注释替换为英文注释
-
-**优先级**: 低（长期任务，不影响功能）
-
-**范围**: `/home/linecat/agent-workspace/projects/ControlX/Server/src/` 目录下所有 `.ts` 文件
-
-### 待修改文件清单（44 个文件）
-
-#### 入口文件
-- [ ] `src/app.ts` - 主入口文件
-
-#### Config 目录
-- [ ] `src/config/config.ts` - 配置接口定义
-- [ ] `src/config/loadConfig.ts` - 配置加载逻辑
-- [ ] `src/config/validate.ts` - 配置验证逻辑
-
-#### Heartbeat 目录
-- [ ] `src/heartbeat/heartbeat.ts` - 心跳模块
-
-#### Input 目录 - 核心输入处理
-- [ ] `src/input/adapters/GamepadXInputAdapter.ts` - 游戏手柄适配器
-- [ ] `src/input/adapters/index.ts` - 适配器索引
-- [ ] `src/input/adapters/InputAdapter.ts` - 输入适配器基类
-- [ ] `src/input/adapters/JoystickAdapter.ts` - 摇杆适配器
-- [ ] `src/input/adapters/KeyboardAdapter.ts` - 键盘适配器
-- [ ] `src/input/adapters/MouseAdapter.ts` - 鼠标适配器
-- [ ] `src/input/applyScheduler.ts` - 调度器应用
-- [ ] `src/input/dryRunExecutor.ts` - 干运行执行器
-- [ ] `src/input/executor.ts` - 输入执行器
-- [ ] `src/input/gamepad.ts` - 游戏手柄模块
-- [ ] `src/input/heartbeat.ts` - 输入心跳模块
-- [ ] `src/input/interfaces.ts` - 输入接口定义
-- [ ] `src/input/joystick.ts` - 摇杆模块
-- [ ] `src/input/keyboard.ts` - 键盘模块
-- [ ] `src/input/mouse.ts` - 鼠标模块
-- [ ] `src/input/safeState.ts` - 安全状态定义
-- [ ] `src/input/safetyController.ts` - 安全控制器
-- [ ] `src/input/stateStore.ts` - 状态存储
-- [ ] `src/input/state.ts` - 输入状态管理
-- [ ] `src/input/test-keyboard.ts` - 键盘测试工具
-- [ ] `src/input/validator.ts` - 输入验证器
-
-#### Types 目录
-- [ ] `src/types/ws-extension.d.ts` - WebSocket 类型扩展
-- [ ] `src/types/ws.ts` - WebSocket 消息类型定义
-
-#### Utils 目录
-- [ ] `src/utils/errorManager.ts` - 错误管理器
-- [ ] `src/utils/logInputData.ts` - 输入数据日志
-- [ ] `src/utils/terminalMonitor.ts` - 终端监控器
-
-#### Viewer 目录
-- [ ] `src/viewer/terminalViewer.ts` - 终端查看器
-
-#### WebSocket 目录
-- [ ] `src/ws/connection.ts` - WebSocket 连接管理
-- [ ] `src/ws/handlers/config.ts` - 配置消息处理器
-- [ ] `src/ws/handlers/event.ts` - 事件消息处理器
-- [ ] `src/ws/handlers/inputDelta.ts` - 输入增量处理器
-- [ ] `src/ws/handlers/inputEvent.ts` - 输入事件处理器
-- [ ] `src/ws/handlers/input.ts` - 输入消息处理器
-- [ ] `src/ws/handlers/latencyProbe.ts` - 延迟探测处理器
-- [ ] `src/ws/handlers/ping.ts` - Ping 消息处理器
-- [ ] `src/ws/handlers/state.ts` - 状态消息处理器
-- [ ] `src/ws/handlers/welcome.ts` - 欢迎消息处理器
-- [ ] `src/ws/router.ts` - 消息路由器
-- [ ] `src/ws/server.ts` - WebSocket 服务器
-
-### 翻译原则
-
-1. **保持注释结构**: 保持原有的注释格式（单行 `//` 或多行 `/** */`）
-2. **技术术语准确**: 使用标准的技术英文术语
-3. **简洁明了**: 英文注释应简洁，避免冗长
-4. **保持一致性**: 相同概念使用相同的英文表达
-
-### 常见术语对照表
-
-| 中文 | 英文 |
-|------|------|
-| 模块 | Module |
-| 配置 | Config / Configuration |
-| 状态 | State |
-| 连接 | Connection |
-| 处理 | Handler / Process |
-| 执行器 | Executor |
-| 适配器 | Adapter |
-| 验证器 | Validator |
-| 路由器 | Router |
-| 服务器 | Server |
-| 客户端 | Client |
-| 心跳 | Heartbeat |
-| 输入 | Input |
-| 输出 | Output |
-| 键盘 | Keyboard |
-| 鼠标 | Mouse |
-| 游戏手柄 | Gamepad |
-| 摇杆 | Joystick |
-| 延迟 | Latency |
-| 超时 | Timeout |
-| 回调 | Callback |
-| 接口 | Interface |
-| 类型 | Type |
-| 定义 | Definition |
-| 管理 | Manager |
-| 监控 | Monitor |
-| 查看器 | Viewer |
-| 日志 | Log |
-| 错误 | Error |
-| 安全 | Safety / Safe |
-| 增量 | Delta |
-| 事件 | Event |
-| 消息 | Message |
-| 响应 | Response |
-| 请求 | Request |
-
-### 执行步骤
-
-1. 逐个文件修改中文注释为英文
-2. 每修改一个文件后运行 `npm test` 确保测试通过
-3. 每完成一个目录的文件，提交一次 git
-4. 全部完成后，进行一次总的提交
-
-### 注意事项
-
-- 不要修改代码逻辑，只修改注释
-- 不要修改字符串字面量中的中文（如果有）
-- 保持 JSDoc 注释格式不变
-- 确保翻译后的注释仍然准确描述代码功能
-
-### 进度追踪
-
-- **总文件数**: 44 个
-- **已完成**: 0 个
-- **进行中**: 0 个
-- **待开始**: 44 个
-
-**完成度**: 0%
+### 源代码注释英文化
+- [ ] 将 Server/src/ 目录下 44 个 TypeScript 文件的中文注释替换为英文
+- 详见：`TASKS_CURRENT.md`（执行期间记录）
 
 ---
 
