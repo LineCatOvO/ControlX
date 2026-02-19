@@ -444,55 +444,60 @@ async function runCoreTests() {
 // 测试用例实现
 
 async function testAppLaunch() {
-    const driver = state.wdDriver;
-    
     // 等待应用加载
     await delay(3000);
-    
+
     // 截图
-    const screenshot = await driver.takeScreenshot();
+    const result = await appiumCommand('GET', '/screenshot');
+    const screenshot = result.value;
     fs.writeFileSync(
         path.join(CONFIG.appiumE2eRoot, "test-results", "app-launch.png"),
         screenshot,
         "base64"
     );
-    
+
     // 验证 UI 元素
-    const textViews = await driver.elements("class name", "android.widget.TextView");
+    const elements = await appiumCommand('POST', '/elements', { using: 'class name', value: 'android.widget.TextView' });
+    const textViews = elements.value || [];
     if (textViews.length === 0) {
         throw new Error("未找到任何 UI 元素");
     }
-    
+
     log(`找到 ${textViews.length} 个文本元素`, "📊");
 }
 
 async function testServiceStart() {
-    const driver = state.wdDriver;
-    
     // 查找启动按钮并点击
-    const textViews = await driver.elements("class name", "android.widget.TextView");
-    let startButton = null;
+    const elements = await appiumCommand('POST', '/elements', { using: 'class name', value: 'android.widget.TextView' });
+    const textViews = elements.value || [];
     
-    for (const view of textViews) {
-        const text = await view.text();
-        if (text.includes("启动") || text.includes("Start") || text.includes("开始")) {
-            startButton = view;
-            break;
+    let startButtonFound = false;
+    for (const element of textViews) {
+        try {
+            const textResult = await appiumCommand('GET', `/element/${element.ELEMENT || element.element-6066-11e4-a52e-4f735466cecf}/text`);
+            const text = textResult.value || '';
+            if (text.includes("启动") || text.includes("Start") || text.includes("开始")) {
+                await appiumCommand('POST', '/element/' + (element.ELEMENT || element['element-6066-11e4-a52e-4f735466cecf']) + '/click', {});
+                startButtonFound = true;
+                break;
+            }
+        } catch (e) {
+            // 继续尝试下一个元素
         }
     }
-    
-    if (startButton) {
-        await startButton.click();
-    } else {
+
+    if (!startButtonFound) {
         // 备用方案：点击固定位置
-        const { width, height } = await driver.getWindowSize();
-        await driver.tap([{ x: width * 0.3, y: height * 0.5 }]);
+        const sizeResult = await appiumCommand('GET', '/window/rect');
+        const { width, height } = sizeResult.value;
+        await tap(width * 0.3, height * 0.5);
     }
-    
+
     await delay(2000);
-    
+
     // 截图
-    const screenshot = await driver.takeScreenshot();
+    const result = await appiumCommand('GET', '/screenshot');
+    const screenshot = result.value;
     fs.writeFileSync(
         path.join(CONFIG.appiumE2eRoot, "test-results", "service-start.png"),
         screenshot,
@@ -501,9 +506,9 @@ async function testServiceStart() {
 }
 
 async function testKeyboardInput() {
-    const driver = state.wdDriver;
-    const { width, height } = await driver.getWindowSize();
-    
+    const sizeResult = await appiumCommand('GET', '/window/rect');
+    const { width, height } = sizeResult.value;
+
     // 模拟键盘区域点击
     const keyPositions = [
         { x: width * 0.2, y: height * 0.7, key: "W" },
@@ -511,19 +516,19 @@ async function testKeyboardInput() {
         { x: width * 0.15, y: height * 0.75, key: "A" },
         { x: width * 0.25, y: height * 0.75, key: "D" }
     ];
-    
+
     for (const pos of keyPositions) {
-        await driver.tap([{ x: pos.x, y: pos.y }]);
+        await tap(pos.x, pos.y);
         await delay(100);
     }
-    
+
     log("键盘输入模拟完成", "⌨️");
 }
 
 async function testGamepadInput() {
-    const driver = state.wdDriver;
-    const { width, height } = await driver.getWindowSize();
-    
+    const sizeResult = await appiumCommand('GET', '/window/rect');
+    const { width, height } = sizeResult.value;
+
     // 模拟游戏手柄按钮点击
     const buttonPositions = [
         { x: width * 0.7, y: height * 0.7, button: "A" },
@@ -531,87 +536,104 @@ async function testGamepadInput() {
         { x: width * 0.75, y: height * 0.65, button: "X" },
         { x: width * 0.85, y: height * 0.7, button: "Y" }
     ];
-    
+
     for (const pos of buttonPositions) {
-        await driver.tap([{ x: pos.x, y: pos.y }]);
+        await tap(pos.x, pos.y);
         await delay(150);
     }
-    
+
     log("游戏手柄输入模拟完成", "🎮");
 }
 
 async function testJoystickInput() {
-    const driver = state.wdDriver;
-    const { width, height } = await driver.getWindowSize();
-    
-    // 模拟摇杆拖动
-    await driver.swipe({
-        startX: width * 0.5,
-        startY: height * 0.8,
-        endX: width * 0.5,
-        endY: height * 0.6,
-        duration: 500
+    const sizeResult = await appiumCommand('GET', '/window/rect');
+    const { width, height } = sizeResult.value;
+
+    // 模拟摇杆拖动 - 使用移动手势
+    await appiumCommand('POST', '/actions', {
+        actions: [{
+            type: 'pointer',
+            id: 'finger1',
+            parameters: { pointerType: 'touch' },
+            actions: [
+                { type: 'pointerMove', duration: 0, x: Math.floor(width * 0.5), y: Math.floor(height * 0.8) },
+                { type: 'pointerDown', button: 0 },
+                { type: 'pointerMove', duration: 500, x: Math.floor(width * 0.5), y: Math.floor(height * 0.6) },
+                { type: 'pointerUp', button: 0 }
+            ]
+        }]
     });
-    
+
     await delay(500);
-    
+
     // 另一个方向的摇杆
-    await driver.swipe({
-        startX: width * 0.5,
-        startY: height * 0.8,
-        endX: width * 0.3,
-        endY: height * 0.7,
-        duration: 500
+    await appiumCommand('POST', '/actions', {
+        actions: [{
+            type: 'pointer',
+            id: 'finger1',
+            parameters: { pointerType: 'touch' },
+            actions: [
+                { type: 'pointerMove', duration: 0, x: Math.floor(width * 0.5), y: Math.floor(height * 0.8) },
+                { type: 'pointerDown', button: 0 },
+                { type: 'pointerMove', duration: 500, x: Math.floor(width * 0.3), y: Math.floor(height * 0.7) },
+                { type: 'pointerUp', button: 0 }
+            ]
+        }]
     });
-    
+
     log("摇杆输入模拟完成", "🕹️");
 }
 
 async function testMouseInput() {
-    const driver = state.wdDriver;
-    const { width, height } = await driver.getWindowSize();
-    
+    const sizeResult = await appiumCommand('GET', '/window/rect');
+    const { width, height } = sizeResult.value;
+
     // 模拟鼠标点击区域
     const mousePositions = [
         { x: width * 0.6, y: height * 0.4, action: "左键" },
         { x: width * 0.65, y: height * 0.45, action: "右键" }
     ];
-    
+
     for (const pos of mousePositions) {
-        await driver.tap([{ x: pos.x, y: pos.y }]);
+        await tap(pos.x, pos.y);
         await delay(150);
     }
-    
+
     log("鼠标输入模拟完成", "🖱️");
 }
 
 async function testServiceStop() {
-    const driver = state.wdDriver;
-    
     // 查找停止按钮并点击
-    const textViews = await driver.elements("class name", "android.widget.TextView");
-    let stopButton = null;
+    const elements = await appiumCommand('POST', '/elements', { using: 'class name', value: 'android.widget.TextView' });
+    const textViews = elements.value || [];
     
-    for (const view of textViews) {
-        const text = await view.text();
-        if (text.includes("停止") || text.includes("Stop") || text.includes("结束")) {
-            stopButton = view;
-            break;
+    let stopButtonFound = false;
+    for (const element of textViews) {
+        try {
+            const textResult = await appiumCommand('GET', `/element/${element.ELEMENT || element['element-6066-11e4-a52e-4f735466cecf']}/text`);
+            const text = textResult.value || '';
+            if (text.includes("停止") || text.includes("Stop") || text.includes("结束")) {
+                await appiumCommand('POST', '/element/' + (element.ELEMENT || element['element-6066-11e4-a52e-4f735466cecf']) + '/click', {});
+                stopButtonFound = true;
+                break;
+            }
+        } catch (e) {
+            // 继续尝试下一个元素
         }
     }
-    
-    if (stopButton) {
-        await stopButton.click();
-    } else {
+
+    if (!stopButtonFound) {
         // 备用方案
-        const { width, height } = await driver.getWindowSize();
-        await driver.tap([{ x: width * 0.7, y: height * 0.5 }]);
+        const sizeResult = await appiumCommand('GET', '/window/rect');
+        const { width, height } = sizeResult.value;
+        await tap(width * 0.7, height * 0.5);
     }
-    
+
     await delay(2000);
-    
+
     // 截图
-    const screenshot = await driver.takeScreenshot();
+    const result = await appiumCommand('GET', '/screenshot');
+    const screenshot = result.value;
     fs.writeFileSync(
         path.join(CONFIG.appiumE2eRoot, "test-results", "service-stop.png"),
         screenshot,
