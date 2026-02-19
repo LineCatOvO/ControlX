@@ -142,29 +142,30 @@ async function checkDevice() {
 
 async function startAppium() {
     log("启动 Appium Server...", "🚀");
-    
+
     return new Promise((resolve, reject) => {
         state.appiumProcess = spawn("npx", ["appium"], {
             cwd: CONFIG.appiumE2eRoot,
             stdio: ["pipe", "pipe", "pipe"]
         });
-        
+
         state.appiumProcess.stdout?.on("data", (data) => {
             const output = data.toString();
             if (output.includes("Appium REST http interface listener")) {
                 log(`Appium 已启动 (端口 ${CONFIG.appiumPort})`, "✅");
-                resolve();
+                // Appium 启动后等待 2 秒确保完全就绪
+                setTimeout(resolve, 2000);
             }
         });
-        
+
         state.appiumProcess.on("error", reject);
-        
+
         // 超时处理
         setTimeout(() => {
             if (state.appiumProcess && state.appiumProcess.pid) {
                 resolve();
             }
-        }, 10000);
+        }, 15000);
     });
 }
 

@@ -1,0 +1,66 @@
+
+> appium-e2e@1.0.0 test
+> npm run test:all
+
+
+> appium-e2e@1.0.0 test:all
+> node tests/run-e2e-pipeline.js
+
+[2026-02-19T14:36:04.980Z] 🚀 WMMT Controller E2E 测试启动
+============================================================
+[2026-02-19T14:36:04.982Z] 🏗️ 开始环境搭建阶段
+============================================================
+[2026-02-19T14:36:04.982Z] 📦 检查依赖...
+[2026-02-19T14:36:05.024Z] ✅ Node.js: v24.13.1
+[2026-02-19T14:36:05.339Z] ✅ npm: 11.8.0
+[2026-02-19T14:36:05.383Z] ✅ ADB: Android Debug Bridge version 1.0.41
+[2026-02-19T14:36:05.388Z] 📱 检查设备连接...
+[2026-02-19T14:36:05.592Z] ✅ 设备：25060RK16C
+ (Android 9
+)
+[2026-02-19T14:36:05.592Z] ✅ 设备 ID: emulator-5554
+[2026-02-19T14:36:05.592Z] 🚀 启动 Appium Server...
+[2026-02-19T14:36:15.610Z] 🚀 启动后端 Server...
+[2026-02-19T14:36:18.639Z] 📲 安装应用...
+[2026-02-19T14:36:19.296Z] ✅ 应用安装成功
+[2026-02-19T14:36:19.296Z] 🔧 初始化 Appium 驱动...
+(node:28909) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:28909) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+[2026-02-19T14:36:21.110Z] ✅ Appium 已启动 (端口 4723)
+[2026-02-19T14:36:21.260Z] ❌ 环境搭建失败：[init({"platformName":"Android","automationName":"UiAutomator2","deviceName":"emulator-5554","appPackage":"com.linecat.wmmtcontroller","appActivity":"com.linecat.wmmtcontroller/.MainActivity","noReset":false,"unicodeKeyboard":true,"resetKeyboard":true,"autoGrantPermissions":true})] The environment you requested was unavailable.
+The requested resource could not be found, or a request was received using an HTTP method that is not supported by the mapped resource.
+[2026-02-19T14:36:21.260Z] ❌ 测试执行失败：环境搭建失败
+[2026-02-19T14:36:21.260Z] 🧹 开始清理阶段
+============================================================
+[2026-02-19T14:36:21.376Z] ✅ 应用已停止
+[2026-02-19T14:36:21.412Z] ⚠️ 清理过程出错：[quit()] Error response: unknown command - The requested resource could not be found, or a request was received using an HTTP method that is not supported by the mapped resource. - Stack trace:
+UnknownCommandError: The requested resource could not be found, or a request was received using an HTTP method that is not supported by the mapped resource.
+    at catch404Handler (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/@appium+base-driver@10.2.0/node_modules/@appium/base-driver/build/lib/express/middleware.js:154:65)
+    at Layer.handleRequest (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:152:17)
+    at next (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/route.js:117:3)
+    at handle (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:152:17)
+    at /home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:295:15
+    at param (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:600:14)
+    at param (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:610:14)
+    at processParams (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:664:3)
+    at next (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+    at logger (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/morgan@1.10.1/node_modules/morgan/index.js:144:5)
+    at Layer.handleRequest (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:152:17)
+    at trimPrefix (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:342:13)
+    at /home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9
+    at processParams (/home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+
+============================================================
+📊 测试执行摘要
+============================================================
+总耗时：16.4秒
+测试数：0
+通过：0
+失败：0
+通过率：N/A%
+------------------------------------------------------------
+============================================================
+[2026-02-19T14:36:21.418Z] 📄 测试报告已保存：test-results/report.json

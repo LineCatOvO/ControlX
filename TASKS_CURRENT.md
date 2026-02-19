@@ -904,6 +904,40 @@ CONFIG.wsClient.on("message", (data) => {
 
 ---
 
+### 2026-02-19 23:55 E2E 测试执行记录 ⏳ 进行中
+
+**设备连接状态**：
+- ✅ 设备已连接：emulator-5554
+- ✅ 设备型号：25060RK16C (Android 9)
+- ✅ Server 已构建
+- ✅ APK 已构建 (13MB)
+
+**wd 包问题已解决**：
+- ✅ 根因：pnpm 配置中 `wd` 在 `ignoredBuiltDependencies` 列表中
+- ✅ 解决：运行 `pnpm approve-builds wd` 允许执行 install 脚本
+- ✅ 结果：`build/` 目录成功创建，`safe-execute.js` 文件存在
+
+**当前阻塞问题**：
+- ❌ Appium v3 与 wd 客户端兼容性问题
+- ❌ 错误信息：`The environment you requested was unavailable`
+- ❌ 错误类型：`UnknownCommandError` - HTTP 404
+
+**问题分析**：
+1. Appium v3 可能更改了 REST API 路径
+2. `wd@1.14.0` 可能不兼容 Appium v3
+3. `init()` 方法发送的请求格式可能已过时
+
+**解决方案探索**：
+1. 方案 A：使用 `@appium/client` 替代 `wd`（官方推荐）
+2. 方案 B：使用纯 HTTP 请求（axios）直接调用 Appium REST API
+3. 方案 C：降级 Appium 到 v2 版本
+
+**下一步**：
+- 尝试使用 axios 直接调用 Appium REST API
+- 或者使用 @appium/client 替代 wd
+
+---
+
 ## 待办事项
 
 ### ✅ 已完成任务

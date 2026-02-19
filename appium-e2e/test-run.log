@@ -1,0 +1,53 @@
+
+> appium-e2e@1.0.0 test
+> npm run test:all
+
+
+> appium-e2e@1.0.0 test:all
+> node tests/run-e2e-pipeline.js
+
+[2026-02-19T14:27:39.718Z] 🚀 WMMT Controller E2E 测试启动
+============================================================
+[2026-02-19T14:27:39.721Z] 🏗️ 开始环境搭建阶段
+============================================================
+[2026-02-19T14:27:39.721Z] 📦 检查依赖...
+[2026-02-19T14:27:39.756Z] ✅ Node.js: v24.13.1
+[2026-02-19T14:27:39.984Z] ✅ npm: 11.8.0
+[2026-02-19T14:27:40.024Z] ✅ ADB: Android Debug Bridge version 1.0.41
+[2026-02-19T14:27:40.030Z] 📱 检查设备连接...
+[2026-02-19T14:27:40.206Z] ✅ 设备：25060RK16C
+ (Android 9
+)
+[2026-02-19T14:27:40.206Z] ✅ 设备 ID: emulator-5554
+[2026-02-19T14:27:40.207Z] 🚀 启动 Appium Server...
+[2026-02-19T14:27:50.231Z] 🚀 启动后端 Server...
+[2026-02-19T14:27:53.263Z] 📲 安装应用...
+[2026-02-19T14:27:54.112Z] ✅ 应用安装成功
+[2026-02-19T14:27:54.113Z] 🔧 初始化 Appium 驱动...
+[2026-02-19T14:27:55.927Z] ❌ 环境搭建失败：Cannot find module '../build/safe-execute'
+Require stack:
+- /home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/wd@1.14.0/node_modules/wd/lib/commands.js
+- /home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/wd@1.14.0/node_modules/wd/lib/element-commands.js
+- /home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/wd@1.14.0/node_modules/wd/lib/element.js
+- /home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/wd@1.14.0/node_modules/wd/lib/webdriver.js
+- /home/linecat/agent-workspace/projects/ControlX/node_modules/.pnpm/wd@1.14.0/node_modules/wd/lib/main.js
+- /home/linecat/agent-workspace/projects/ControlX/appium-e2e/tests/run-e2e-pipeline.js
+[2026-02-19T14:27:55.927Z] ❌ 测试执行失败：环境搭建失败
+[2026-02-19T14:27:55.928Z] 🧹 开始清理阶段
+============================================================
+[2026-02-19T14:27:56.056Z] ✅ 应用已停止
+[2026-02-19T14:27:56.057Z] ✅ 后端已停止
+[2026-02-19T14:27:56.057Z] ✅ Appium 已停止
+[2026-02-19T14:27:56.057Z] ✅ 清理完成
+
+============================================================
+📊 测试执行摘要
+============================================================
+总耗时：16.3秒
+测试数：0
+通过：0
+失败：0
+通过率：N/A%
+------------------------------------------------------------
+============================================================
+[2026-02-19T14:27:56.064Z] 📄 测试报告已保存：test-results/report.json
