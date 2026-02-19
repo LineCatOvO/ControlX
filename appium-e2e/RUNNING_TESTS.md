@@ -1,5 +1,67 @@
 # ControlX 端到端测试运行指南
 
+## 运行全部测试
+
+### 一键运行
+
+```bash
+cd appium-e2e
+npm test
+```
+
+**注意**：运行测试前需要满足以下条件：
+
+### 前置条件
+
+1. **Android 设备或模拟器**
+   ```bash
+   # 检查设备连接
+   adb devices
+   
+   # 如果没有设备，需要启动模拟器或连接真机
+   # 模拟器示例（需要 Android SDK）
+   emulator -avd <your_avd_name>
+   
+   # 或者通过网络连接真机
+   adb connect <device_ip>:5555
+   ```
+
+2. **已构建的 Server**
+   ```bash
+   cd ../Server
+   npm run build
+   ```
+
+3. **已构建的 Android 客户端**
+   ```bash
+   cd ../AndroidClient
+   ./gradlew assembleDebug
+   ```
+
+4. **Appium Server**（测试会自动启动）
+   ```bash
+   # 或者手动启动
+   npx appium
+   ```
+
+### 运行命令
+
+```bash
+# 运行完整测试管道（推荐）
+npm test
+
+# 运行详细日志
+npm run test:verbose
+
+# 跳过构建阶段（快速测试）
+npm run test:quick
+
+# CI/CD 模式
+npm run test:ci
+```
+
+---
+
 ## 测试框架说明
 
 ### 为什么使用 Mocha + wd 而不是 Playwright？

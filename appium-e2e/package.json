@@ -4,24 +4,13 @@
   "description": "Appium E2E tests for WMMT Remote Controller",
   "main": "index.js",
   "scripts": {
-    "test": "node tests/run-e2e-pipeline.js",
+    "test": "npm run test:all",
+    "test:all": "node tests/run-e2e-pipeline.js",
     "test:full": "node tests/run-e2e-pipeline.js",
     "test:verbose": "node tests/run-e2e-pipeline.js -v",
     "test:quick": "node tests/run-e2e-pipeline.js --skip-build",
     "test:legacy": "node tests/run-e2e.js",
-    
-    "test:functional": "mocha tests/functional/**/*.test.js",
-    "test:protocol": "mocha tests/protocol/**/*.test.js",
-    "test:performance": "mocha tests/performance/**/*.test.js",
-    "test:exception": "mocha tests/exception/**/*.test.js",
-    "test:compatibility": "mocha tests/compatibility/**/*.test.js",
-    
-    "test:watch": "mocha --watch tests/functional/**/*.test.js",
-    "test:debug": "mocha --inspect-brk tests/functional/**/*.test.js",
-    
-    "test:ci": "mocha --reporter mocha-junit-reporter --reporter-options mochaFile=reports/junit/test-results.xml",
-    "test:html-report": "mocha --reporter mochawesome --reporter-options reportDir=reports/html",
-    
+    "test:ci": "node tests/run-e2e-pipeline.js --ci",
     "lint": "eslint tests/**/*.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
@@ -38,13 +27,8 @@
   "devDependencies": {
     "appium": "^3.2.0",
     "appium-uiautomator2-driver": "^6.8.0",
-    "chai": "^4.3.10",
-    "chai-as-promised": "^7.1.1",
     "eslint": "^8.57.0",
-    "mocha": "^10.3.0",
-    "mocha-junit-reporter": "^2.2.1",
-    "mochawesome": "^7.1.3",
-    "wd": "^1.14.0"
+    "mocha": "^10.3.0"
   },
   "dependencies": {
     "ws": "^8.19.0"

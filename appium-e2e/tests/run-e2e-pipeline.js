@@ -540,6 +540,12 @@ function printSummary() {
     const passed = state.testResults.filter(r => r.passed).length;
     const failed = state.testResults.filter(r => !r.passed).length;
     
+    // 确保报告目录存在
+    const reportsDir = path.join(CONFIG.appiumE2eRoot, 'test-results');
+    if (!fs.existsSync(reportsDir)) {
+        fs.mkdirSync(reportsDir, { recursive: true });
+    }
+    
     console.log("\n" + "=".repeat(60));
     console.log("📊 测试执行摘要");
     console.log("=".repeat(60));
@@ -547,7 +553,11 @@ function printSummary() {
     console.log(`测试数：${state.testResults.length}`);
     console.log(`通过：${passed}`);
     console.log(`失败：${failed}`);
-    console.log(`通过率：${((passed / state.testResults.length) * 100).toFixed(1)}%`);
+    
+    const passRate = state.testResults.length > 0
+        ? ((passed / state.testResults.length) * 100).toFixed(1)
+        : "N/A";
+    console.log(`通过率：${passRate}%`);
     console.log("-".repeat(60));
     
     for (const result of state.testResults) {
