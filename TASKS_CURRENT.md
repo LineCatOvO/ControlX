@@ -580,20 +580,70 @@ SHADOW_MODE=false
 
 ## 待办事项
 
-- [ ] 阶段 1：地基搭建
-  - [ ] 创建 src/input/hosts/ 目录
-  - [ ] 创建 src/input/router/ 目录
-  - [ ] 实现 InputHost.ts 抽象基类
-  - [ ] 实现 InputDeviceType 枚举
-  - [ ] 实现 InputRouter.ts
-  - [ ] 实现 WindowsKeyboardHost.ts
-  - [ ] 实现 WindowsGamepadHost.ts
-  - [ ] 实现 HostFactory.ts（可选）
-  - [ ] 创建 index.ts 统一导出
+### ✅ 已完成任务
 
-- [ ] 阶段 2：影子模式（后续）
-- [ ] 阶段 3：流量切换（后续）
-- [ ] 阶段 4：生态扩展（后续）
+#### 阶段 1：地基搭建 ✅ 已完成
+- [x] 创建 src/input/hosts/ 目录
+- [x] 创建 src/input/router/ 目录
+- [x] 实现 InputHost.ts 抽象基类
+- [x] 实现 InputDeviceType 枚举
+- [x] 实现 InputRouter.ts
+- [x] 实现 WindowsKeyboardHost.ts
+- [x] 实现 WindowsGamepadHost.ts
+- [x] 创建 index.ts 统一导出
+
+#### 阶段 2：影子模式 ✅ 已完成
+- [x] 在 InputExecutorManager 中集成 InputRouter
+- [x] 实现双写机制：同时调用旧 Executor 和新 Router
+- [x] 添加日志比对：记录执行结果和耗时
+- [x] 编写一致性验证测试框架
+
+#### 阶段 3：流量切换 ✅ 已完成
+- [x] 创建 Router-only 执行器
+- [x] 通过配置开关切换主流量到 InputRouter
+- [x] 实现自动降级保护
+- [x] 修改 ApplyScheduler 支持 Router-only 模式
+
+#### 阶段 4：生态扩展（空类） ✅ 已完成
+- [x] 创建 LinuxKeyboardHost.ts 空类
+- [x] 创建 LinuxGamepadHost.ts 空类
+- [x] 创建 MacOSKeyboardHost.ts 空类
+- [x] 创建 MacOSGamepadHost.ts 空类
+- [x] 更新 hosts/index.ts 导出
+
+---
+
+### ⏳ 待制作任务（低优先级）
+
+#### 阶段 4：生态扩展（具体实现）⏳ 待制作
+
+**Linux 平台支持**
+- [ ] 实现 LinuxKeyboardHost 具体功能
+  - [ ] 安装 uinput 依赖
+  - [ ] 实现 uinput 设备创建
+  - [ ] 实现按键事件发送
+  - [ ] Linux 平台测试
+- [ ] 实现 LinuxGamepadHost 具体功能
+  - [ ] 安装 uinput 依赖
+  - [ ] 实现虚拟 Xbox 360 控制器
+  - [ ] 实现按钮/摇杆/扳机映射
+  - [ ] Linux 平台测试
+
+**MacOS 平台支持**
+- [ ] 实现 MacOSKeyboardHost 具体功能
+  - [ ] 安装 Quartz 事件库
+  - [ ] 实现按键码映射
+  - [ ] 实现按键事件发送
+  - [ ] MacOS 平台测试
+- [ ] 实现 MacOSGamepadHost 具体功能
+  - [ ] 安装 GCController 库
+  - [ ] 实现控制器连接
+  - [ ] 实现按钮/摇杆映射
+  - [ ] MacOS 平台测试
+
+**跨平台工厂模式（可选）**
+- [ ] 实现 HostFactory 自动检测平台并创建对应 Host
+- [ ] 添加平台检测单元测试
 
 ---
 
