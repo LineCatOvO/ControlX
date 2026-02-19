@@ -1,7 +1,7 @@
 import { PingMessage } from "../../types/ws";
 import { HeartbeatModule } from "../../input/heartbeat";
 
-// 心跳模块实例（由app.ts初始化）
+// 心跳模块实例（由 app.ts 初始化）
 let heartbeatModule: HeartbeatModule | null = null;
 
 /**
@@ -13,23 +13,17 @@ export function initHeartbeat(heartbeat: HeartbeatModule) {
 }
 
 /**
- * 处理ping消息
- * @param ws WebSocket连接
- * @param message ping消息
+ * 处理 ping 消息
+ * @param ws WebSocket 连接
+ * @param message ping 消息
  */
 export function handlePing(ws: any, message: PingMessage) {
-    // 检查心跳模块是否初始化
-    if (!heartbeatModule) {
-        console.warn("Heartbeat module not initialized");
-        return;
-    }
-
-    // 处理心跳响应
-    if (message.timestamp !== undefined) {
+    // 处理心跳响应（如果心跳模块已初始化）
+    if (heartbeatModule && message.timestamp !== undefined) {
         heartbeatModule.handlePong(message.timestamp);
     }
 
-    // 发送pong响应
+    // 发送 pong 响应
     const pongMsg = { type: "pong", timestamp: Date.now() };
     console.log("Sending pong response to client:", JSON.stringify(pongMsg));
     ws.send(JSON.stringify(pongMsg));

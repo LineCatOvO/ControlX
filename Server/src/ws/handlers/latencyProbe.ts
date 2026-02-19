@@ -64,7 +64,7 @@ function resetRttStats() {
 export function handleLatencyProbe(ws: any, message: LatencyProbeMessage) {
   try {
     // 记录客户端时间戳
-    const clientTimestamp = message.timestamp;
+    const clientTimestamp = message.timestamp ?? Date.now();
 
     // 记录服务端接收时间
     const serverRecvTs = Date.now();

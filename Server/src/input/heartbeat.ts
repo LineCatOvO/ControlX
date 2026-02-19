@@ -162,16 +162,16 @@ export class HeartbeatModule {
                 `Heartbeat: Timeout detected, elapsed: ${elapsed}ms, consecutive timeouts: ${this.consecutiveTimeouts}`
             );
 
-            // 每5次连续超时输出一次警告
+            // 触发超时回调
+            if (this.onTimeoutCallback) {
+                this.onTimeoutCallback();
+            }
+
+            // 每 5 次连续超时输出一次警告
             if (this.consecutiveTimeouts % 5 === 0) {
                 console.warn(
                     `Heartbeat: High consecutive timeouts (${this.consecutiveTimeouts}), triggering safety clear`
                 );
-
-                // 触发超时回调
-                if (this.onTimeoutCallback) {
-                    this.onTimeoutCallback();
-                }
             }
 
             return true;

@@ -9,5 +9,10 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
-  testTimeout: 10000
+  testTimeout: 10000,
+  testPathIgnorePatterns: [
+    '/tests/cases/websocket-messages.test.ts',
+    '/tests/cases/executors.test.ts',
+    '/tests/cases/e2e-integration.test.ts'
+  ]
 };

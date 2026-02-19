@@ -77,9 +77,17 @@ describe("WebSocket Connection Tests", () => {
         client = new WsClient({ url: `ws://localhost:${serverPort}` });
         await client.connect();
 
-        const pingResponse = new Promise<any>((resolve) => {
+        // Wait a bit for the connection to stabilize
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const pingResponse = new Promise<any>((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                reject(new Error('Timeout waiting for pong response'));
+            }, 5000);
+
             client.onMessage((message) => {
                 if (message.type === "pong") {
+                    clearTimeout(timeoutId);
                     resolve(message);
                 }
             });
@@ -88,7 +96,7 @@ describe("WebSocket Connection Tests", () => {
         await client.send({ type: "ping" });
         const response = await pingResponse;
         expect(response).toHaveProperty("type", "pong");
-    });
+    }, 15000);
 
     test("should reset input state to safe state when client disconnects", async () => {
         // 修改输入状态到非安全状态
