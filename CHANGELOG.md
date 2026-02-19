@@ -1,5 +1,26 @@
 # Changelog
 
+## [2026-02-19] test: 为 Android 客户端添加全面的单元测试和集成测试
+
+### Changes
+- AndroidClient/app/src/test/java/com/linecat/wmmtcontroller/model/InputStateTest.java: 新建输入状态模型测试（24 个用例）
+- AndroidClient/app/src/test/java/com/linecat/wmmtcontroller/model/RawInputTest.java: 新建原始输入模型测试（22 个用例）
+- AndroidClient/app/src/test/java/com/linecat/wmmtcontroller/input/ScriptProfileTest.java: 新建脚本配置测试（23 个用例）
+- AndroidClient/app/src/test/java/com/linecat/wmmtcontroller/input/GameInputEventTest.java: 新建游戏输入事件测试（21 个用例）
+- AndroidClient/app/src/test/java/com/linecat/wmmtcontroller/input/InputStateControllerTest.java: 新建输入状态控制器测试（22 个用例）
+- AndroidClient/app/src/test/java/com/linecat/wmmtcontroller/input/SafetyControllerTest.java: 新建安全控制器测试（20 个用例）
+- AndroidClient/app/src/test/java/com/linecat/wmmtcontroller/input/ProfileManagerIntegrationTest.java: 新建 Profile 管理集成测试（15 个用例）
+- AndroidClient/ANDROID_TEST_REPORT.md: 新建测试实施报告文档
+- TASKS.md: 更新 Android 测试完成状态
+- TASKS_CURRENT.md: 记录 Android 测试实施详情
+
+### Impact
+- Android 客户端测试覆盖率达到显著提升
+- 新增 7 个测试文件，147 个测试用例
+- 覆盖模型层、输入层、Profile 管理等核心模块
+- 包含并发安全、异常处理、边界条件等场景测试
+- 为后续重构和迭代提供质量保障
+
 ## [2026-02-19] fix: 修复 E2E 测试无法结束的问题
 
 ### Changes

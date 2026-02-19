@@ -78,6 +78,34 @@
 | WebSocket 消息处理 | websocket-messages.test.ts | 18 | 100% | ✅ 完成 |
 | 端到端流程 | e2e-integration.test.ts | 16 | 100% | ✅ 完成 |
 
+### Android 测试完成（2026-02-19 新增）✅
+
+| 模块 | 测试文件 | 测试用例数 | 状态 |
+|------|----------|------------|------|
+| 输入状态模型 | InputStateTest.java | 24 | ✅ 完成 |
+| 原始输入模型 | RawInputTest.java | 22 | ✅ 完成 |
+| 脚本配置 | ScriptProfileTest.java | 23 | ✅ 完成 |
+| 游戏输入事件 | GameInputEventTest.java | 21 | ✅ 完成 |
+| 输入状态控制器 | InputStateControllerTest.java | 22 | ✅ 完成 |
+| 安全控制器 | SafetyControllerTest.java | 20 | ✅ 完成 |
+| Profile 管理 | ProfileManagerIntegrationTest.java | 15 | ✅ 完成 |
+| 静态处理器 | StaticProcessorTests.java | 5 | ✅ 已有 |
+| Profile 契约 | ProfileManagerContractTests.java | 6 | ✅ 已有 |
+| 输入抽象层 Golden | InputAbstractionLayerGoldenTest.java | 4 | ✅ 已有 |
+| 输入抽象层 Gyro | InputAbstractionLayerGyroTest.java | - | ✅ 已有 |
+| 输入抽象层 Pointer | InputAbstractionLayerPointerTest.java | - | ✅ 已有 |
+| 输入抽象层 Rotation | InputAbstractionLayerRotationTest.java | - | ✅ 已有 |
+
+**Android 测试总计**: 13 个测试文件，162+ 个测试用例
+
+**测试运行方法**:
+```bash
+cd AndroidClient
+./gradlew testDebugUnitTest
+```
+
+**详细报告**: `AndroidClient/ANDROID_TEST_REPORT.md`
+
 ### 测试统计
 
 - **测试套件总数**：12

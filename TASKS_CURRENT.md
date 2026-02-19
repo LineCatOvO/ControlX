@@ -1,9 +1,46 @@
-# 当前任务：统一输入路由抽象架构重构 + E2E 测试架构重构
+# 当前任务：统一输入路由抽象架构重构 + E2E 测试架构重构 + Android 单元测试实施
 
 **开始时间**: 2026-02-19
-**目标**: 
+**目标**:
 1. 实现 InputHost 抽象层与 InputRouter 统一路由
 2. 重构 E2E 测试架构为三阶段模式，遵循 Appium 模拟为主原则
+3. 为 Android 客户端编写全面的单元测试和集成测试 ✅ 已完成
+
+---
+
+## ✅ Android 测试实施完成 (2026-02-19)
+
+### 新增测试文件
+
+| 测试文件 | 类型 | 测试用例数 | 状态 |
+|----------|------|------------|------|
+| `model/InputStateTest.java` | 单元测试 | 24 | ✅ 完成 |
+| `model/RawInputTest.java` | 单元测试 | 22 | ✅ 完成 |
+| `input/ScriptProfileTest.java` | 单元测试 | 23 | ✅ 完成 |
+| `input/GameInputEventTest.java` | 单元测试 | 21 | ✅ 完成 |
+| `input/InputStateControllerTest.java` | 单元测试 | 22 | ✅ 完成 |
+| `input/SafetyControllerTest.java` | 单元测试 | 20 | ✅ 完成 |
+| `input/ProfileManagerIntegrationTest.java` | 集成测试 | 15 | ✅ 完成 |
+
+**总计**: 7 个新测试文件，147 个测试用例
+
+### 测试覆盖模块
+
+- ✅ **模型层**: InputState, RawInput, ScriptProfile
+- ✅ **输入层**: GameInputEvent, InputStateController, SafetyController
+- ✅ **Profile 管理**: ProfileManager 切换/回滚/验证
+- ✅ **处理器层**: DeadzoneProcessor, RangeMapper, CurveProcessor, InvertProcessor (已有)
+
+### 测试运行方法
+
+```bash
+cd /home/linecat/agent-workspace/projects/ControlX/AndroidClient
+./gradlew testDebugUnitTest
+```
+
+### 详细报告
+
+详见：`AndroidClient/ANDROID_TEST_REPORT.md`
 
 ---
 
