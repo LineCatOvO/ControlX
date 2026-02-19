@@ -1,5 +1,23 @@
 # Changelog
 
+## [2026-02-19] feat: 实现 Router-only 流量切换（阶段 3）
+
+### Changes
+- Server/src/input/RouterOnlyExecutor.ts: 新建 Router-only 执行器（260 行），使用适配器模式将 InputRouter 适配为 InputExecutorManager 接口
+- Server/src/input/applyScheduler.ts: 修改 applyCurrentState 方法，添加 Router-only 模式支持（优先级：Router-only > Shadow > Executor）
+- Server/src/app.ts: 添加 initRouterOnlyMode 调用，启用 Router-only 模式初始化
+- TASKS_CURRENT.md: 记录阶段 3 实施细节和配置说明
+
+### Impact
+- 实现主流量切换到 InputRouter，通过环境变量 ROUTER_ONLY=true 控制
+- 适配器模式保持向后兼容，无需修改现有调用代码
+- 自动降级保护：连续 3 次失败自动回退到 Executor 模式
+- 三种运行模式：
+  - 普通模式（默认）：使用旧 Executor
+  - 影子模式（SHADOW_MODE=true）：双写验证
+  - Router-only 模式（ROUTER_ONLY=true）：直接使用 Router
+- 为彻底移除旧 Executor 层奠定基础
+
 ## [2026-02-19] feat: 实现影子模式双写验证机制（阶段 2）
 
 ### Changes

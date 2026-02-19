@@ -2,6 +2,7 @@ import { StateStore } from './stateStore';
 import { InputExecutorManager } from './interfaces';
 import { getSafetyController } from './executor';
 import { executeInputWithShadow, isShadowModeEnabled } from './executor_shadow';
+import { executeInputRouterOnly, isRouterOnlyModeEnabled } from './RouterOnlyExecutor';
 
 /**
  * ApplyScheduler配置
@@ -140,8 +141,11 @@ export class ApplyScheduler {
         // 记录接收时间
         this.lastReceiveTime = tickTime;
 
-        // 应用状态到所有执行器（支持影子模式）
-        if (isShadowModeEnabled()) {
+        // 应用状态到所有执行器（支持多种模式）
+        if (isRouterOnlyModeEnabled()) {
+          // Router-only 模式：直接使用 Router
+          executeInputRouterOnly();
+        } else if (isShadowModeEnabled()) {
           // 影子模式：双写到 Executor 和 Router
           executeInputWithShadow();
         } else {

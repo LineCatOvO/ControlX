@@ -497,6 +497,56 @@ SHADOW_MODE=false
 
 ---
 
+### 2026-02-19 22:00 阶段 3：流量切换完成 ✅
+
+**创建的文件**：
+- ✅ `src/input/RouterOnlyExecutor.ts` - Router-only 执行器（260 行）
+
+**修改的文件**：
+- ✅ `src/input/applyScheduler.ts` - 添加 Router-only 模式支持
+- ✅ `src/app.ts` - 添加 Router-only 初始化调用
+
+**核心功能**：
+
+1. **RouterOnlyExecutorManager（适配器模式）**
+   - 将 InputRouter 适配为 InputExecutorManager 接口
+   - 保持向后兼容，无需修改现有调用代码
+   - 支持降级回 Executor 模式
+
+2. **自动降级保护**
+   - 连续失败阈值：3 次
+   - 自动切换到 Executor 模式
+   - 保证系统稳定性
+
+3. **三种运行模式**
+   ```bash
+   # 普通模式（默认）
+   # 使用旧 Executor
+   
+   # 影子模式
+   SHADOW_MODE=true
+   
+   # Router-only 模式（阶段 3）
+   ROUTER_ONLY=true
+   ```
+
+4. **执行优先级**
+   - Router-only 模式 > 影子模式 > 普通模式
+   - 通过环境变量灵活控制
+
+**架构改进**：
+- 设计模式：适配器模式
+- 流量切换：主流量迁移到 InputRouter
+- 降级策略：自动回退保证可用性
+- 为彻底移除旧 Executor 层奠定基础
+
+**下一步**：
+- 阶段 4：生态扩展
+- 彻底移除旧 Executor 层
+- 开发 Linux/Mac 支持
+
+---
+
 ## 待办事项
 
 - [ ] 阶段 1：地基搭建

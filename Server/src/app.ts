@@ -3,6 +3,7 @@
 import { startWsServer } from "./ws/server";
 import { startInputExecutor, getExecutorManager, isDryRun, printDryRunSummary, getSafetyController } from "./input/executor";
 import { initShadowModeIntegration } from "./input/executor_shadow";
+import { initRouterOnlyMode } from "./input/RouterOnlyExecutor";
 import { StateStore } from "./input/stateStore";
 import { ApplyScheduler } from "./input/applyScheduler";
 import { HeartbeatModule } from "./input/heartbeat";
@@ -105,6 +106,9 @@ startInputExecutor();
 // 初始化影子模式（如果启用）
 initShadowModeIntegration();
 
+
+// 初始化 Router-only 模式（如果启用）
+initRouterOnlyMode();
 // 初始化并启动ApplyScheduler
 const executorManager = getExecutorManager();
 const applyScheduler = new ApplyScheduler(executorManager, stateStore);
