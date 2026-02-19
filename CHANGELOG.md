@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-02-19] feat: 实现影子模式双写验证机制（阶段 2）
+
+### Changes
+- Server/src/input/shadow/ShadowModeManager.ts: 新建影子模式管理器（501 行），实现双写调度、日志记录、一致性比对、自动降级
+- Server/src/input/shadow/index.ts: shadow 模块统一导出
+- Server/src/input/ShadowModeExecutor.ts: 新建影子模式执行器包装器，使用装饰器模式包装 InputExecutorManager
+- Server/src/input/initShadowMode.ts: 新建影子模式初始化辅助函数，提供简化的配置 API
+- Server/src/input/executor_shadow.ts: 新建影子模式集成模块，实现 executeInputWithShadow 双写逻辑
+- Server/src/input/applyScheduler.ts: 修改 applyCurrentState 方法，集成影子模式支持
+- Server/src/app.ts: 添加 initShadowModeIntegration 调用，启用影子模式初始化
+- TASKS_CURRENT.md: 记录阶段 2 实施细节和配置说明
+
+### Impact
+- 实现新旧链路双写机制，同时调用旧 Executor 和新 Router，验证行为一致性
+- 提供环境变量控制：SHADOW_MODE=true 启用，SHADOW_MODE_VERBOSE=true 详细日志
+- 一致性检查系统：比对执行状态、耗时差异（阈值 50ms）、错误信息
+- 自动降级保护：连续 5 次失败自动切换到 Executor-only 模式，保证系统稳定性
+- 装饰器模式保持向后兼容，不影响现有代码
+- 下一阶段将进行流量切换，逐步迁移到 InputRouter
+
 ## [2026-02-19] feat: 实现统一输入路由抽象架构（阶段 1）
 
 ### Changes

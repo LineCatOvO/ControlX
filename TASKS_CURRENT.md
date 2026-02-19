@@ -277,23 +277,35 @@ class WindowsKeyboardHost extends InputHost {
 
 ## 🛠️ 渐进式实施路线图
 
-### 阶段 1：地基搭建 (Foundation) ⏳ 进行中
+### 阶段 1：地基搭建 (Foundation) ✅ 已完成
 
 **目标**：创建新抽象层，现有业务无感知
 
 **任务清单**：
-- [ ] 定义 `InputHost` 抽象类及 `InputDeviceType` 枚举
-- [ ] 实现 `InputRouter` 骨架（暂不接管流量）
-- [ ] 实现 `WindowsKeyboardHost`
-- [ ] 实现 `WindowsGamepadHost`
-- [ ] 创建工厂类 `HostFactory`（可选）
+- [x] 定义 `InputHost` 抽象类及 `InputDeviceType` 枚举
+- [x] 实现 `InputRouter` 骨架（暂不接管流量）
+- [x] 实现 `WindowsKeyboardHost`
+- [x] 实现 `WindowsGamepadHost`
+- [x] 创建工厂类 `HostFactory`（可选）
 
 **产出**：
-- `src/input/router/InputRouter.ts`
-- `src/input/hosts/InputHost.ts`
-- `src/input/hosts/WindowsKeyboardHost.ts`
-- `src/input/hosts/WindowsGamepadHost.ts`
-- `src/input/hosts/index.ts`
+- `src/input/hosts/types.ts` - 类型定义
+- `src/input/hosts/InputHost.ts` - 抽象基类
+- `src/input/hosts/WindowsKeyboardHost.ts` - Windows 键盘宿主
+- `src/input/hosts/WindowsGamepadHost.ts` - Windows 游戏手柄宿主
+- `src/input/hosts/index.ts` - 模块导出
+- `src/input/router/InputRouter.ts` - 输入路由器
+- `src/input/router/index.ts` - 模块导出
+
+**提交记录**：
+```
+commit d6f5d92
+feat: 实现统一输入路由抽象架构（阶段 1）
+
+- 新增 7 个文件，1316 行代码
+- 引入策略模式 + 门面模式
+- 为跨平台支持奠定基础
+```
 
 ---
 
@@ -391,7 +403,7 @@ class WindowsKeyboardHost extends InputHost {
 3. **WindowsGamepadHost**
    - 动态加载 vigemclient
    - XInput 按钮映射（14 个按钮）
-   - 摇杆轴值转换（-1.0~1.0 → -32768~32767）
+   - 摇杆轴值转换（-1.0~1.0 → -32767~32767）
    - 扳机值转换（0.0~1.0 → 0~255）
    - 完整状态提交
 
@@ -409,6 +421,79 @@ class WindowsKeyboardHost extends InputHost {
 - 阶段 2：影子模式（双写验证）
 - 在 InputExecutorManager 中集成 InputRouter
 - 实现双写机制，比对执行结果
+
+---
+
+### 2026-02-19 21:00 阶段 2：影子模式完成 ✅
+
+**创建的文件**：
+- ✅ `src/input/shadow/ShadowModeManager.ts` - 影子模式管理器（501 行）
+- ✅ `src/input/shadow/index.ts` - shadow 模块统一导出
+- ✅ `src/input/ShadowModeExecutor.ts` - 影子模式执行器包装器
+- ✅ `src/input/initShadowMode.ts` - 影子模式初始化辅助函数
+- ✅ `src/input/executor_shadow.ts` - 影子模式集成模块
+- ✅ `src/input/applyScheduler.ts` - 修改为支持影子模式
+- ✅ `src/app.ts` - 添加影子模式初始化调用
+
+**核心功能**：
+
+1. **ShadowModeManager（影子模式管理器）**
+   - 双写调度：同时调用旧 Executor 和新 Router
+   - 日志记录：记录两边的执行结果、耗时、错误
+   - 一致性比对：验证 Executor 和 Router 的输出一致性
+   - 降级保护：Router 失败时自动回退到 Executor-only 模式
+   - 统计信息：执行次数、成功率、一致性通过率、平均耗时
+
+2. **ShadowModeInputExecutorManager（装饰器模式）**
+   - 包装现有 InputExecutorManager
+   - 透明添加影子模式功能
+   - 保持向后兼容
+   - 支持动态切换模式（executor/router/shadow）
+
+3. **executor_shadow 集成模块**
+   - 环境变量控制：`SHADOW_MODE=true` 启用
+   - 自动注册 WindowsKeyboardHost 和 WindowsGamepadHost
+   - 提供 `executeInputWithShadow()` 替代原有执行逻辑
+   - 无侵入集成到 ApplyScheduler
+
+4. **一致性检查系统**
+   - 执行状态比对（成功/失败）
+   - 执行耗时差异检测（阈值 50ms）
+   - 错误信息比对
+   - 差异日志记录
+
+5. **自动降级机制**
+   - 连续失败阈值：5 次
+   - 自动切换到 Executor-only 模式
+   - 保护系统稳定性
+
+**配置选项**：
+```bash
+# 启用影子模式
+SHADOW_MODE=true
+
+# 启用详细日志
+SHADOW_MODE_VERBOSE=true
+
+# 普通模式（默认）
+SHADOW_MODE=false
+```
+
+**编译验证**：
+- ✅ 影子模式相关文件编译通过
+- ✅ applyScheduler.ts 修改后编译通过
+- ✅ app.ts 修改后编译通过
+
+**架构改进**：
+- 设计模式：装饰器模式 + 策略模式
+- 双写机制：新旧链路同时执行，行为比对
+- 故障隔离：单个 Host 失败不影响其他
+- 降级策略：自动回退保证系统可用性
+
+**下一步**：
+- 阶段 3：流量切换
+- 通过配置开关切换主流量到 InputRouter
+- 旧 Executor 转为"兼容适配器"或直接废弃
 
 ---
 

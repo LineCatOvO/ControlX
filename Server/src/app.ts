@@ -1,7 +1,8 @@
 // 入口文件，启动服务
 
 import { startWsServer } from "./ws/server";
-import { startInputExecutor, getExecutorManager, isDryRun, printDryRunSummary } from "./input/executor";
+import { startInputExecutor, getExecutorManager, isDryRun, printDryRunSummary, getSafetyController } from "./input/executor";
+import { initShadowModeIntegration } from "./input/executor_shadow";
 import { StateStore } from "./input/stateStore";
 import { ApplyScheduler } from "./input/applyScheduler";
 import { HeartbeatModule } from "./input/heartbeat";
@@ -86,8 +87,8 @@ heartbeatModule.start();
 // 设置心跳超时回调（触发安全清零）
 heartbeatModule.onTimeout(() => {
     console.error("Heartbeat timeout: Triggering safety clear");
-    const safetyController = getExecutorManager().getSafetyController?.();
-    if (safetyController && typeof safetyController.triggerSafetyClear === "function") {
+    const safetyController = getSafetyController();
+    if (safetyController) {
         safetyController.triggerSafetyClear("Heartbeat timeout");
     }
 });
@@ -101,10 +102,13 @@ startWsServer();
 // 启动输入执行器
 startInputExecutor();
 
+// 初始化影子模式（如果启用）
+initShadowModeIntegration();
+
 // 初始化并启动ApplyScheduler
 const executorManager = getExecutorManager();
 const applyScheduler = new ApplyScheduler(executorManager, stateStore);
-applyScheduler.start();
+applyScheduler.start(Date.now());
 
 // 导出全局实例，供其他模块使用
 (global as any).stateStore = stateStore;

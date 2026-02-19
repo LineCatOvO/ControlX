@@ -1,6 +1,7 @@
 import { StateStore } from './stateStore';
 import { InputExecutorManager } from './interfaces';
 import { getSafetyController } from './executor';
+import { executeInputWithShadow, isShadowModeEnabled } from './executor_shadow';
 
 /**
  * ApplyScheduler配置
@@ -139,20 +140,26 @@ export class ApplyScheduler {
         // 记录接收时间
         this.lastReceiveTime = tickTime;
 
-        // 应用状态到所有执行器
-        this.executorManager.applyState(latestState);
+        // 应用状态到所有执行器（支持影子模式）
+        if (isShadowModeEnabled()) {
+          // 影子模式：双写到 Executor 和 Router
+          executeInputWithShadow();
+        } else {
+          // 普通模式：只写 Executor
+          this.executorManager.applyState(latestState);
 
-        // 记录应用时间
-        const applyTime = Date.now();
-        this.lastApplyTime = applyTime;
-        this.stateStore.recordAppliedState(sequenceNumber, applyTime);
+          // 记录应用时间
+          const applyTime = Date.now();
+          this.lastApplyTime = applyTime;
+          this.stateStore.recordAppliedState(sequenceNumber, applyTime);
 
-        // 记录有效状态时间到安全控制器
-        const safetyController = getSafetyController();
-        safetyController.recordValidState(latestState, applyTime);
+          // 记录有效状态时间到安全控制器
+          const safetyController = getSafetyController();
+          safetyController.recordValidState(latestState, applyTime);
+        }
 
         // 计算时间差
-        const timeDiff = applyTime - tickTime;
+        const timeDiff = Date.now() - tickTime;
 
         this.applyCount++;
 
