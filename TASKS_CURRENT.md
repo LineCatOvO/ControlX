@@ -1,10 +1,11 @@
-# 当前任务：统一输入路由抽象架构重构 + E2E 测试架构重构 + Android 单元测试实施
+# 当前任务：统一输入路由抽象架构重构 + E2E 测试架构重构 + Android 单元测试实施 + Android 架构优化设计
 
 **开始时间**: 2026-02-19
 **目标**:
 1. 实现 InputHost 抽象层与 InputRouter 统一路由
 2. 重构 E2E 测试架构为三阶段模式，遵循 Appium 模拟为主原则
 3. 为 Android 客户端编写全面的单元测试和集成测试 ✅ 已完成
+4. 分析 Android 客户端代码结构，提出架构优化设计方案 ✅ 已完成
 
 ---
 
@@ -41,6 +42,67 @@ cd /home/linecat/agent-workspace/projects/ControlX/AndroidClient
 ### 详细报告
 
 详见：`AndroidClient/ANDROID_TEST_REPORT.md`
+
+---
+
+## ✅ Android 架构分析完成 (2026-02-19)
+
+### 核心问题识别
+
+| 问题维度 | 症状描述 | 影响等级 | 优先级 |
+|----------|----------|----------|--------|
+| **架构双轨制** | Layer 五层架构与 Control 三层架构并存 | 🔴 高 | P0 |
+| **职责边界模糊** | InputAbstractionLayer 混合状态机/合并/归一化 | 🔴 高 | P0 |
+| **服务类过重** | InputRuntimeService 管理所有组件 | 🟡 中 | P1 |
+| **包结构混乱** | input/ 包包含 50+ 个职责不同的类 | 🟡 中 | P1 |
+| **重复代码** | LayoutEngine 新旧版本并存 | 🟡 中 | P1 |
+| **依赖倒置缺失** | 高层模块直接依赖低层模块 | 🟡 中 | P2 |
+| **测试困难** | 核心逻辑与 Android API 强耦合 | 🟢 低 | P2 |
+
+### 优化方案设计
+
+**核心设计决策**:
+1. **核心业务逻辑与平台实现分离** - 创建 `core/` 纯 Java 逻辑，`platform/api/` 接口，`platform/android/` 实现
+2. **统一三层控制架构** - 保留 Control 三层架构，整合 Layer 架构功能
+3. **精简 InputRuntimeService** - Service 只负责生命周期，创建 `RuntimeFacade` 管理组件
+
+**优化后包结构**:
+```
+com.linecat.wmmtcontroller/
+├── core/           # 核心业务逻辑 (纯 Java，无 Android 依赖)
+├── platform/       # 平台适配层 (api/接口 + android/实现)
+├── network/        # 网络通信
+├── service/        # Android Service(精简)
+├── ui/             # UI 组件
+├── model/          # 数据模型
+└── util/           # 工具类
+```
+
+### 迁移路径 (5 个阶段)
+
+| 阶段 | 名称 | 预计时间 | 主要任务 |
+|------|------|----------|----------|
+| 阶段 1 | 基础架构搭建 | 1-2 周 | 创建新包结构，移动纯 Java 类 |
+| 阶段 2 | Platform 层重构 | 2-3 周 | 实现 Android Provider，解耦 |
+| 阶段 3 | Input Pipeline 整合 | 2-3 周 | 替换 InputAbstractionLayer |
+| 阶段 4 | Service 层精简 | 1 周 | 创建 RuntimeFacade |
+| 阶段 5 | 清理与优化 | 1-2 周 | 删除废弃代码，性能优化 |
+
+**总计预计**: 7-10 周
+
+### 架构文档
+
+- **详细设计**: `AndroidClient/ARCHITECTURE_OPTIMIZATION_DESIGN.md` (943 行)
+- **总结文档**: `AndroidClient/ARCHITECTURE_SUMMARY.md` (150 行)
+
+包含内容:
+- 当前架构问题分析
+- 优化架构设计 (分层/包结构/数据流)
+- 详细类设计
+- 迁移路径规划
+- 测试策略
+- 风险管理
+- 成功指标
 
 ---
 
