@@ -1,5 +1,35 @@
 # ControlX 端到端测试运行指南
 
+## 测试框架说明
+
+### 为什么使用 Mocha + wd 而不是 Playwright？
+
+**原因**：
+1. **Appium 原生支持** - `wd` 是 Appium 官方推荐的 Node.js 客户端
+2. **职责分离** - Playwright 主要用于 Web 浏览器测试，不适用于原生 Android App
+3. **生态一致** - Mocha + wd + chai 是标准的 Appium 测试组合
+
+**测试框架栈**：
+```
+├── Mocha          - 测试运行器
+├── wd             - Appium Node.js 客户端
+├── chai           - 断言库
+├── chai-as-promised - Promise 断言扩展
+└── WebSocket      - 原生 WebSocket 客户端
+```
+
+### 各测试类型使用的框架
+
+| 测试类型 | 测试框架 | 移动端驱动 | 说明 |
+|----------|----------|------------|------|
+| **功能测试** | Mocha + wd | Appium (UiAutomator2) | 真正的 App UI 交互 |
+| **协议测试** | Mocha + WebSocket | 无 | 纯网络协议测试 |
+| **性能测试** | Mocha + wd | Appium + WebSocket | 延迟/吞吐量测量 |
+| **异常测试** | Mocha + wd | Appium | 错误恢复测试 |
+| **兼容性测试** | Mocha + wd | Appium | 多设备测试 |
+
+---
+
 ## 快速开始
 
 ### 前置条件
