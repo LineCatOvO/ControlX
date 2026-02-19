@@ -1,7 +1,9 @@
-# 当前任务：统一输入路由抽象架构重构
+# 当前任务：统一输入路由抽象架构重构 + E2E 测试架构重构
 
 **开始时间**: 2026-02-19
-**目标**: 实现 InputHost 抽象层与 InputRouter 统一路由，解决路由逻辑分散、状态分裂、平台耦合问题
+**目标**: 
+1. 实现 InputHost 抽象层与 InputRouter 统一路由
+2. 重构 E2E 测试架构为三阶段模式，遵循 Appium 模拟为主原则
 
 ---
 
@@ -578,94 +580,433 @@ SHADOW_MODE=false
 
 ---
 
+## E2E 测试架构重构
+
+### 测试设计原则
+
+| 原则 | 说明 | 优先级 |
+|------|------|--------|
+| **Appium 模拟真实交互** | 通过 UI 点击、滑动等操作测试完整链路 | 🔴 主要 |
+| **WebSocket 仅用于验证** | 监听后端收到的输入，确认 App→Server 通信正常 | 🟢 辅助 |
+
+### 为什么这样设计？
+
+1. **真实用户场景**：用户通过 App UI 操作，不是直接调用 WebSocket
+2. **测试价值最大化**：Appium 模拟能发现 UI→逻辑→通信 全链路问题
+3. **职责分离**：
+   - Appium 测试：**App 能否正确响应用户操作并发送输入**
+   - WebSocket 监听：**后端是否收到正确的输入**（验证用）
+
+### 正确的测试流程
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    正确的 E2E 测试流程                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. Appium 模拟用户点击 App 上的键盘区域                     │
+│         │                                                   │
+│         ▼                                                   │
+│  2. App 检测到触摸事件，生成输入数据                         │
+│         │                                                   │
+│         ▼                                                   │
+│  3. App 通过 WebSocket 发送输入到后端                        │
+│         │                                                   │
+│         ▼                                                   │
+│  4. 测试脚本监听 WebSocket，验证后端收到了正确的输入         │
+│         │                                                   │
+│         ▼                                                   │
+│  5. 断言：收到的输入 == 预期的输入                          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 错误的测试流程（已修正）
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    错误的 E2E 测试流程                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  测试脚本 ──主动发送──> WebSocket ──> 后端                  │
+│         │                                                   │
+│         └────── 这跳过了 App 的 UI 和输入生成逻辑！          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## E2E 测试体系设计
+
+### 测试框架选型
+
+| 框架组合 | Appium 支持 | Web 测试 | 学习曲线 | 生态成熟度 | 选择 |
+|----------|-------------|----------|----------|------------|------|
+| **Mocha + wd** | ✅ 原生 | ❌ | 低 | 高 | ✅ **选用** |
+| Playwright + Appium 插件 | ⚠️ 间接 | ✅ | 中 | 中 | ❌ |
+| Jest + appium-jest | ⚠️ 社区 | ❌ | 中 | 低 | ❌ |
+| WebdriverIO | ✅ 原生 | ✅ | 高 | 高 | 备选 |
+
+**选择理由**：
+1. **wd** 是 Appium 官方推荐的 Node.js 客户端，由 Appium 团队维护
+2. **Mocha** 是最成熟的 Node.js 测试框架，灵活且可配置
+3. **chai** 提供 BDD 风格的断言，可读性强
+4. **生态一致** - 避免混用多个框架导致维护复杂
+
+### 测试框架栈
+
+```
+┌─────────────────────────────────────────┐
+│           测试框架架构                   │
+├─────────────────────────────────────────┤
+│                                         │
+│  Mocha (测试运行器)                     │
+│  ├── 测试组织 (describe/it)            │
+│  ├── 生命周期 (before/after)           │
+│  └── 报告生成 (reporters)              │
+│                                         │
+│  wd (Appium 客户端)                     │
+│  ├── 设备控制 (tap, swipe, etc.)       │
+│  ├── 元素查找 (elementByAccessibilityId)│
+│  └── 截图 (takeScreenshot)             │
+│                                         │
+│  chai (断言库)                          │
+│  ├── expect 风格                        │
+│  ├── chai-as-promised (Promise 断言)   │
+│  └── 自定义断言                        │
+│                                         │
+│  WebSocket (原生客户端)                 │
+│  ├── 后端通信                           │
+│  ├── 延迟测量                           │
+│  └── 协议验证                           │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### 测试套件结构
+
+```
+appium-e2e/
+├── tests/
+│   ├── run-e2e-pipeline.js      # 主测试管道（推荐）
+│   ├── functional/              # 功能测试
+│   │   ├── keyboard-input.test.js
+│   │   ├── gamepad-input.test.js
+│   │   ├── mouse-input.test.js
+│   │   └── joystick-input.test.js
+│   ├── protocol/                # 协议测试
+│   │   └── websocket-protocol.test.js
+│   ├── performance/             # 性能测试
+│   │   └── performance.test.js
+│   ├── exception/               # 异常测试
+│   └── compatibility/           # 兼容性测试
+├── fixtures/                    # 测试数据
+├── configs/                     # 配置文件
+├── test-results/                # 测试结果
+└── reports/                     # 测试报告
+```
+
+### 测试类别说明
+
+| 类别 | 测试文件 | 测试内容 | 预计耗时 |
+|------|----------|----------|----------|
+| **功能测试** | `tests/functional/*.test.js` | 键盘/手柄/鼠标/摇杆输入 | 2 分钟 |
+| **协议测试** | `tests/protocol/*.test.js` | WebSocket 连接/心跳/RTT | 1 分钟 |
+| **性能测试** | `tests/performance/*.test.js` | 延迟/吞吐量/压力/稳定性 | 3 分钟 |
+| **异常测试** | `tests/exception/*.test.js` | 网络中断/服务崩溃恢复 | 待扩展 |
+| **兼容性测试** | `tests/compatibility/*.test.js` | 多设备/多 Android 版本 | 待扩展 |
+
+### 运行命令
+
+```bash
+# 运行完整测试套件
+cd appium-e2e
+npm test
+
+# 按类别运行
+npm run test:functional      # 功能测试
+npm run test:protocol        # 协议测试
+npm run test:performance     # 性能测试
+
+# CI/CD 模式
+npm run test:ci
+```
+
+### 前置条件
+
+1. **Android 设备或模拟器**
+   ```bash
+   adb devices  # 检查设备连接
+   ```
+
+2. **已构建的 Server**
+   ```bash
+   cd ../Server && npm run build
+   ```
+
+3. **已构建的 Android 客户端**
+   ```bash
+   cd ../AndroidClient && ./gradlew assembleDebug
+   ```
+
+---
+
+## E2E 测试架构重构执行记录
+
+### 2026-02-19 23:00 E2E 测试体系设计完成 ✅
+
+**创建的文件**：
+- ✅ `appium-e2e/E2E_TEST_DESIGN.md` - 完整的测试体系设计文档
+- ✅ `appium-e2e/RUNNING_TESTS.md` - 测试运行指南
+- ✅ `appium-e2e/configs/thresholds.json` - 性能阈值配置
+- ✅ `appium-e2e/fixtures/input-scenarios.json` - 测试数据工厂
+
+**核心内容**：
+1. **测试设计原则**
+   - Appium 模拟真实交互
+   - WebSocket 仅用于验证
+   - 正确的测试流程图
+
+2. **测试框架选型**
+   - 选择 Mocha + wd（Appium 官方客户端）
+   - 不使用 Playwright（主要用于 Web 测试）
+
+3. **测试套件结构**
+   - 功能测试、协议测试、性能测试
+   - 异常测试、兼容性测试（待扩展）
+
+4. **质量门禁**
+   - 测试通过率 >95%
+   - 输入延迟 <50ms
+   - 端到端延迟 <100ms
+   - 代码覆盖率 >85%
+
+---
+
+### 2026-02-19 23:15 测试脚本创建完成 ✅
+
+**创建的文件**：
+- ✅ `appium-e2e/tests/functional/keyboard-input.test.js` - 键盘输入功能测试
+- ✅ `appium-e2e/tests/protocol/websocket-protocol.test.js` - WebSocket 协议测试
+- ✅ `appium-e2e/tests/performance/performance.test.js` - 性能测试
+
+**测试用例**：
+
+#### 功能测试（键盘）
+- 单键按下/释放
+- 多键组合（W+A+S）
+- 快速连击（10 次/秒）
+- 长按（2 秒）
+- 特殊键（方向键）
+- 键盘布局验证
+
+#### 协议测试（WebSocket）
+- 连接建立（正常连接）
+- 断线重连机制
+- 多客户端并发（5 个连接）
+- 心跳机制（Ping/Pong）
+- 网络 RTT 测量
+- 消息接收验证
+
+#### 性能测试
+- 输入延迟测量（<50ms）
+- 吞吐量测试（30+ FPS）
+- 多键组合测试
+- 长时间运行（30 秒）
+- 内存使用监控（增长<50MB）
+
+---
+
+### 2026-02-19 23:30 测试框架统一完成 ✅
+
+**修改的文件**：
+- ✅ `appium-e2e/package.json` - 统一使用 Mocha + wd
+- ✅ `appium-e2e/.mocharc.js` - Mocha 配置文件
+
+**修改原因**：
+- 之前测试混用了 Playwright 和 wd (Appium)
+- Playwright 主要用于 Web 测试，不直接支持 Appium
+- 导致框架职责混乱，依赖复杂
+
+**解决方案**：
+- 统一使用 Mocha + wd + chai 作为测试框架
+- wd 是 Appium 官方推荐的 Node.js 客户端
+- Mocha 是成熟的测试运行器
+- chai 提供 BDD 风格断言
+
+---
+
+### 2026-02-19 23:45 测试运行命令配置完成 ✅
+
+**修改的文件**：
+- ✅ `appium-e2e/package.json` - 添加 `npm test` 命令
+- ✅ `appium-e2e/tests/run-e2e-pipeline.js` - 修复报告目录创建
+
+**运行命令**：
+```bash
+cd appium-e2e
+npm test  # 运行全部测试
+```
+
+**前置条件**：
+- Android 设备或模拟器已连接 (`adb devices`)
+- Server 已构建 (`cd ../Server && npm run build`)
+- Android 客户端已构建 (`cd ../AndroidClient && ./gradlew assembleDebug`)
+
+---
+
+### 2026-02-19 23:50 测试设计原则修正完成 ✅
+
+**修改的文件**：
+- ✅ `appium-e2e/tests/protocol/websocket-protocol.test.js` - 移除主动发送输入
+- ✅ `appium-e2e/tests/performance/performance.test.js` - 改为 Appium 点击模拟
+- ✅ `appium-e2e/E2E_TEST_DESIGN.md` - 添加测试设计原则说明
+- ✅ `appium-e2e/RUNNING_TESTS.md` - 添加设计原则说明
+
+**修改内容**：
+
+#### WebSocket 协议测试修正
+**删除的测试**：
+- ❌ "应该能接收标准输入消息" - 主动发送 input 消息
+- ❌ "应该保证 frameId 单调递增" - 主动发送带 frameId 的消息
+
+**保留的测试**：
+- ✅ 连接管理（建立连接、断线重连、并发连接）
+- ✅ 心跳机制（Ping/Pong 响应、网络 RTT 测量）
+- ✅ 消息接收验证（监听服务器推送）
+
+#### 性能测试修正
+**修改前**：
+```javascript
+// ❌ 错误：通过 WebSocket 主动发送输入
+CONFIG.wsClient.send(JSON.stringify({
+    type: "input",
+    data: { keyboard: ["W"], ... }
+}));
+```
+
+**修改后**：
+```javascript
+// ✅ 正确：通过 Appium 点击模拟输入
+await driver.tap([{ x: width * 0.2, y: height * 0.7 }]);
+// WebSocket 仅用于监听延迟
+CONFIG.wsClient.on("message", (data) => {
+    if (msg.type === "input" && msg.data.timestamp) {
+        CONFIG.inputLatencies.push(Date.now() - msg.data.timestamp);
+    }
+});
+```
+
+**设计原则**：
+- ✅ Appium 模拟真实交互（点击、滑动等）
+- ⚠️ WebSocket 仅监听验证，不主动发送输入
+
+---
+
 ## 待办事项
 
 ### ✅ 已完成任务
 
-#### 阶段 1：地基搭建 ✅ 已完成
-- [x] 创建 src/input/hosts/ 目录
-- [x] 创建 src/input/router/ 目录
-- [x] 实现 InputHost.ts 抽象基类
-- [x] 实现 InputDeviceType 枚举
-- [x] 实现 InputRouter.ts
-- [x] 实现 WindowsKeyboardHost.ts
-- [x] 实现 WindowsGamepadHost.ts
-- [x] 创建 index.ts 统一导出
+#### 输入路由架构重构
+- [x] 阶段 1：地基搭建 ✅
+- [x] 阶段 2：影子模式 ✅
+- [x] 阶段 3：流量切换 ✅
+- [x] 阶段 4：生态扩展（空类） ✅
 
-#### 阶段 2：影子模式 ✅ 已完成
-- [x] 在 InputExecutorManager 中集成 InputRouter
-- [x] 实现双写机制：同时调用旧 Executor 和新 Router
-- [x] 添加日志比对：记录执行结果和耗时
-- [x] 编写一致性验证测试框架
-
-#### 阶段 3：流量切换 ✅ 已完成
-- [x] 创建 Router-only 执行器
-- [x] 通过配置开关切换主流量到 InputRouter
-- [x] 实现自动降级保护
-- [x] 修改 ApplyScheduler 支持 Router-only 模式
-
-#### 阶段 4：生态扩展（空类） ✅ 已完成
-- [x] 创建 LinuxKeyboardHost.ts 空类
-- [x] 创建 LinuxGamepadHost.ts 空类
-- [x] 创建 MacOSKeyboardHost.ts 空类
-- [x] 创建 MacOSGamepadHost.ts 空类
-- [x] 更新 hosts/index.ts 导出
+#### E2E 测试架构重构
+- [x] 测试体系设计文档 ✅
+- [x] 测试框架选型（Mocha + wd） ✅
+- [x] 功能测试脚本（键盘） ✅
+- [x] 协议测试脚本（WebSocket） ✅
+- [x] 性能测试脚本 ✅
+- [x] 测试运行命令配置 ✅
+- [x] 测试设计原则修正 ✅
 
 ---
 
 ### ⏳ 待制作任务（低优先级）
 
-#### 阶段 4：生态扩展（具体实现）⏳ 待制作
+#### 输入路由架构 - 阶段 4 剩余工作
 
 **Linux 平台支持**
 - [ ] 实现 LinuxKeyboardHost 具体功能
-  - [ ] 安装 uinput 依赖
-  - [ ] 实现 uinput 设备创建
-  - [ ] 实现按键事件发送
-  - [ ] Linux 平台测试
 - [ ] 实现 LinuxGamepadHost 具体功能
-  - [ ] 安装 uinput 依赖
-  - [ ] 实现虚拟 Xbox 360 控制器
-  - [ ] 实现按钮/摇杆/扳机映射
-  - [ ] Linux 平台测试
 
 **MacOS 平台支持**
 - [ ] 实现 MacOSKeyboardHost 具体功能
-  - [ ] 安装 Quartz 事件库
-  - [ ] 实现按键码映射
-  - [ ] 实现按键事件发送
-  - [ ] MacOS 平台测试
 - [ ] 实现 MacOSGamepadHost 具体功能
-  - [ ] 安装 GCController 库
-  - [ ] 实现控制器连接
-  - [ ] 实现按钮/摇杆映射
-  - [ ] MacOS 平台测试
 
-**跨平台工厂模式（可选）**
-- [ ] 实现 HostFactory 自动检测平台并创建对应 Host
-- [ ] 添加平台检测单元测试
+#### E2E 测试架构 - 扩展测试
+
+**异常测试**
+- [ ] 网络中断恢复测试
+- [ ] 服务崩溃恢复测试
+- [ ] 边界条件测试
+
+**兼容性测试**
+- [ ] 多 Android 版本测试
+- [ ] 多设备测试
+- [ ] 屏幕尺寸兼容性测试
+
+**功能测试扩展**
+- [ ] 游戏手柄输入测试
+- [ ] 鼠标输入测试
+- [ ] 摇杆输入测试
 
 ---
 
 ## 知识沉淀
 
-### 设计模式应用
+### 输入路由架构 - 设计模式应用
 
 | 模式 | 应用场景 | 价值 |
 |------|----------|------|
 | **策略模式** | InputHost 抽象 + 具体实现 | 隔离平台差异，易于扩展 |
 | **门面模式** | InputRouter 统一接口 | 简化调用方，隐藏复杂性 |
-| **工厂模式** | HostFactory 创建 Host | 集中管理创建逻辑 |
+| **装饰器模式** | ShadowModeManager | 透明添加影子模式功能 |
+| **适配器模式** | RouterOnlyExecutor | 兼容旧接口，平滑迁移 |
+
+### E2E 测试架构 - 设计原则
+
+| 原则 | 说明 | 优先级 |
+|------|------|--------|
+| **Appium 模拟真实交互** | 通过 UI 点击、滑动等操作测试完整链路 | 🔴 主要 |
+| **WebSocket 仅用于验证** | 监听后端收到的输入，确认 App→Server 通信正常 | 🟢 辅助 |
+
+### E2E 测试架构 - 测试框架选型
+
+| 框架组合 | Appium 支持 | Web 测试 | 学习曲线 | 生态成熟度 | 选择 |
+|----------|-------------|----------|----------|------------|------|
+| **Mocha + wd** | ✅ 原生 | ❌ | 低 | 高 | ✅ **选用** |
+| Playwright + Appium 插件 | ⚠️ 间接 | ✅ | 中 | 中 | ❌ |
 
 ### 关键技术点
 
+**输入路由架构**：
 1. **异步初始化**：`initialize()` 返回 `Promise<boolean>`，避免启动阻塞
 2. **并行状态分发**：`Promise.all()` 并行处理不同设备，降低延迟
 3. **熔断机制**：`dispatch()` 中的 try-catch 故障隔离
 4. **差集算法**：最小化系统调用，只发送变化的按键
+5. **影子模式**：双写验证，自动降级保护
+6. **Router-only 模式**：适配器模式，平滑迁移
+
+**E2E 测试架构**：
+1. **三阶段测试管道**：环境搭建 → 核心测试 → 清理收尾
+2. **Appium 模拟交互**：通过 `driver.tap()` 模拟真实用户操作
+3. **WebSocket 监听验证**：仅用于确认后端收到正确的输入
+4. **性能阈值监控**：延迟、吞吐量、内存使用
+5. **测试报告生成**：JSON、JUnit、HTML 格式
 
 ### 注意事项
 
+**输入路由架构**：
 - 不要急于删除旧代码：利用"影子模式"充分验证
 - 接口先行：先冻结 InputHost 的接口定义
 - 自动化测试：为 InputRouter 编写完整的单元测试
+
+**E2E 测试架构**：
+- 测试应该模拟真实用户行为，而不是绕过 App 直接调用底层 API
+- WebSocket 仅用于监听验证，不主动发送输入数据
+- 测试前确保 Android 设备/模拟器已连接
+- 性能测试需要多次采样取平均值
