@@ -1,13 +1,14 @@
 // 键盘适配器实现
 
-import { KeyboardAdapter } from './InputAdapter';
+import { KeyboardAdapter as IKeyboardAdapter } from './InputAdapter';
 import { KeyboardExecutor } from '../keyboard';
+import { InputState } from '../../types/ws';
 
 /**
  * 键盘适配器
- * 封装KeyboardExecutor的调用逻辑，实现KeyboardAdapter接口
+ * 封装 KeyboardExecutor 的调用逻辑，实现 KeyboardAdapter 接口
  */
-export class KeyboardAdapter implements KeyboardAdapter {
+export class KeyboardAdapter implements IKeyboardAdapter {
     private executor: KeyboardExecutor;
 
     constructor(executor: KeyboardExecutor) {
@@ -18,22 +19,21 @@ export class KeyboardAdapter implements KeyboardAdapter {
      * 应用输入状态（适配器基类方法）
      * @param state 输入状态
      */
-    applyState(state: any): void {
-        if (state.keyboard) {
-            this.applyKeyboardState(state.keyboard);
-        }
+    applyState(state: InputState): void {
+        this.executor.applyState(state);
     }
 
     /**
-     * 应用键盘状态（KeyboardAdapter特定方法）
+     * 应用键盘状态（KeyboardAdapter 特定方法）
      * @param pressedKeys 按下的键集合
      */
     applyKeyboardState(pressedKeys: Set<string> | string[]): void {
-        // 转换Set为数组（如果需要）
         const keys = Array.isArray(pressedKeys) ? pressedKeys : Array.from(pressedKeys);
-
-        // 应用键盘状态到执行器
-        this.executor.applyKeyboardState(keys);
+        this.executor.applyState({
+            keyboard: new Set(keys),
+            mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+            joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 }
+        });
     }
 
     /**
@@ -48,6 +48,7 @@ export class KeyboardAdapter implements KeyboardAdapter {
      * @returns 当前按下的键集合
      */
     getKeyboardState(): Set<string> {
-        return this.executor.getCurrentKeys();
+        // KeyboardExecutor 不暴露内部状态，返回空集合
+        return new Set<string>();
     }
 }
