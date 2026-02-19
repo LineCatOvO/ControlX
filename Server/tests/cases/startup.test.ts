@@ -8,7 +8,7 @@ describe('Startup Phase Tests', () => {
   let applyScheduler: ApplyScheduler;
 
   afterEach(async () => {
-    if (applyScheduler) {
+    if (applyScheduler && applyScheduler.isRunning()) {
       applyScheduler.stop();
     }
     stopInputExecutor();
@@ -31,7 +31,7 @@ describe('Startup Phase Tests', () => {
 
     // Initialize apply scheduler
     applyScheduler = new ApplyScheduler(executorManager, stateStore);
-    applyScheduler.start();
+    applyScheduler.start(Date.now());
 
     // Verify scheduler is running
     expect(applyScheduler.isRunning()).toBe(true);
@@ -44,7 +44,7 @@ describe('Startup Phase Tests', () => {
     stateStore = new StateStore();
     const executorManager = getExecutorManager();
     applyScheduler = new ApplyScheduler(executorManager, stateStore);
-    applyScheduler.start();
+    applyScheduler.start(Date.now());
 
     // Verify components are running
     expect(applyScheduler.isRunning()).toBe(true);
@@ -71,7 +71,7 @@ describe('Startup Phase Tests', () => {
     applyScheduler = new ApplyScheduler(executorManager, stateStore);
     
     // Start and immediately stop to verify it can start
-    applyScheduler.start();
+    applyScheduler.start(Date.now());
     expect(applyScheduler.isRunning()).toBe(true);
   });
 
@@ -92,7 +92,7 @@ describe('Startup Phase Tests', () => {
     applyScheduler.addTickCallback(tickCallback);
     
     // 启动调度器
-    applyScheduler.start();
+    applyScheduler.start(Date.now());
     
     // 等待足够的时间让调度器运行预期的tick数
     await new Promise(resolve => setTimeout(resolve, expectedTicks * 20 + 20)); // 20ms per tick + 20ms buffer

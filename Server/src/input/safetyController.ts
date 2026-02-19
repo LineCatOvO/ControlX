@@ -6,11 +6,13 @@ import { InputState } from "../types/ws";
  */
 interface SafetyConfig {
     timeoutMs: number; // 超时时间，默认500ms
+    clearReasons?: Record<string, string>; // 清零原因记录
 }
 
 /**
  * 安全控制器
  * 负责在异常情况下（超时、断连、状态校验失败等）立即清零所有输入状态
+ * SafetyController 是唯一允许触发清零的模块，确保清零操作的单一权威性
  */
 export class SafetyController {
     // 执行器管理器引用
@@ -34,6 +36,9 @@ export class SafetyController {
     // 是否已销毁标志
     private isDestroyed: boolean = false;
 
+    // 清零原因记录
+    private clearReasons: Record<string, string> = {};
+
     /**
      * 构造函数
      * @param executorManager 执行器管理器
@@ -55,21 +60,23 @@ export class SafetyController {
     /**
      * 记录有效状态接收时间
      * @param state 接收到的状态
+     * @param applyTime 应用时间戳（可选，用于时间一致性）
      */
-    recordValidState(state: InputState): void {
-        this.lastValidStateTime = Date.now();
+    recordValidState(state: InputState, applyTime?: number): void {
+        this.lastValidStateTime = applyTime || Date.now();
         // 移除重复日志，只记录关键事件
     }
 
     /**
      * 触发显式清零
+     * @param reason 清零原因
      */
-    triggerSafetyClear(): void {
+    triggerSafetyClear(reason: string = "explicit"): void {
         this.clearAllInputs();
         this.clearCount++;
+        this.clearReasons[this.clearCount] = reason;
         console.log(
-            "SafetyController: Safety clear triggered, total clears:",
-            this.clearCount
+            `SafetyController: Safety clear triggered: ${reason}, total clears: ${this.clearCount}`
         );
     }
 
@@ -81,6 +88,7 @@ export class SafetyController {
         this.clearAllInputs();
         this.clearCount++;
         this.exceptionClearCount++;
+        this.clearReasons[this.clearCount] = reason;
         console.log(
             `SafetyController: Exception clear triggered: ${reason}, total clears: ${this.clearCount}, exception clears: ${this.exceptionClearCount}`
         );
@@ -88,25 +96,27 @@ export class SafetyController {
 
     /**
      * 处理显式零状态
+     * @param reason 清零原因
      */
-    handleZeroState(): void {
+    handleZeroState(reason: string = "zero_state"): void {
         this.clearAllInputs();
         this.clearCount++;
+        this.clearReasons[this.clearCount] = reason;
         console.log(
-            "SafetyController: Zero state handled, total clears:",
-            this.clearCount
+            `SafetyController: Zero state handled: ${reason}, total clears: ${this.clearCount}`
         );
     }
 
     /**
      * 处理WebSocket断开连接
+     * @param reason 清零原因
      */
-    handleDisconnect(): void {
+    handleDisconnect(reason: string = "websocket_disconnected"): void {
         this.clearAllInputs();
         this.clearCount++;
+        this.clearReasons[this.clearCount] = reason;
         console.log(
-            "SafetyController: WebSocket disconnected, total clears:",
-            this.clearCount
+            `SafetyController: WebSocket disconnected: ${reason}, total clears: ${this.clearCount}`
         );
     }
 

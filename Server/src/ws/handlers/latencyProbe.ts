@@ -71,7 +71,7 @@ export function handleLatencyProbe(ws: any, message: LatencyProbeMessage) {
 
     // 返回服务端时间戳
     const response: LatencyProbeResponseMessage = {
-      type: 'latencyProbeResponse',
+      type: 'latency_probe_response',
       clientTimestamp,
       serverTimestamp: serverRecvTs,
     };

@@ -154,8 +154,9 @@ export class StateStore {
     /**
      * 记录状态应用时间
      * @param sequenceNumber 序列号
+     * @param applyTime 应用时间戳（可选）
      */
-    recordAppliedState(sequenceNumber: number): void {
+    recordAppliedState(sequenceNumber: number, applyTime?: number): void {
         // 更新最后应用的序列号
         this.lastAppliedSequenceNumber = sequenceNumber;
 
@@ -164,7 +165,7 @@ export class StateStore {
             (entry) => entry.sequenceNumber === sequenceNumber
         );
         if (historyEntry) {
-            historyEntry.appliedTime = Date.now();
+            historyEntry.appliedTime = applyTime || Date.now();
             // 移除重复的应用状态日志
         }
     }

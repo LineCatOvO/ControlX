@@ -10,7 +10,7 @@ export interface WsMessage {
 // 输入元数据接口
 export interface InputMetadata {
     clientId: string;
-    timestamp: number;
+    timestamp?: number;
     latency?: number;
 }
 
@@ -219,13 +219,14 @@ export interface InputEventMessage extends WsMessage {
 // 延迟测量消息
 export interface LatencyProbeMessage extends WsMessage {
     type: "latency_probe";
-    timestamp: number;
+    timestamp?: number;
 }
 
 // 延迟测量响应消息
 export interface LatencyProbeResponseMessage extends WsMessage {
+    serverTimestamp: number;
     type: "latency_probe_response";
-    timestamp: number;
+    timestamp?: number;
     clientTimestamp: number;
 }
 
@@ -285,11 +286,14 @@ export interface ConfigErrorMessage extends WsMessage {
 
 // Ping消息
 export interface PingMessage extends WsMessage {
+    timestamp?: number;
     type: "ping";
 }
 
 // Pong消息
 export interface PongMessage extends WsMessage {
+    timestamp?: number;
+    serverTimestamp?: number;
     type: "pong";
 }
 

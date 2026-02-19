@@ -9,7 +9,5 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
-  moduleNameMapping: {
-    '^@/(.*)$': '<rootDir>/src/$1'
-  }
+  testTimeout: 10000
 };

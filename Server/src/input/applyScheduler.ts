@@ -7,33 +7,40 @@ import { getSafetyController } from './executor';
  */
 interface ApplySchedulerConfig {
   applyIntervalMs: number; // 应用间隔时间，默认8ms（125Hz）
+  tickTime?: number; // Tick时间戳，用于时间一致性保证
 }
 
 /**
  * ApplyScheduler
  * 负责固定频率（125Hz）状态应用，实现接收与应用解耦
+ * ApplyScheduler 是唯一的时间权威，所有时间戳记录都在这里完成
  */
 export class ApplyScheduler {
   // 执行器管理器引用
   private readonly executorManager: InputExecutorManager;
-  
+
   // 状态存储引用
   private readonly stateStore: StateStore;
-  
+
   // 配置
   private readonly config: ApplySchedulerConfig;
-  
+
   // 应用定时器
   private applyTimer: NodeJS.Timeout | null = null;
-  
+
   // 运行状态
   private _isRunning = false;
-  
+
   // 应用计数
   private applyCount = 0;
-  
+
   // Tick回调列表，用于测试
   private tickCallbacks: Array<() => void> = [];
+
+  // 时间统计
+  private lastTickTime: number = 0;
+  private lastApplyTime: number = 0;
+  private lastReceiveTime: number = 0;
   
   /**
    * 构造函数
@@ -72,18 +79,22 @@ export class ApplyScheduler {
   
   /**
    * 启动ApplyScheduler
+   * @param tickTime Tick时间戳，用于时间一致性保证
    */
-  start(): void {
+  start(tickTime: number): void {
     if (this._isRunning) {
       console.warn('ApplyScheduler: Already running');
       return;
     }
-    
+
     this._isRunning = true;
+    this.lastTickTime = tickTime;
+    this.lastReceiveTime = tickTime;
+
     this.applyTimer = setInterval(() => {
       this.applyCurrentState();
     }, this.config.applyIntervalMs);
-    
+
     console.log(`ApplyScheduler: Started with interval ${this.config.applyIntervalMs}ms (${1000 / this.config.applyIntervalMs}Hz)`);
   }
   
@@ -107,34 +118,48 @@ export class ApplyScheduler {
   
   /**
    * 应用当前状态
+   * ApplyScheduler 是唯一的时间权威，所有时间戳记录都在这里完成
    */
   private applyCurrentState(): void {
     try {
+      // 记录Tick时间
+      const tickTime = Date.now();
+      this.lastTickTime = tickTime;
+
       // 调用tick回调
       this.tickCallbacks.forEach(callback => callback());
-      
+
       // 获取最新状态
       const latestState = this.stateStore.getLatestState();
-      
+
       if (latestState) {
         // 提取序列号
         const sequenceNumber = this.extractSequenceNumber(latestState);
-        
+
+        // 记录接收时间
+        this.lastReceiveTime = tickTime;
+
         // 应用状态到所有执行器
         this.executorManager.applyState(latestState);
-        
+
         // 记录应用时间
-        this.stateStore.recordAppliedState(sequenceNumber);
-        
+        const applyTime = Date.now();
+        this.lastApplyTime = applyTime;
+        this.stateStore.recordAppliedState(sequenceNumber, applyTime);
+
         // 记录有效状态时间到安全控制器
         const safetyController = getSafetyController();
-        safetyController.recordValidState(latestState);
-        
+        safetyController.recordValidState(latestState, applyTime);
+
+        // 计算时间差
+        const timeDiff = applyTime - tickTime;
+
         this.applyCount++;
-        
+
         // 每100次应用输出一次日志
         if (this.applyCount % 100 === 0) {
-          console.log(`ApplyScheduler: Applied ${this.applyCount} states, last sequence: ${sequenceNumber}`);
+          const rtt = tickTime - this.lastReceiveTime;
+          console.log(`ApplyScheduler: Applied ${this.applyCount} states, last sequence: ${sequenceNumber}, time diff: ${timeDiff}ms, RTT: ${rtt}ms`);
         }
       } else {
         // 没有最新状态，不执行任何操作
@@ -142,7 +167,7 @@ export class ApplyScheduler {
       }
     } catch (error) {
       console.error('ApplyScheduler: Error applying state:', error);
-      
+
       // 发生异常时触发安全清零
       const safetyController = getSafetyController();
       safetyController.triggerExceptionClear('ApplyScheduler error');

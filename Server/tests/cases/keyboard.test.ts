@@ -172,13 +172,16 @@ describe("Keyboard Output Tests", () => {
         keyboardExecutor.applyState(emptyState);
 
         // 验证所有状态转换都被正确处理
-        expect(sendKeyMock).toHaveBeenCalled();
-        // 验证最终状态为空时，sendKey 不再被调用
-        const calls = sendKeyMock.mock.calls;
-        // 应该有 3 次调用：W → WA → A（空状态不触发调用）
-        expect(calls.length).toBe(3);
-        expect(calls[0]).toEqual([["W"]]);
-        expect(calls[1]).toEqual([["W", "A"]]);
-        expect(calls[2]).toEqual([["A"]]);
+        // 状态序列：W → WA → A → empty
+        // 实现会：
+        // 1. W → WA: keysToPress={A}, keysToRelease={W} → sendKey([]), sendKey(A) [2次调用]
+        // 2. WA → A: keysToPress={}, keysToRelease={W,A} → sendKey([]) [1次调用]
+        // 3. A → empty: keysToPress={}, keysToRelease={A} → sendKey([]) [1次调用]
+        // 总共4次调用：1. W, 2. [], 3. A, 4. []
+        expect(sendKeyMock).toHaveBeenCalledTimes(4);
+        expect(sendKeyMock).toHaveBeenNthCalledWith(1, ["W"]);
+        expect(sendKeyMock).toHaveBeenNthCalledWith(2, []);
+        expect(sendKeyMock).toHaveBeenNthCalledWith(3, ["A"]);
+        expect(sendKeyMock).toHaveBeenNthCalledWith(4, []);
     });
 });

@@ -8,6 +8,7 @@ import { SafetyController } from "./safetyController";
 import { InputExecutor, InputExecutorManager } from "./interfaces";
 import { TestModeKeyboardExecutor } from "./test-keyboard";
 import { DryRunExecutor } from "./dryRunExecutor";
+import { ApplyScheduler } from "./applyScheduler";
 
 // 检查运行模式
 const isTestMode = process.env.TEST_MODE === "true";
@@ -126,6 +127,15 @@ export function startInputExecutor() {
     // 启动安全控制器的超时检查
     safetyController.startTimeoutCheck();
 
+    // 启动ApplyScheduler（唯一时间权威）
+    const applyScheduler = (global as any).applyScheduler as ApplyScheduler;
+    if (applyScheduler) {
+        // ApplyScheduler由app.ts启动，这里不重复启动
+        console.log("ApplyScheduler: Already started");
+    } else {
+        console.error("ApplyScheduler: Not initialized");
+    }
+
     // 输入执行循环（125Hz）
     inputExecutorInterval = setInterval(() => {
         executeInput();
@@ -155,8 +165,9 @@ function executeInput() {
     // 应用当前输入状态到所有执行器
     executorManager.applyState(inputState);
 
-    // 记录有效状态时间
-    safetyController.recordValidState(inputState);
+    // 记录有效状态时间（applyTime由ApplyScheduler传入）
+    const applyTime = Date.now();
+    safetyController.recordValidState(inputState, applyTime);
 
     // 在测试模式下记录额外信息
     if (isTestMode) {

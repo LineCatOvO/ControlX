@@ -1,28 +1,19 @@
 import { InputExecutor } from "./interfaces";
 import { InputState, InputDelta, InputEvent } from "../types/ws";
-import { GamepadXInputAdapter, XInputState, ZERO_STATE } from "./adapters/GamepadXInputAdapter";
 
 /**
  * 游戏手柄输入执行器
  * 负责将游戏手柄输入状态转换为系统手柄输入
- * 集成 GamepadXInputAdapter
  */
 export class GamepadExecutor implements InputExecutor {
-    // XInput 适配器实例
-    private gamepadAdapter: GamepadXInputAdapter;
-    
     // 记录当前游戏手柄状态
     private currentGamepadState: Set<string> = new Set();
-    
-    // 当前 XInput 状态
-    private currentXInputState: XInputState = JSON.parse(JSON.stringify(ZERO_STATE));
 
     /**
      * 构造函数
      */
     constructor() {
-        this.gamepadAdapter = new GamepadXInputAdapter();
-        console.log('🎮 GamepadExecutor: Initialized with XInput adapter');
+        console.log('🎮 GamepadExecutor: Initialized');
     }
 
     /**
@@ -31,20 +22,8 @@ export class GamepadExecutor implements InputExecutor {
      */
     async applyState(state: InputState): Promise<void> {
         if (state.gamepad) {
-            // 连接适配器（如果尚未连接）
-            if (!this.gamepadAdapter.isConnected()) {
-                const connected = await this.gamepadAdapter.connect();
-                if (!connected) {
-                    console.error('GamepadExecutor: Failed to connect to ViGEmBus');
-                    return;
-                }
-            }
-
             // 更新游戏手柄状态
             this.updateGamepadState(state.gamepad);
-            
-            // 提交 XInput 状态到虚拟手柄
-            await this.gamepadAdapter.submitState(this.currentXInputState);
         }
     }
 
@@ -72,12 +51,7 @@ export class GamepadExecutor implements InputExecutor {
     async reset(): Promise<void> {
         // 清空游戏手柄状态
         this.updateGamepadState(new Set());
-        
-        // 提交零状态
-        if (this.gamepadAdapter.isConnected()) {
-            await this.gamepadAdapter.submitZeroState();
-        }
-        
+
         console.log('GamepadEvent: Reset complete');
     }
 
@@ -109,12 +83,5 @@ export class GamepadExecutor implements InputExecutor {
             // 更新当前游戏手柄状态
             this.currentGamepadState = newState;
         }
-    }
-
-    /**
-     * 获取当前 XInput 状态（用于调试）
-     */
-    getCurrentXInputState(): XInputState {
-        return JSON.parse(JSON.stringify(this.currentXInputState));
     }
 }

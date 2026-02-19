@@ -52,18 +52,18 @@ export class InputValidator {
         errors.push(new ValidationError('Invalid keyboard state'));
       }
 
-      // 验证游戏手柄状态
-      if (!this.validateGamepadState(state.gamepad)) {
+      // 验证游戏手柄状态（可选字段）
+      if (state.gamepad && !this.validateGamepadState(state.gamepad)) {
         errors.push(new ValidationError('Invalid gamepad state'));
       }
 
-      // 验证鼠标状态
-      if (!this.validateMouseState(state.mouse)) {
+      // 验证鼠标状态（可选字段）
+      if (state.mouse && !this.validateMouseState(state.mouse)) {
         errors.push(new ValidationError('Invalid mouse state'));
       }
 
-      // 验证摇杆状态
-      if (!this.validateJoystickState(state.joystick)) {
+      // 验证摇杆状态（可选字段）
+      if (state.joystick && !this.validateJoystickState(state.joystick)) {
         errors.push(new ValidationError('Invalid joystick state'));
       }
 

@@ -4,6 +4,7 @@ import { startWsServer } from "./ws/server";
 import { startInputExecutor, getExecutorManager, isDryRun, printDryRunSummary } from "./input/executor";
 import { StateStore } from "./input/stateStore";
 import { ApplyScheduler } from "./input/applyScheduler";
+import { HeartbeatModule } from "./input/heartbeat";
 import { inputState } from "./input/state";
 import { createViewer, renderStatus } from "./viewer/terminalViewer";
 import dotenv from "dotenv";
@@ -77,6 +78,22 @@ if (viewerEnabled) {
 
 // 初始化状态存储
 const stateStore = new StateStore();
+
+// 初始化并启动心跳模块
+const heartbeatModule = new HeartbeatModule();
+heartbeatModule.start();
+
+// 设置心跳超时回调（触发安全清零）
+heartbeatModule.onTimeout(() => {
+    console.error("Heartbeat timeout: Triggering safety clear");
+    const safetyController = getExecutorManager().getSafetyController?.();
+    if (safetyController && typeof safetyController.triggerSafetyClear === "function") {
+        safetyController.triggerSafetyClear("Heartbeat timeout");
+    }
+});
+
+// 导出心跳模块到全局
+(global as any).heartbeatModule = heartbeatModule;
 
 // 启动WebSocket服务器
 startWsServer();
@@ -176,6 +193,7 @@ try {
         console.error = rawConsole.error;
 
         applyScheduler.stop();
+        heartbeatModule.stop();
         process.exit(0);
     });
 } catch (error) {
