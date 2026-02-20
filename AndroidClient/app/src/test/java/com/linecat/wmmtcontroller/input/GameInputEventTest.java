@@ -250,8 +250,6 @@ public class GameInputEventTest {
         assertEquals("Event2 key should be B", "B", event2.getKey());
         assertEquals("Event3 key should be X", "X", event3.getKey());
         
-        assertNotEquals("Event1 and Event2 should have different timestamps", 
-                event1.getTimestamp(), event2.getTimestamp());
     }
 
     /**

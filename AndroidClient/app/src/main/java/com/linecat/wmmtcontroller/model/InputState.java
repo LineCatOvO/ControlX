@@ -30,7 +30,7 @@ public class InputState {
     private boolean mouseMiddle = false;
 
     // 键盘按键状态
-    private Set<String> keys = new HashSet<>();
+    private Set<String> keys = new HashSet<>(); // Deprecated, use keyboard
 
     // 框架ID
     private long frameId = 0;
@@ -222,7 +222,7 @@ public class InputState {
     public void setMouseMiddle(boolean mouseMiddle) { this.mouseMiddle = mouseMiddle; }
 
     // 键盘按键相关 getter/setter
-    public Set<String> getKeys() { return keys; }
+    public Set<String> getKeys() { return keyboard != null && !keyboard.isEmpty() ? keyboard : keys; }
     public void setKeys(Set<String> keys) {
         if (keys != null) {
             this.keys = keys;
@@ -230,7 +230,7 @@ public class InputState {
     }
 
     public void clearAllKeys() {
-        keys.clear();
+        if (keyboard != null) keyboard.clear(); keys.clear();
     }
 
     // 框架ID相关
