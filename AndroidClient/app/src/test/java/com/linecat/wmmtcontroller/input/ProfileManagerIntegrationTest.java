@@ -1,4 +1,5 @@
 package com.linecat.wmmtcontroller.input;
+import com.linecat.wmmtcontroller.model.InputState;
 
 import com.linecat.wmmtcontroller.model.InputState;
 import com.linecat.wmmtcontroller.model.RawInput;

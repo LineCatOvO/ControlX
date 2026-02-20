@@ -143,8 +143,8 @@ public class InputState {
             this.frameId = other.frameId;
             this.runtimeStatus = other.runtimeStatus != null ? other.runtimeStatus : "";
 
-            if (other.keys != null) {
-                this.keys.addAll(other.keys);
+            if (other.keyboard != null) {
+                this.keyboard.addAll(other.keyboard);
             }
 
             if (other.mouse != null) {
