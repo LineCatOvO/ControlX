@@ -59,13 +59,21 @@ public class Region {
     private final String mappingAxis;          // 映射轴
     private final String mappingButton;        // 映射按钮
     private final String customMappingTarget;  // 自定义映射目标
-    
+
     private final Object customData;       // 自定义数据（根据区域类型不同而不同）
-    
+    private final boolean clickThrough;    // 点击穿透设置
+
     /**
-     * 构造函数
+     * 构造函数（完整版）
      */
     public Region(String id, RegionType type, float left, float top, float right, float bottom, int zIndex, float deadzone, String curve, float[] range, float[] outputRange, OperationType operationType, MappingType mappingType, String mappingKey, String mappingAxis, String mappingButton, String customMappingTarget, Object customData) {
+        this(id, type, left, top, right, bottom, zIndex, deadzone, curve, range, outputRange, operationType, mappingType, mappingKey, mappingAxis, mappingButton, customMappingTarget, customData, false);
+    }
+
+    /**
+     * 构造函数（带穿透设置）
+     */
+    public Region(String id, RegionType type, float left, float top, float right, float bottom, int zIndex, float deadzone, String curve, float[] range, float[] outputRange, OperationType operationType, MappingType mappingType, String mappingKey, String mappingAxis, String mappingButton, String customMappingTarget, Object customData, boolean clickThrough) {
         this.id = id;
         this.type = type;
         this.left = Math.max(0f, Math.min(1f, left));
@@ -84,6 +92,7 @@ public class Region {
         this.mappingButton = mappingButton;
         this.customMappingTarget = customMappingTarget;
         this.customData = customData;
+        this.clickThrough = clickThrough;
     }
     
     /**
@@ -189,7 +198,15 @@ public class Region {
     public Object getCustomData() {
         return customData;
     }
-    
+
+    /**
+     * 获取点击穿透设置
+     * @return true: 点击事件穿透到下层窗口，false: 点击事件由区域消费
+     */
+    public boolean isClickThrough() {
+        return clickThrough;
+    }
+
     // 兼容旧方法名
     public String id() {
         return getId();
@@ -227,6 +244,7 @@ public class Region {
                 ", zIndex=" + zIndex +
                 ", deadzone=" + deadzone +
                 ", curve='" + curve + '\'' +
+                ", clickThrough=" + clickThrough +
                 '}';
     }
 }

@@ -12,6 +12,7 @@ public class UiElement {
     private Float opacity = 1.0f;
     private String resource;
     private Hitbox hitbox;
+    private Boolean clickThrough = false; // 点击穿透设置
 
     public UiElement() {}
 
@@ -77,5 +78,21 @@ public class UiElement {
 
     public void setHitbox(Hitbox hitbox) {
         this.hitbox = hitbox;
+    }
+
+    /**
+     * 获取点击穿透设置
+     * @return true: 点击事件穿透到下层窗口，false: 点击事件由布局消费
+     */
+    public Boolean getClickThrough() {
+        return clickThrough;
+    }
+
+    /**
+     * 设置点击穿透
+     * @param clickThrough true: 点击事件穿透到下层窗口，false: 点击事件由布局消费
+     */
+    public void setClickThrough(Boolean clickThrough) {
+        this.clickThrough = clickThrough;
     }
 }

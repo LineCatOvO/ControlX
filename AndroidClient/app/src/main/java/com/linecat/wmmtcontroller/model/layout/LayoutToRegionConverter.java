@@ -119,7 +119,8 @@ public class LayoutToRegionConverter {
                 null,                                        // mappingAxis
                 null,                                        // mappingButton
                 null,                                        // customMappingTarget
-                uiElement                                    // customData (保存整个 UI 元素对象)
+                uiElement,                                   // customData (保存整个 UI 元素对象)
+                uiElement.getClickThrough() != null ? uiElement.getClickThrough() : false  // clickThrough
         );
     }
 
