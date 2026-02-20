@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void requestOverlayPermission() {
         Log.d(TAG, "requestOverlayPermission called");
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
                 try {
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Starting overlay permission activity: " + intent);
                     startActivity(intent);
                     Log.d(TAG, "Overlay permission activity started successfully");
+                    Toast.makeText(this, "正在获取浮窗权限...", Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to start overlay permission activity", e);
                     // 如果包名方式失败，尝试通用方式
@@ -75,15 +77,19 @@ public class MainActivity extends AppCompatActivity {
                         fallbackIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(fallbackIntent);
                         Log.d(TAG, "Fallback overlay permission activity started");
+                        Toast.makeText(this, "正在获取浮窗权限...", Toast.LENGTH_SHORT).show();
                     } catch (Exception e2) {
                         Log.e(TAG, "Failed to start fallback overlay permission activity", e2);
+                        Toast.makeText(this, "无法打开权限设置页面", Toast.LENGTH_SHORT).show();
                     }
                 }
             } else {
                 Log.d(TAG, "Overlay permission already granted");
+                Toast.makeText(this, "浮窗权限已授予", Toast.LENGTH_SHORT).show();
             }
         } else {
             Log.d(TAG, "Android version below M, overlay permission not required");
+            Toast.makeText(this, "当前系统版本无需浮窗权限", Toast.LENGTH_SHORT).show();
         }
     }
     
