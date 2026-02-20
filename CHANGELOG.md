@@ -1,5 +1,24 @@
 # Changelog
 
+## [2026-02-20] feat: 完善 WebSocket 状态处理器 - 序列号验证、错误处理、日志增强
+
+### Changes
+- Server/src/ws/handlers/state.ts: 增强 WebSocket 状态处理器功能
+  - 集成序列号单调性验证（自动调用 validator.validate()）
+  - 添加序列号错误检测和自动重置验证器
+  - 定义统一错误码（VALIDATION_FAILED, SEQUENCE_ERROR, STATE_STORE_ERROR, INTERNAL_ERROR）
+  - 实现 sendAck() 和 sendErrorAck() 统一 ACK 发送函数
+  - 增强错误日志：带 [StateHandler] 前缀，详细错误字段/期望值/实际值
+  - 添加 validationStats.sequenceErrors 序列号错误统计
+  - 重构 handleState() 函数，统一错误处理路径
+
+### Impact
+- 序列号验证自动集成，支持重传场景处理
+- 错误码统一，便于客户端解析和处理
+- 错误日志清晰可读，带 emoji 标记和统一前缀
+- 统计系统完善，包含序列号错误计数
+- 为 WebSocket 协议完整性提供保障
+
 ## [2026-02-20] feat: 完善键盘映射规则 - 边界测试、日志系统、文档
 
 ### Changes
