@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-02-20] fix: 修复 SafetyController.recordValidState 调用参数错误
+
+### Changes
+- Server/src/input/executor.ts: 更新 recordValidState 函数签名
+  - 添加 tickTime 参数
+  - 传递给 SafetyController.recordValidState(state, tickTime)
+
+- Server/tests/cases/safetyController.test.ts: 更新测试调用
+  - 添加 tickTime 参数到所有 recordValidState 调用
+
+- TASKS_CURRENT.md: 记录测试覆盖率提升任务执行过程
+
+### Impact
+- 修复 TypeScript 编译错误
+- 所有 10 个测试套件通过（247 个测试用例）
+- 核心模块覆盖率保持高水平（>85%）
+
 ## [2026-02-20] feat: 明确 ApplyScheduler 时间权威 - SafetyController 重构
 
 ### Changes
