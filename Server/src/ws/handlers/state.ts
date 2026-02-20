@@ -6,6 +6,15 @@ import { InputValidator, ValidationError } from '../../input/validator';
 // 创建验证器实例
 const validator = new InputValidator();
 
+// 错误码定义
+const ERROR_CODES = {
+    VALIDATION_FAILED: 'VALIDATION_FAILED',
+    SEQUENCE_ERROR: 'SEQUENCE_ERROR',
+    STATE_STORE_ERROR: 'STATE_STORE_ERROR',
+    INTERNAL_ERROR: 'INTERNAL_ERROR',
+    WEBSOCKET_ERROR: 'WEBSOCKET_ERROR',
+} as const;
+
 // ACK 统计
 const ackStats = {
   total: 0,
@@ -20,6 +29,7 @@ const validationStats = {
   total: 0,
   passed: 0,
   failed: 0,
+  sequenceErrors: 0,  // 序列号错误计数
   errorsByField: {} as Record<string, number>,
   timestamps: [] as number[],
 };
@@ -84,6 +94,11 @@ function updateValidationStats(valid: boolean, errors: ValidationError[]) {
         validationStats.errorsByField[error.field] =
           (validationStats.errorsByField[error.field] || 0) + 1;
       }
+
+      // 检测序列号错误
+      if (error.message.includes('sequence') || error.message.includes('序列号')) {
+        validationStats.sequenceErrors++;
+      }
     });
   }
 
@@ -93,6 +108,7 @@ function updateValidationStats(valid: boolean, errors: ValidationError[]) {
       total: validationStats.total,
       passed: validationStats.passed,
       failed: validationStats.failed,
+      sequenceErrors: validationStats.sequenceErrors,
       passRate: `${((validationStats.passed / validationStats.total) * 100).toFixed(2)}%`,
       errorsByField: validationStats.errorsByField,
     });
@@ -119,27 +135,16 @@ function getValidationStats() {
  * @param message 状态消息
  */
 export function handleState(ws: any, message: StateMessage) {
+    const recvTime = Date.now();
+    const stateId = message.stateId;
+
     // 获取全局状态存储实例
     const stateStore = (global as any).stateStore;
 
     // 检查状态存储是否可用
     if (!stateStore) {
-        // 发送错误 ACK 消息
-        const errorAckMessage: StateAckMessage = {
-            type: 'stateAck',
-            ackStateId: message.stateId,
-            serverRecvTs: Date.now(),
-            serverApplyTs: Date.now(),
-            status: 'rejected',
-            reason: 'StateStore not available'
-        };
-
-        try {
-            ws.send(JSON.stringify(errorAckMessage));
-            updateAckStats('error', Date.now());
-        } catch (error) {
-            console.error('Error sending stateAck:', error);
-        }
+        console.error(`[StateHandler] ❌ StateStore not available for state ${stateId}`);
+        sendErrorAck(ws, stateId, recvTime, ERROR_CODES.STATE_STORE_ERROR, 'StateStore not available');
         return;
     }
 
@@ -170,16 +175,16 @@ export function handleState(ws: any, message: StateMessage) {
             }
         };
 
-        // 验证输入状态
+        // 验证输入状态（包括序列号单调性验证）
         const validationResult = validator.validate(inputState);
 
         // 更新验证统计
         updateValidationStats(validationResult.valid, validationResult.errors);
 
         if (!validationResult.valid) {
-            // 验证失败，记录错误
+            // 验证失败，记录详细错误
             validationResult.errors.forEach(error => {
-                console.error(`Validation error: ${error.message}`);
+                console.error(`[StateHandler] ❌ Validation error: ${error.message}`);
                 if (error.field) {
                     console.error(`  Field: ${error.field}`);
                 }
@@ -191,6 +196,17 @@ export function handleState(ws: any, message: StateMessage) {
                 }
             });
 
+            // 检查是否是序列号错误
+            const isSequenceError = validationResult.errors.some(
+                err => err.message.includes('sequence') || err.message.includes('序列号')
+            );
+
+            if (isSequenceError) {
+                console.warn(`[StateHandler] ⚠️ Sequence number error for state ${stateId}, resetting validator`);
+                // 序列号错误时，重置验证器状态（处理重传场景）
+                validator.reset();
+            }
+
             // 触发安全清零（在发送 ACK 之前）
             const safetyController = (global as any).safetyController;
             if (safetyController && typeof safetyController.triggerExceptionClear === "function") {
@@ -200,62 +216,86 @@ export function handleState(ws: any, message: StateMessage) {
             }
 
             // 发送错误 ACK 消息
-            const errorAckMessage: StateAckMessage = {
-                type: 'stateAck',
-                ackStateId: message.stateId,
-                serverRecvTs: Date.now(),
-                serverApplyTs: Date.now(),
-                status: 'rejected',
-                reason: `Validation failed: ${validationResult.errors[0]?.message || 'Invalid state'}`
-            };
-
-            try {
-                ws.send(JSON.stringify(errorAckMessage));
-                updateAckStats('rejected', Date.now());
-            } catch (error) {
-                console.error('Error sending error stateAck:', error);
-            }
+            sendErrorAck(
+                ws,
+                stateId,
+                recvTime,
+                ERROR_CODES.VALIDATION_FAILED,
+                `Validation failed: ${validationResult.errors[0]?.message || 'Invalid state'}`
+            );
             return;
         }
 
-        // 存储状态
+        // 验证通过，存储状态
         const stored = stateStore.storeState(inputState);
 
-        // 发送 ACK 消息
-        const ackMessage: StateAckMessage = {
-            type: 'stateAck',
-            ackStateId: message.stateId,
-            serverRecvTs: Date.now(),
-            serverApplyTs: Date.now(),
-            status: stored ? 'success' : 'rejected',
-            reason: stored ? undefined : 'Invalid state'
-        };
-
-        try {
-            ws.send(JSON.stringify(ackMessage));
-            updateAckStats(stored ? 'success' : 'rejected', Date.now());
-        } catch (error) {
-            console.error('Error sending stateAck:', error);
+        if (!stored) {
+            console.warn(`[StateHandler] ⚠️ StateStore rejected state ${stateId}`);
         }
+
+        // 发送成功 ACK 消息
+        sendAck(ws, stateId, recvTime, stored ? 'success' : 'rejected', stored ? undefined : 'StateStore rejected');
+
     } catch (error) {
-        console.error('Error handling state message:', error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error(`[StateHandler] ❌ Error handling state message ${stateId}:`, errorMsg);
 
         // 发送错误 ACK 消息
-        const errorAckMessage: StateAckMessage = {
-            type: 'stateAck',
-            ackStateId: message.stateId,
-            serverRecvTs: Date.now(),
-            serverApplyTs: Date.now(),
-            status: 'rejected',
-            reason: 'Internal error'
-        };
+        sendErrorAck(ws, stateId, recvTime, ERROR_CODES.INTERNAL_ERROR, `Internal error: ${errorMsg}`);
+    }
+}
 
-        try {
-            ws.send(JSON.stringify(errorAckMessage));
-            updateAckStats('error', Date.now());
-        } catch (error) {
-            console.error('Error sending error stateAck:', error);
-        }
+/**
+ * 发送成功 ACK 消息
+ * @param ws WebSocket 连接
+ * @param stateId 状态 ID
+ * @param recvTime 接收时间
+ * @param status ACK 状态
+ * @param reason 原因（可选）
+ */
+function sendAck(ws: any, stateId: number, recvTime: number, status: 'success' | 'rejected', reason?: string) {
+    const ackMessage: StateAckMessage = {
+        type: 'stateAck',
+        ackStateId: stateId,
+        serverRecvTs: recvTime,
+        serverApplyTs: Date.now(),
+        status: status,
+        reason: reason
+    };
+
+    try {
+        ws.send(JSON.stringify(ackMessage));
+        updateAckStats(status, Date.now());
+    } catch (error) {
+        console.error('Error sending stateAck:', error);
+        updateAckStats('error', Date.now());
+    }
+}
+
+/**
+ * 发送错误 ACK 消息
+ * @param ws WebSocket 连接
+ * @param stateId 状态 ID
+ * @param recvTime 接收时间
+ * @param errorCode 错误码
+ * @param reason 错误原因
+ */
+function sendErrorAck(ws: any, stateId: number, recvTime: number, errorCode: string, reason: string) {
+    const ackMessage: StateAckMessage = {
+        type: 'stateAck',
+        ackStateId: stateId,
+        serverRecvTs: recvTime,
+        serverApplyTs: Date.now(),
+        status: 'rejected',
+        reason: `[${errorCode}] ${reason}`
+    };
+
+    try {
+        ws.send(JSON.stringify(ackMessage));
+        updateAckStats('rejected', Date.now());
+    } catch (error) {
+        console.error('Error sending error stateAck:', error);
+        updateAckStats('error', Date.now());
     }
 }
 
