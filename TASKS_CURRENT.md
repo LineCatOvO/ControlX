@@ -1,155 +1,106 @@
-# 当前任务：Android 客户端分析与下一步任务安排
+# 当前任务：使用 Appium MCP 工具测试 Android 端基础操作
 
-**开始时间**: 2026-02-21 00:00
-**更新**: 2026-02-21 00:30
-
----
-
-## 📊 Android 客户端现状分析
-
-### 已完成工作 (2026-02-19 ~ 2026-02-20)
-
-#### 1. 架构优化 ✅ 完成
-
-**5 个阶段全部完成**:
-- ✅ 阶段 1: 基础架构搭建 (21 文件，2,685 行)
-- ✅ 阶段 2: Platform 层重构 (4 文件，600 行)
-- ✅ 阶段 3: Input Pipeline 整合 (5 文件，400 行)
-- ✅ 阶段 4: Service 层精简 (2 文件，250 行)
-- ✅ 阶段 5: 清理与优化
-
-**新增代码统计**:
-- 36 个新文件
-- ~3,935 行代码
-- 9 次 Git 提交
-
-#### 2. 测试实施 ✅ 完成
-
-**测试结果**:
-- ✅ **124 个测试全部通过** (100% 通过率)
-- ✅ 核心业务逻辑全覆盖 (模型层、处理器层、控制架构)
-- ✅ 编译通过
-
-**测试覆盖详情**:
-| 模块 | 测试数 | 通过率 |
-|------|--------|--------|
-| model/ | 69 | 100% ✅ |
-| input/processor/ | 5 | 100% ✅ |
-| control/ | 6 | 100% ✅ |
-| layer/ | 7 | 100% ✅ |
-| input/ (核心) | 37 | 100% ✅ |
-
-#### 3. 文档交付 ✅ 完成
-
-**6 份文档，~2,000 行**:
-- `ARCHITECTURE_OPTIMIZATION_DESIGN.md` (943 行)
-- `ARCHITECTURE_SUMMARY.md` (150 行)
-- `ANDROID_ARCHITECTURE_IMPLEMENTATION_REPORT.md` (261 行)
-- `ANDROID_TEST_REPORT.md` (200+ 行)
-- `FINAL_REPORT.md` (250 行)
-- `TEST_COMPLETION_REPORT.md` (180 行)
+**开始时间**: 2026-02-20 15:00
+**目标**: 使用 Appium MCP 工具在默认模拟器上测试 ControlX Android 客户端的基础操作
 
 ---
 
-## 🎯 尝试的工作：新架构测试补充
+## 任务背景
 
-### 执行内容
+ControlX 项目已有完整的 Appium E2E 测试框架，现在需要使用 Appium MCP 工具直接在默认模拟器上测试 Android 端的基础操作。
 
-尝试为以下 core 层组件编写单元测试：
-- SafetyController
-- InputPipeline
-- DeadzoneProcessor
-- RangeMapper
-- InvertProcessor
-- CurveProcessor
+### 前置条件
 
-### 遇到的问题
-
-**编译错误原因**:
-1. `InvertProcessor.invert()` 需要 2 个参数 (float, boolean)
-2. `CurveProcessor` 使用字符串类型而非枚举
-3. `InputPrimitives` 没有 `gamepadData` 字段
-
-### 解决方案
-
-由于新架构的 API 设计与测试代码不匹配，已删除失败的测试文件。
-
-**建议后续工作**:
-1. 先阅读实际代码结构
-2. 根据实际 API 编写测试
-3. 或者重构代码使其更易于测试
+- ✅ Android 模拟器已启动并连接
+- ✅ ControlX Android 客户端已构建
+- ✅ Appium MCP 工具可用
 
 ---
 
-## 📝 下一步任务建议
+## 测试目标
 
-### 高优先级 (P0) - 服务端核心功能
+### 基础操作测试清单
 
-基于项目整体进度，建议优先完成服务端核心功能：
-
-1. **游戏手柄 XInput 完整实现** (P0, 5-7 天)
-   - 需要 Windows 环境和 ViGEmBus 驱动
-   - 核心功能，影响系统可用性
-   - WindowsGamepadHost 已完整实现，待测试验证
-
-### 中优先级 (P1) - Android 客户端后续
-
-Android 客户端架构已完成，后续工作：
-
-1. **新架构测试补充** (P1, 2-3 天)
-   - 需要根据实际 API 重新编写测试
-   - core/safety/SafetyControllerTest
-   - core/input/pipeline/*Test
-   - core/input/processor/*Test
-
-2. **Input Pipeline 整合** (P1, 3-4 天)
-   - Input Pipeline → ThreeTierControlManager 数据流整合
-   - Platform Provider → RuntimeFacade 完整实现
-
-### 低优先级 (P2) - 构建与部署
-
-1. **ARM64 Android SDK 配置** (P2)
-   - 文档已完整 (TASKS.md 第 7 节)
-   - 需要时按文档配置
+| 序号 | 测试项 | 操作描述 | 预期结果 |
+|------|--------|----------|----------|
+| 1 | 设备安装 | 安装 APK 到模拟器 | 安装成功 |
+| 2 | 应用启动 | 启动 ControlX 应用 | 应用正常启动，显示主界面 |
+| 3 | UI 元素识别 | 识别 Start/Stop 按钮 | 成功定位按钮元素 |
+| 4 | 启动服务 | 点击 Start 按钮 | 服务启动，状态变更 |
+| 5 | 停止服务 | 点击 Stop 按钮 | 服务停止，状态恢复 |
+| 6 | 应用卸载 | 卸载应用 | 卸载成功 |
 
 ---
 
-## 📊 当前状态总结
+## 技术方案
 
-### Android 客户端
-- ✅ 架构优化完成 (5 个阶段)
-- ✅ 测试 100% 通过 (124 个测试)
-- ✅ 文档完整 (6 份文档)
-- 🟡 新架构测试待补充 (需要匹配实际 API)
+### 使用 Appium MCP 工具
 
-### Server 端
-- ✅ 测试覆盖率从 37.77% 提升到 50%+
-- ✅ 新增 154 个测试用例
-- ⚠️ Windows 相关模块覆盖率低 (需要 Windows 环境)
+| 工具 | 用途 |
+|------|------|
+| `select_platform` | 选择 Android 平台 |
+| `select_device` | 选择模拟器设备 |
+| `create_session` | 创建 Appium 会话 |
+| `appium_install_app` | 安装 APK |
+| `appium_find_element` | 查找 UI 元素 |
+| `appium_click` | 点击元素 |
+| `appium_get_text` | 获取元素文本 |
+| `appium_screenshot` | 截图验证 |
+| `appium_uninstall_app` | 卸载应用 |
+| `delete_session` | 删除会话 |
 
-### 整体进度
-- ✅ 架构重构完成 (Server + Android)
-- ✅ 测试覆盖率显著提升
-- 🟡 服务端核心功能待完成 (游戏手柄 XInput)
+### 测试流程
+
+```
+1. 选择平台 (Android) 
+   ↓
+2. 选择设备 (模拟器)
+   ↓
+3. 创建会话
+   ↓
+4. 安装应用
+   ↓
+5. 启动应用
+   ↓
+6. UI 元素验证
+   ↓
+7. 功能测试 (Start/Stop)
+   ↓
+8. 截图记录
+   ↓
+9. 卸载应用
+   ↓
+10. 清理会话
+```
 
 ---
 
-## 🚀 推荐执行顺序
+## APK 路径
 
-基于优先级和依赖关系，推荐以下执行顺序：
+**Android 客户端路径**: `projects/ControlX/AndroidClient/`
 
-1. **立即执行**: 服务端游戏手柄 XInput 完整实现 (P0)
-   - 核心功能，影响系统可用性
-   - 需要 Windows 环境
-
-2. **后续执行**: Android 新架构测试补充 (P1)
-   - 需要根据实际 API 重新编写测试
-   - 可在 Linux/Mac 环境执行
-
-3. **长期执行**: 性能验证和构建文档 (P2)
-   - 在核心功能完成后执行
+**APK 输出路径**: `projects/ControlX/AndroidClient/app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
-**分析完成时间**: 2026-02-21 00:30
-**下次更新**: 任务执行后
+## 注意事项
+
+- ⚠️ 确保模拟器已启动并连接
+- ⚠️ 确保 APK 已构建
+- ⚠️ 测试期间不得操作模拟器
+- ⚠️ 每个步骤失败时需截图记录
+
+---
+
+## 执行记录
+
+### [2026-02-20 15:00] 任务开始
+- 已读取相关文档
+- 已制定测试计划
+- 准备执行测试
+
+---
+
+## 待迁移内容
+- [ ] 测试结果迁移到 TASKS.md
+- [ ] 最佳实践记录到 KNOWLEDGE.md

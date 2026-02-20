@@ -1,5 +1,14 @@
 # Changelog
 
+## [2026-02-20] docs: 更新 Appium MCP 测试任务记录
+
+### Changes
+- TASKS_CURRENT.md: 更新为 Appium MCP 工具测试 Android 端基础操作任务
+
+### Impact
+- 记录 Appium MCP 测试任务背景、目标和方案
+- 为后续测试执行提供文档参考
+
 ## [2026-02-20] test: 为 loadConfig 添加单元测试（24 个测试用例）
 
 ### Changes
