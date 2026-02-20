@@ -1,0 +1,342 @@
+# ControlX 项目 - 下一步工作计划
+
+**分析日期**: 2026-02-20  
+**分析依据**: 项目文档、代码现状、已完成工作
+
+---
+
+## 📊 当前项目状态
+
+### ✅ 已完成工作
+
+#### Android 客户端
+- ✅ **架构优化** - 5 个阶段全部完成
+  - 核心业务逻辑与 Android API 分离
+  - 创建 Input Pipeline (3 阶段处理)
+  - 实现 Platform Provider (4 个接口 +4 个实现)
+  - 创建 RuntimeFacade 统一管理
+- ✅ **测试覆盖** - 124 个测试 100% 通过
+  - 模型层：69 个测试 (100%)
+  - 处理器层：5 个测试 (100%)
+  - 控制架构：7 个测试 (100%)
+  - 输入抽象层：7 个测试 (100%)
+
+#### Server 端 (TypeScript)
+- ✅ **架构重构** - 4 个阶段完成
+  - InputHost 抽象层 (策略模式)
+  - 影子模式 (双写验证)
+  - 流量切换 (Router-only)
+  - 生态扩展 (Linux/MacOS空类)
+- ✅ **单元测试** - 大部分通过
+  - 输入验证器：48 个测试 (100%)
+  - 状态存储：24 个测试 (100%)
+  - 安全控制器：28 个测试 (100%)
+  - 应用调度器：18 个测试 (100%)
+  - ⚠️ 心跳模块：24 个测试 (83.3%)
+  - ⚠️ 键盘输出：8 个测试 (25%)
+
+---
+
+## 🎯 下一步工作优先级
+
+### 🔴 P0 - 核心功能缺失 (必须立即实现)
+
+#### 1. Server 端输入验证器实现
+
+**状态**: 部分完成，需要完善  
+**优先级**: 🔴 P0  
+**预计工作量**: 2-3 天
+
+**待完成任务**:
+- [ ] 完善 InputValidator 类 (已创建但功能不完整)
+- [ ] 实现游戏手柄状态验证
+- [ ] 实现序列号单调性验证
+- [ ] 集成验证器到 WebSocket 消息处理流程
+- [ ] 添加验证失败时的错误 ACK 机制
+
+**相关文件**:
+- `Server/src/input/validator.ts`
+- `Server/src/ws/handlers/state.ts`
+- `Server/tests/input/validator.test.ts`
+
+**实施步骤**:
+1. 检查 validator.ts 当前实现
+2. 补充游戏手柄验证逻辑
+3. 添加序列号验证
+4. 集成到 WebSocket 处理器
+5. 编写集成测试
+
+---
+
+#### 2. Server 端键盘映射规则完善
+
+**状态**: 部分完成  
+**优先级**: 🔴 P0  
+**预计工作量**: 3-4 天
+
+**待完成任务**:
+- [ ] 实现差集计算逻辑 (pressedKeys vs previousPressedKeys)
+- [ ] 实现幂等性保证 (不重复发送 KeyDown)
+- [ ] 实现正确的按键顺序 (先释放后按下)
+- [ ] 实现清零时的键盘行为 (遍历释放所有按键)
+- [ ] 添加键盘映射日志
+
+**相关文件**:
+- `Server/src/input/hosts/WindowsKeyboardHost.ts`
+- `Server/src/input/executor.ts`
+
+**实施步骤**:
+1. 在 KeyboardExecutor 中添加 previousPressedKeys 状态
+2. 实现差集计算算法
+3. 添加按键去重逻辑
+4. 实现按键顺序控制
+5. 添加详细日志
+
+---
+
+#### 3. Server 端游戏手柄真实实现 (XInput + ViGEmBus)
+
+**状态**: 空类待实现  
+**优先级**: 🔴 P0  
+**预计工作量**: 5-7 天
+
+**待完成任务**:
+- [ ] 安装和配置 ViGEmBus 驱动
+- [ ] 实现 GamepadXInputAdapter 类
+- [ ] 实现 4 轴映射 (LX, LY, RX, RY)
+- [ ] 实现 2 扳机映射 (LT, RT)
+- [ ] 实现 14 按钮映射
+- [ ] 实现状态提交策略 (每 tick 一次性提交)
+- [ ] 修复 GamepadExecutor
+
+**相关文件**:
+- `Server/src/input/hosts/WindowsGamepadHost.ts` (空类)
+- `Server/src/input/executor.ts`
+- `package.json` (依赖：node-vigemclient)
+
+**实施步骤**:
+1. 安装 ViGEmBus 驱动和 node-vigemclient
+2. 创建 GamepadXInputAdapter
+3. 实现 XInput 状态映射
+4. 集成到 GamepadExecutor
+5. 编写测试 (需要 Windows 环境)
+
+---
+
+### 🟡 P1 - 重要功能缺失 (近期实现)
+
+#### 4. Server 端 ApplyScheduler 时间权威明确
+
+**状态**: 未开始  
+**优先级**: 🟡 P1  
+**预计工作量**: 2-3 天
+
+**待完成任务**:
+- [ ] 在文档中明确 ApplyScheduler 为唯一时间权威
+- [ ] 重构 SafetyController 超时检查使用 tickTime
+- [ ] 添加时间戳记录 (接收/应用/清零时间)
+- [ ] 实现时间差统计
+
+**相关文件**:
+- `Server/src/input/applyScheduler.ts`
+- `Server/src/input/safetyController.ts`
+
+---
+
+#### 5. Server 端心跳与延迟探测完整实现
+
+**状态**: 部分完成 (测试失败)  
+**优先级**: 🟡 P1  
+**预计工作量**: 3-4 天
+
+**待完成任务**:
+- [ ] 修复心跳模块测试 (当前 83.3% 通过率)
+- [ ] 实现客户端心跳 (30s 定时器)
+- [ ] 实现服务端心跳处理 (handlePing/ handlePong)
+- [ ] 实现心跳超时检测
+- [ ] 完善 RTT 统计 (平均/最小/最大/P95)
+
+**相关文件**:
+- `Server/src/input/heartbeat.ts`
+- `Server/src/ws/handlers/latencyProbe.ts`
+- `Server/tests/input/heartbeat.test.ts`
+
+---
+
+#### 6. Android 端新架构整合
+
+**状态**: 架构完成，待整合  
+**优先级**: 🟡 P1  
+**预计工作量**: 4-5 天
+
+**待完成任务**:
+- [ ] Input Pipeline 与 ThreeTierControlManager 数据流整合
+- [ ] RuntimeFacade 完整实现 (当前有部分 TODO)
+- [ ] Platform Provider 与现有系统集成
+- [ ] 新架构端到端测试
+- [ ] 性能基准测试
+
+**相关文件**:
+- `AndroidClient/app/src/main/java/com/linecat/wmmtcontroller/core/RuntimeFacade.java`
+- `AndroidClient/app/src/main/java/com/linecat/wmmtcontroller/core/input/pipeline/`
+- `AndroidClient/app/src/main/java/com/linecat/wmmtcontroller/control/`
+
+---
+
+### 🟢 P2 - 优化与增强 (后续实现)
+
+#### 7. Server 端 WebSocket 协议增强
+
+**状态**: 未开始  
+**优先级**: 🟢 P2  
+**预计工作量**: 2-3 天
+
+**待完成任务**:
+- [ ] 实现配置管理 (config.json 加载)
+- [ ] 实现配置热更新
+- [ ] 实现调试消息 (日志级别控制)
+- [ ] 实现日志导出
+
+---
+
+#### 8. Server 端可观测性指标完善
+
+**状态**: 未开始  
+**优先级**: 🟢 P2  
+**预计工作量**: 3-4 天
+
+**待完成任务**:
+- [ ] 创建 Metrics 模块
+- [ ] 实现连接状态监控
+- [ ] 实现输入统计 (键盘/手柄事件数)
+- [ ] 实现系统资源监控 (CPU/内存)
+- [ ] 添加监控 API
+
+---
+
+#### 9. Android 端新架构测试补充
+
+**状态**: 需要补充  
+**优先级**: 🟢 P2  
+**预计工作量**: 2-3 天
+
+**待完成任务**:
+- [ ] core/safety/SafetyControllerTest (新架构)
+- [ ] core/input/pipeline/*Test (Input Pipeline 测试)
+- [ ] Platform Provider 集成测试
+- [ ] RuntimeFacade 集成测试
+
+---
+
+## 📋 建议实施顺序
+
+### 第 1 周：Server 端核心功能
+
+**目标**: 完成输入验证器和键盘映射
+
+| 天数 | 任务 | 交付物 |
+|------|------|--------|
+| Day 1-2 | 输入验证器完善 | InputValidator 完整实现 |
+| Day 3-5 | 键盘映射规则 | 差集计算/幂等性/按键顺序 |
+| Day 6-7 | 缓冲/测试 | 单元测试和集成测试 |
+
+### 第 2 周：Server 端游戏手柄实现
+
+**目标**: 完成 ViGEmBus 集成
+
+| 天数 | 任务 | 交付物 |
+|------|------|--------|
+| Day 1-2 | 环境配置 | ViGEmBus 驱动安装 |
+| Day 3-5 | GamepadXInputAdapter | XInput 映射实现 |
+| Day 6-7 | 集成测试 | Windows 环境测试 |
+
+### 第 3 周：时间权威与心跳
+
+**目标**: 完成 ApplyScheduler 和心跳
+
+| 天数 | 任务 | 交付物 |
+|------|------|--------|
+| Day 1-3 | ApplyScheduler | 时间权威明确 |
+| Day 4-7 | 心跳模块 | 心跳/RTT 完整实现 |
+
+### 第 4 周：Android 端整合
+
+**目标**: 完成新架构整合
+
+| 天数 | 任务 | 交付物 |
+|------|------|--------|
+| Day 1-3 | 数据流整合 | Input Pipeline → ControlManager |
+| Day 4-5 | 系统集成 | Platform Provider 集成 |
+| Day 6-7 | 测试验证 | 端到端测试 |
+
+---
+
+## 🎯 立即执行任务 (Next Actions)
+
+基于优先级和依赖关系，**建议立即执行以下任务**:
+
+### 1. Server 端输入验证器完善 (最高优先级)
+
+**原因**: 
+- 是其他功能的基础
+- 影响系统安全性
+- 已有部分实现，完成成本低
+
+**第一步**: 读取并分析 `Server/src/input/validator.ts` 当前实现
+
+---
+
+### 2. Server 端键盘映射规则完善
+
+**原因**:
+- 直接影响用户体验
+- 当前键盘输出测试通过率仅 25%
+- 需要修复幂等性和按键顺序问题
+
+**第一步**: 读取 `Server/src/input/hosts/WindowsKeyboardHost.ts` 当前实现
+
+---
+
+### 3. Android 端新架构测试补充
+
+**原因**:
+- 新架构已实现但缺少测试
+- 确保架构重构不引入回归问题
+- 为后续整合奠定基础
+
+**第一步**: 创建 `core/safety/SafetyControllerTest.java`
+
+---
+
+## 📊 风险评估
+
+| 风险 | 影响 | 概率 | 缓解措施 |
+|------|------|------|----------|
+| ViGEmBus 驱动兼容性问题 | 高 | 中 | 提前测试多种 Windows 版本 |
+| Android 新架构整合复杂度 | 中 | 中 | 分阶段整合，充分测试 |
+| 心跳模块测试失败原因不明 | 中 | 低 | 详细分析测试日志 |
+| 键盘映射幂等性实现复杂 | 低 | 低 | 参考成熟方案 |
+
+---
+
+## 📈 成功指标
+
+### 短期 (1-2 周)
+- ✅ 输入验证器 100% 完成
+- ✅ 键盘映射规则完善
+- ✅ 键盘输出测试通过率 >90%
+
+### 中期 (3-4 周)
+- ✅ 游戏手柄真实实现完成
+- ✅ ApplyScheduler 时间权威明确
+- ✅ 心跳模块 100% 测试通过
+
+### 长期 (1-2 月)
+- ✅ Android 新架构完全整合
+- ✅ 所有 P0/P1任务完成
+- ✅ 整体测试覆盖率 >90%
+
+---
+
+**报告生成时间**: 2026-02-20  
+**建议**: 从 Server 端输入验证器完善开始执行
