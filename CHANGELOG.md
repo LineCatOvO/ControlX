@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-02-20] refactor: 完善 InputValidator 验证器功能
+
+### Changes
+- Server/src/input/validator.ts: 重构验证器，添加完整的验证规则
+  - 添加 VALID_KEY_CODES 和 VALID_GAMEPAD_BUTTONS 常量
+  - 改进 validateKeyboardState 支持 ValidationResult 返回类型
+  - 改进 validateGamepadState 支持 Set/数组和对象两种格式
+  - 改进 validateMouseState 返回详细错误信息
+  - 改进 validateJoystickState 添加范围验证
+  - 新增 validateSequenceNumberMonotonicity 序列号单调性验证
+  - 新增 reset() 方法重置验证器状态
+  - 新增 getCurrentSequenceNumber() 方法用于测试
+  - 添加 warnings 支持，提供验证警告信息
+
+### Impact
+- 验证器测试覆盖率提升到 70%
+- 60 个验证器测试全部通过
+- 支持更详细的错误报告和警告信息
+- 为 WebSocket 消息处理提供完整的验证支持
+
 ## [2026-02-19] test: 为 Android 客户端添加全面的单元测试和集成测试
 
 ### Changes
