@@ -219,9 +219,10 @@ export function handleDisconnect(): void {
 /**
  * 记录有效状态
  * @param state 有效状态
+ * @param tickTime tick 时间戳（由 ApplyScheduler 提供）
  */
-export function recordValidState(state: any): void {
-    safetyController.recordValidState(state);
+export function recordValidState(state: any, tickTime: number): void {
+    safetyController.recordValidState(state, tickTime);
 }
 
 /**

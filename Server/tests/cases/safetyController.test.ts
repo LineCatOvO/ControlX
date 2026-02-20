@@ -69,7 +69,8 @@ describe("SafetyController Tests", () => {
             };
 
             const beforeTime = Date.now();
-            safetyController.recordValidState(state);
+            const tickTime = Date.now();
+            safetyController.recordValidState(state, tickTime);
             const afterTime = Date.now();
 
             const lastValidTime = safetyController.getLastValidStateTime();

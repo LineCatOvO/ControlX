@@ -1,7 +1,7 @@
-# 当前任务：ApplyScheduler 时间权威明确
+# 当前任务：提高测试代码覆盖率
 
-**开始时间**: 2026-02-20 19:00
-**目标**: 明确 ApplyScheduler 为唯一时间权威，重构 SafetyController 时间逻辑
+**开始时间**: 2026-02-20 21:00
+**目标**: 修复编译错误，提高测试覆盖率
 
 ---
 
@@ -9,139 +9,87 @@
 
 ### 执行的工作
 
-#### 1. 文档明确时间权威 ✅
+#### 1. 编译错误修复 ✅
 
-**文件**: `Server/src/input/applyScheduler.ts`
+**问题**: SafetyController.recordValidState() 修改为需要 2 个参数后，旧代码未更新
 
-**实现内容**:
+**修复文件**:
+- `src/input/executor.ts` - 更新函数签名
+- `tests/cases/safetyController.test.ts` - 更新测试调用
 
-##### 1.1 类注释说明
+**修复内容**:
 ```typescript
-/**
- * ApplyScheduler
- * 负责固定频率（125Hz）状态应用，实现接收与应用解耦
- * 
- * **时间权威性：ApplyScheduler 是唯一的时间权威，所有时间戳记录都在这里完成**
- * - SafetyController 的超时检查使用 ApplyScheduler 提供的 tickTime
- * - 所有状态应用时间戳都在 ApplyScheduler 中记录
- * - 时间一致性由 ApplyScheduler 保证
- */
-```
+// 修复前
+export function recordValidState(state: any): void {
+    safetyController.recordValidState(state);
+}
 
----
-
-#### 2. SafetyController 重构 ✅
-
-**文件**: `Server/src/input/safetyController.ts`
-
-**新增功能**:
-
-##### 2.1 添加 tickTime 更新方法
-```typescript
-// 当前 tickTime（由 ApplyScheduler 提供）
-private currentTickTime: number = 0;
-
-/**
- * 更新当前 tickTime（由 ApplyScheduler 调用）
- * ApplyScheduler 是唯一的时间权威，所有时间戳都来自这里
- * @param tickTime 当前 tick 时间戳
- */
-updateTickTime(tickTime: number): void {
-    this.currentTickTime = tickTime;
+// 修复后
+export function recordValidState(state: any, tickTime: number): void {
+    safetyController.recordValidState(state, tickTime);
 }
 ```
 
-##### 2.2 重构 recordValidState
-```typescript
-/**
- * 记录有效状态接收时间
- * @param state 接收到的状态
- * @param tickTime tick 时间戳（由 ApplyScheduler 提供，用于时间一致性）
- */
-recordValidState(state: InputState, tickTime: number): void {
-    // 使用 tickTime 而不是 Date.now()，确保时间一致性
-    this.lastValidStateTime = tickTime;
-    this.currentTickTime = tickTime;
-}
-```
+#### 2. 测试运行结果 ✅
 
-##### 2.3 重构 checkTimeout
-```typescript
-/**
- * 检查超时
- * 使用 ApplyScheduler 提供的 tickTime 进行时间一致性检查
- */
-private checkTimeout(): void {
-    // 使用 currentTickTime（由 ApplyScheduler 提供）而不是 Date.now()
-    const now = this.currentTickTime || Date.now();
-    const elapsed = now - this.lastValidStateTime;
+**测试结果**:
+- ✅ 测试套件：10/10 通过 (100%)
+- ✅ 测试用例：247 个（7 个跳过，240 个通过）
+- ✅ 无失败测试
 
-    if (elapsed > this.config.timeoutMs) {
-        this.triggerSafetyClear();
-        console.log(
-            `SafetyController: Timeout detected, elapsed: ${elapsed}ms, timeout: ${this.config.timeoutMs}ms`
-        );
-    }
-}
-```
+**测试覆盖率统计**:
 
----
+| 文件类别 | 语句覆盖率 | 分支覆盖率 | 函数覆盖率 | 行覆盖率 |
+|----------|------------|------------|------------|----------|
+| **总计** | 37.77% | 24.19% | 39.5% | 38.58% |
+| src/config | 34.09% | 0% | 66.66% | 32.55% |
+| src/input | 52.42% | 40.64% | 49.3% | 53.5% |
+| src/input/adapters | 26% | 8.77% | 50% | 29.32% |
+| src/input/hosts | 9.03% | 4.08% | 3.22% | 9.43% |
+| src/input/router | 3.17% | 0% | 0% | 3.17% |
+| src/input/shadow | 1.02% | 0% | 0% | 1.02% |
+| src/ws | 67.44% | 52.63% | 82.35% | 67.44% |
+| src/ws/handlers | 14.61% | 1.31% | 3.03% | 14.35% |
 
-#### 3. ApplyScheduler 集成 ✅
+**高覆盖率模块**:
+- ✅ heartbeat.ts: 98.07% / 88.88% / 100% / 98.07%
+- ✅ applyScheduler.ts: 93.84% / 75% / 100% / 93.65%
+- ✅ safetyController.ts: 98.21% / 90% / 100% / 98.21%
+- ✅ stateStore.ts: 88.05% / 71.87% / 100% / 89.39%
+- ✅ validator.ts: 70% / 57.65% / 85.71% / 70%
+- ✅ keyboard.ts: 68.31% / 57.57% / 52.94% / 69.69%
 
-**文件**: `Server/src/input/applyScheduler.ts`
-
-**修改内容**:
-
-##### 3.1 更新 SafetyController tickTime
-```typescript
-private applyCurrentState(): void {
-    // 记录 Tick 时间
-    const tickTime = Date.now();
-    this.lastTickTime = tickTime;
-
-    // 更新 SafetyController 的 tickTime（时间权威性）
-    const safetyController = getSafetyController();
-    safetyController.updateTickTime(tickTime);
-
-    // ...
-}
-```
-
-##### 3.2 使用 tickTime 记录有效状态
-```typescript
-// 普通模式：只写 Executor
-this.executorManager.applyState(latestState);
-
-// 记录有效状态时间到安全控制器（使用 tickTime 保证时间一致性）
-safetyController.recordValidState(latestState, tickTime);
-```
+**低覆盖率模块（待提高）**:
+- ⚠️ ShadowModeManager.ts: 1.02%
+- ⚠️ InputRouter.ts: 3.17%
+- ⚠️ WindowsGamepadHost.ts: 4.93%
+- ⚠️ WindowsKeyboardHost.ts: 4.61%
+- ⚠️ latencyProbe.ts: 8.1%
 
 ---
 
 ## 📊 任务完成统计
 
-| 子任务 | 状态 | 文件变更 | 代码行数 |
-|--------|------|----------|----------|
-| 文档明确时间权威 | ✅ 完成 | +10 行注释 | +10 行 |
-| SafetyController 重构 | ✅ 完成 | +40 行 | +40 行 |
-| ApplyScheduler 集成 | ✅ 完成 | +5 行 | +5 行 |
-| **总计** | **✅ 完成** | **2 文件** | **~55 行** |
+| 子任务 | 状态 | 说明 |
+|--------|------|------|
+| 编译错误修复 | ✅ 完成 | executor.ts 和测试文件已修复 |
+| 测试运行 | ✅ 完成 | 10/10 套件通过，247 个测试用例 |
+| 覆盖率分析 | ✅ 完成 | 生成详细覆盖率报告 |
 
 ---
 
 ## 📈 质量指标
 
-### 功能完整性
-- ✅ ApplyScheduler 类注释明确时间权威
-- ✅ SafetyController 使用 tickTime 而不是 Date.now()
-- ✅ ApplyScheduler 每 tick 更新 SafetyController 时间
-- ✅ 时间一致性保证
+### 测试覆盖情况
+- ✅ 核心模块覆盖率高（heartbeat/applyScheduler/safetyController/stateStore > 85%）
+- ✅ 所有测试通过（240/247，7 个跳过）
+- ⚠️ 平台代码覆盖率低（hosts/adapters < 10%）
+- ⚠️ 新功能代码覆盖率低（shadow/router < 5%）
 
-### 代码质量
-- ✅ 注释清晰说明时间权威性
-- ✅ 代码结构清晰，职责单一
-- ✅ 向后兼容（currentTickTime  fallback 到 Date.now()）
+### 编译质量
+- ✅ TypeScript 编译通过
+- ✅ 无类型错误
+- ✅ 无运行时错误
 
 ---
 
@@ -149,9 +97,10 @@ safetyController.recordValidState(latestState, tickTime);
 
 | 验收标准 | 状态 | 说明 |
 |----------|------|------|
-| 文档清晰说明时间权威 | ✅ 完成 | 类注释详细说明 |
-| 所有时间逻辑使用 tickTime | ✅ 完成 | SafetyController 重构完成 |
-| 测试覆盖率 | ⚠️ 待完成 | 需要编写测试验证 |
+| 编译通过 | ✅ 完成 | 无 TypeScript 错误 |
+| 测试通过 | ✅ 完成 | 10/10 套件，240/247 用例 |
+| 核心模块覆盖率 > 80% | ✅ 完成 | heartbeat/safetyController/applyScheduler/stateStore |
+| 平台代码覆盖率 > 60% | ⚠️ 待完成 | 需要为 hosts/adapters 编写测试 |
 
 ---
 
@@ -159,41 +108,38 @@ safetyController.recordValidState(latestState, tickTime);
 
 ### 技术方案
 
-#### 1. 时间权威性设计
-- **ApplyScheduler** 是唯一的时间权威
-- 所有时间戳都在 ApplyScheduler 中记录
-- SafetyController 通过 `updateTickTime()` 获取当前 tickTime
-- `checkTimeout()` 使用 `currentTickTime` 而不是`Date.now()`
+#### 1. 时间权威性修复
+- SafetyController.recordValidState() 需要 tickTime 参数
+- 所有调用点都需要更新
+- 使用 `tickTime || Date.now()` 降级策略
 
-#### 2. 时间一致性保证
-- ApplyScheduler 每 tick 调用 `safetyController.updateTickTime(tickTime)`
-- `recordValidState()` 使用 tickTime 而不是 Date.now()
-- `checkTimeout()` 使用 `currentTickTime || Date.now()` 降级
-
-#### 3. 降级策略
-- 如果 `currentTickTime` 未设置，fallback 到 `Date.now()`
-- 保证在 ApplyScheduler 未启动时仍能工作
+#### 2. 测试覆盖分析
+- 核心业务逻辑覆盖率高（>85%）
+- 平台相关代码覆盖率低（需要 Windows 环境）
+- 新功能代码需要补充测试
 
 ### 注意事项
 
-#### 1. 时间同步
-- ApplyScheduler 必须在启动后每 tick 更新 SafetyController
-- 否则 SafetyController 会使用 fallback 的 Date.now()
+#### 1. 测试跳过原因
+- 游戏手柄测试需要 ViGEmBus 驱动（Windows only）
+- 平台特定代码需要对应环境
 
-#### 2. 测试验证
-- 需要编写测试验证时间一致性
-- 测试超时检测是否准确
+#### 2. 覆盖率提升建议
+- 为 InputRouter 编写单元测试
+- 为 ShadowModeManager 编写单元测试
+- 为 latencyProbe 编写集成测试
+- 为 hosts 编写 Mock 测试
 
 ---
 
 ## 🔄 待迁移内容
 
-- [ ] 将时间权威性设计迁移到 KNOWLEDGE.md
-- [ ] 编写测试验证时间一致性
+- [ ] 将测试修复经验迁移到 TASKS.md
+- [ ] 为低覆盖率模块编写测试
 - [ ] 更新 TASKS.md 任务状态
 
 ---
 
-**完成时间**: 2026-02-20 19:30
+**完成时间**: 2026-02-20 21:30
 **执行耗时**: 30 分钟
 **下一步**: 提交代码更改
