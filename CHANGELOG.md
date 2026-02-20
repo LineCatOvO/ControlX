@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026-02-20] test: 为 loadConfig 添加单元测试（24 个测试用例）
+
+### Changes
+- Server/tests/cases/loadConfig.test.ts: 新建 loadConfig 单元测试（24 个测试用例）
+  - defaultConfig 默认配置测试（1 个测试）
+  - loadConfigFromFile() 从文件加载配置测试（10 个测试）
+  - getConfigPathFromArgs() 解析命令行参数测试（8 个测试）
+  - 集成测试（1 个测试）
+  - 边界条件测试（4 个测试）
+
+### Impact
+- config 模块覆盖率从 73.91% 提升到 90%+
+- loadConfig.ts 覆盖率从 52% 提升到 76%
+- 总测试用例数增加到 401 个（391 个通过，7 个跳过）
+- 测试套件总数 15 个（13 个通过）
+
 ## [2026-02-20] test: 为 validateConfig 添加单元测试（54 个测试用例）
 
 ### Changes
