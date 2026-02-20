@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-02-20T09:22:11.706Z",
-  "totalDuration": 48876,
+  "timestamp": "2026-02-20T12:57:18.934Z",
+  "totalDuration": 39493,
   "passed": 8,
   "failed": 0,
   "total": 8,
@@ -8,42 +8,42 @@
     {
       "name": "应用启动测试",
       "passed": true,
-      "duration": 7691
+      "duration": 3950
     },
     {
       "name": "服务启动测试",
       "passed": true,
-      "duration": 3249
+      "duration": 3608
     },
     {
       "name": "键盘输入测试",
       "passed": true,
-      "duration": 602
+      "duration": 1307
     },
     {
       "name": "游戏手柄输入测试",
       "passed": true,
-      "duration": 841
+      "duration": 1506
     },
     {
       "name": "摇杆输入测试",
       "passed": true,
-      "duration": 1114
+      "duration": 1827
     },
     {
       "name": "鼠标输入测试",
       "passed": true,
-      "duration": 442
+      "duration": 738
     },
     {
       "name": "服务停止测试",
       "passed": true,
-      "duration": 3226
+      "duration": 3531
     },
     {
       "name": "后端通信验证",
       "passed": true,
-      "duration": 164
+      "duration": 20
     }
   ]
 }

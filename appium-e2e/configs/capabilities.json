@@ -1,0 +1,11 @@
+{
+  "platformName": "Android",
+  "automationName": "UiAutomator2",
+  "deviceName": "emulator-5554",
+  "appPackage": "com.linecat.wmmtcontroller",
+  "appActivity": "com.linecat.wmmtcontroller.MainActivity",
+  "noReset": false,
+  "unicodeKeyboard": true,
+  "resetKeyboard": true,
+  "autoGrantPermissions": true
+}

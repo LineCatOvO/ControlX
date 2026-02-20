@@ -14,6 +14,11 @@ const path = require("path");
 const fs = require("fs");
 const axios = require("axios");
 
+// 在 Windows 上获取 npx 的完整路径，使用 process.env.ComSpec 来执行 .cmd 文件
+const NPX_COMMAND = process.platform === "win32"
+    ? process.env.ComSpec || "cmd.exe"
+    : "npx";
+
 // 配置
 const CONFIG = {
     appiumE2eRoot: __dirname,
@@ -108,11 +113,27 @@ async function checkDevice() {
 
 async function startAppium() {
     log("启动 Appium Server...", "🚀");
-    
+
     return new Promise((resolve, reject) => {
-        state.appiumProcess = spawn("npx", ["appium"], {
+        // 在 Windows 上使用 cmd.exe /c npx appium
+        const args = process.platform === "win32"
+            ? ["/c", "npx", "appium"]
+            : ["appium"];
+
+        // 设置 Android 环境变量
+        const androidHome = process.platform === "win32"
+            ? "C:\\Users\\15013\\AppData\\Local\\Android\\Sdk"
+            : process.env.ANDROID_HOME || "/home/linecat/android_sdk";
+
+        state.appiumProcess = spawn(NPX_COMMAND, args, {
             cwd: CONFIG.appiumE2eRoot,
-            stdio: ["pipe", "pipe", "pipe"]
+            stdio: ["pipe", "pipe", "pipe"],
+            shell: false,
+            env: {
+                ...process.env,
+                ANDROID_HOME: androidHome,
+                ANDROID_SDK_ROOT: androidHome
+            }
         });
         
         let outputBuffer = "";

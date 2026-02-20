@@ -56,15 +56,34 @@ public class MainActivity extends AppCompatActivity {
      * 检查并请求浮窗权限
      */
     private void requestOverlayPermission() {
+        Log.d(TAG, "requestOverlayPermission called");
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION);
-                Log.d(TAG, "Requesting overlay permission");
+                try {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + getPackageName()));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Log.d(TAG, "Starting overlay permission activity: " + intent);
+                    startActivity(intent);
+                    Log.d(TAG, "Overlay permission activity started successfully");
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to start overlay permission activity", e);
+                    // 如果包名方式失败，尝试通用方式
+                    try {
+                        Intent fallbackIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                        fallbackIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(fallbackIntent);
+                        Log.d(TAG, "Fallback overlay permission activity started");
+                    } catch (Exception e2) {
+                        Log.e(TAG, "Failed to start fallback overlay permission activity", e2);
+                    }
+                }
             } else {
                 Log.d(TAG, "Overlay permission already granted");
             }
+        } else {
+            Log.d(TAG, "Android version below M, overlay permission not required");
         }
     }
     
