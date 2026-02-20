@@ -21,6 +21,216 @@ describe("Keyboard Output Tests", () => {
         jest.clearAllMocks();
     });
 
+    // Helper function to create input state
+    function createState(keys: string[]): InputState {
+        return {
+            keyboard: new Set(keys),
+            mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+            joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+        } as InputState;
+    }
+
+    describe("差集计算 (Difference Calculation)", () => {
+        test("should calculate keys to press when transitioning from empty to pressed", () => {
+            const state = createState(["W", "A"]);
+            keyboardExecutor.applyState(state);
+
+            // Should press W and A
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should calculate keys to release when transitioning to empty", () => {
+            // First press W
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.applyState(createState(["W"])); // Set previous state
+            jest.clearAllMocks();
+
+            // Then release all
+            keyboardExecutor.applyState(createState([]));
+
+            // Should release W
+            expect(sendKeyMock).toHaveBeenCalledWith(["W"]);
+        });
+
+        test("should calculate both press and release in complex transition", () => {
+            // Start with W, A pressed
+            keyboardExecutor.applyState(createState(["W", "A"]));
+            keyboardExecutor.applyState(createState(["W", "A"]));
+            jest.clearAllMocks();
+
+            // Transition to A, S pressed (release W, press S)
+            keyboardExecutor.applyState(createState(["A", "S"]));
+
+            // Should release W and press S
+            expect(sendKeyMock).toHaveBeenCalledWith(["W"]);
+        });
+
+        test("should handle no change in state", () => {
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.applyState(createState(["W"]));
+            jest.clearAllMocks();
+
+            // Apply same state again
+            keyboardExecutor.applyState(createState(["W"]));
+
+            // Should not send any keys (no change)
+            expect(sendKeyMock).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("幂等性保证 (Idempotency)", () => {
+        test("should track sent keys across multiple applyState calls", () => {
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.applyState(createState(["W", "A"]));
+            keyboardExecutor.applyState(createState(["W", "A", "S"]));
+
+            // Each new key should be sent
+            expect(sendKeyMock).toHaveBeenCalledTimes(3);
+        });
+
+        test("should not send duplicate key down events without reset", () => {
+            // Press W
+            keyboardExecutor.applyState(createState(["W"]));
+            jest.clearAllMocks();
+
+            // Press W again - should NOT be sent (already in sentKeys)
+            keyboardExecutor.applyState(createState(["W"]));
+
+            // Should not send W again because it's already in sentKeys
+            expect(sendKeyMock).not.toHaveBeenCalled();
+        });
+
+        test("should allow key to be pressed again after reset", () => {
+            // Press W
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.applyState(createState(["W"]));
+            jest.clearAllMocks();
+
+            // Reset - this clears sentKeys
+            keyboardExecutor.reset();
+            jest.clearAllMocks();
+
+            // Press W again - should be sent after reset
+            keyboardExecutor.applyState(createState(["W"]));
+
+            expect(sendKeyMock).toHaveBeenCalledWith(["W"]);
+        });
+    });
+
+    describe("正确的按键顺序 (Key Order)", () => {
+        test("should release keys before pressing new keys", () => {
+            // Start with W pressed
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.applyState(createState(["W"]));
+            jest.clearAllMocks();
+
+            // Transition to A pressed (release W, press A)
+            keyboardExecutor.applyState(createState(["A"]));
+
+            // Verify release was called
+            expect(sendKeyMock).toHaveBeenCalledWith(["W"]);
+        });
+    });
+
+    describe("清零时的键盘行为 (Clear on Reset)", () => {
+        test("should release all keys on reset", () => {
+            keyboardExecutor.applyState(createState(["W", "A", "S"]));
+            keyboardExecutor.reset();
+
+            // Reset should release all current keys
+            expect(sendKeyMock).toHaveBeenCalledWith(["W", "A", "S"]);
+        });
+
+        test("should clear all state on reset", () => {
+            keyboardExecutor.applyState(createState(["W", "A"]));
+            keyboardExecutor.reset();
+
+            // After reset, applying new state should work normally
+            jest.clearAllMocks();
+            keyboardExecutor.applyState(createState(["W"]));
+
+            // Should be able to press W again after reset
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should handle reset with empty state", () => {
+            keyboardExecutor.reset();
+
+            // Should not throw error
+            expect(sendKeyMock).not.toHaveBeenCalled();
+        });
+
+        test("should reset sentKeys tracking", () => {
+            // Press W
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.reset();
+            jest.clearAllMocks();
+
+            // Press W again - should be sent because reset cleared sentKeys
+            keyboardExecutor.applyState(createState(["W"]));
+
+            expect(sendKeyMock).toHaveBeenCalledWith(["W"]);
+        });
+    });
+
+    describe("边界条件 (Edge Cases)", () => {
+        test("should handle large number of keys", () => {
+            const manyKeys = Array.from({ length: 5 }, (_, i) => 
+                String.fromCharCode("A".charCodeAt(0) + i)
+            );
+
+            // Apply state - should send keys on first press
+            keyboardExecutor.applyState(createState(manyKeys));
+
+            // Should have sent keys
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should handle special keys", () => {
+            const specialKeys = ["Control", "Alt", "Shift"];
+            
+            // Apply state - should send keys on first press
+            keyboardExecutor.applyState(createState(specialKeys));
+
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should handle rapid state changes", () => {
+            // Simulate rapid state changes
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.applyState(createState(["A"]));
+            keyboardExecutor.applyState(createState(["S"]));
+            keyboardExecutor.applyState(createState(["D"]));
+
+            // Should not throw errors and should send keys
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+    });
+
+    describe("错误处理 (Error Handling)", () => {
+        test("should handle keySender.sendKey errors gracefully", () => {
+            sendKeyMock.mockImplementationOnce(() => {
+                throw new Error("Mock sendKey error");
+            });
+
+            // Should not throw
+            expect(() => keyboardExecutor.applyState(createState(["W"]))).not.toThrow();
+        });
+
+        test("should handle reset errors gracefully", () => {
+            keyboardExecutor.applyState(createState(["W"]));
+            
+            sendKeyMock.mockImplementationOnce(() => {
+                throw new Error("Mock sendKey error");
+            });
+
+            // Should not throw
+            expect(() => keyboardExecutor.reset()).not.toThrow();
+        });
+    });
+
+    // Original tests
     test("reset should release all currently pressed keys", () => {
         const state: InputState = {
             keyboard: new Set(["W", "A"]),
@@ -53,7 +263,7 @@ describe("Keyboard Output Tests", () => {
         };
 
         keyboardExecutor.applyState(state);
-        
+
         // Internal state should be tracked even if sendKey is not called
         expect(keyboardExecutor).toBeDefined();
     });
@@ -66,12 +276,12 @@ describe("Keyboard Output Tests", () => {
             joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
         };
         keyboardExecutor.applyState(stateW);
-        
+
         // Apply again to set previousKeyboardState
         keyboardExecutor.applyState(stateW);
-        
+
         jest.clearAllMocks();
-        
+
         // Now transition to different state
         const stateA: InputState = {
             keyboard: new Set(["A"]),
@@ -79,7 +289,7 @@ describe("Keyboard Output Tests", () => {
             joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
         };
         keyboardExecutor.applyState(stateA);
-        
+
         // Should release W when transitioning
         expect(sendKeyMock).toHaveBeenCalledWith(["W"]);
     });

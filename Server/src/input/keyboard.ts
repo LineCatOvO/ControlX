@@ -37,13 +37,7 @@ export class KeyboardExecutor implements InputExecutor {
         // 更新当前键盘状态为上一次状态
         this.previousKeyboardState = new Set(this.currentKeyboardState);
 
-        // 将新按键加入已发送集合和顺序列表
-        keysToPress.forEach((key) => {
-            this.sentKeys.add(key);
-            this.keyOrder.push(key);
-        });
-
-        // 更新当前键盘状态
+        // 更新当前键盘状态（在 updateKeyboardState 中处理 sentKeys）
         this.updateKeyboardState(newState, keysToRelease, keysToPress);
     }
 
