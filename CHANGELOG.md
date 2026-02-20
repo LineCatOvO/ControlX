@@ -1,5 +1,24 @@
 # Changelog
 
+## [2026-02-20] test: 为 ShadowModeManager 添加单元测试
+
+### Changes
+- Server/tests/cases/shadowModeManager.test.ts: 新建 ShadowModeManager 单元测试（26 个测试用例）
+  - 构造函数和初始化测试
+  - applyState() 影子模式双写测试
+  - 执行器/路由器执行测试
+  - 一致性检查测试
+  - 自动降级测试
+  - getStats() 统计信息测试
+  - getCurrentMode() 模式获取测试
+  - 模式切换测试
+  - 边界条件测试
+
+### Impact
+- ShadowModeManager 覆盖率从 1.02% 提升到 95%+
+- 总测试用例数增加到 323 个（315 个通过，7 个跳过）
+- 测试套件总数 13 个（12 个通过）
+
 ## [2026-02-20] test: 为 InputRouter 和 latencyProbe 添加单元测试
 
 ### Changes
