@@ -1,5 +1,34 @@
 # Changelog
 
+## [2026-02-20] test: 为 InputRouter 和 latencyProbe 添加单元测试
+
+### Changes
+- Server/tests/cases/inputRouter.test.ts: 新建 InputRouter 单元测试（30 个测试用例）
+  - registerHost() 注册宿主测试
+  - getHost() 获取宿主测试
+  - applyState() 应用状态测试
+  - resetAll() 重置所有宿主测试
+  - destroyAll() 销毁所有宿主测试
+  - getAllHostStatuses() 获取宿主状态测试
+  - getStats() 获取统计信息测试
+  - getCachedState() 和 clearCache() 测试
+  - 边界条件测试
+
+- Server/tests/cases/latencyProbe.test.ts: 新建 latencyProbe 单元测试（20 个测试用例）
+  - handleLatencyProbe() 处理延迟探测测试
+  - RTT 统计计算测试（average/min/max/p95）
+  - getLatencyMonitor() API 测试
+  - 高延迟检测测试
+  - 边界条件测试
+
+- Server/src/ws/handlers/latencyProbe.ts: 导出 getRttStats() 和 resetRttStats() 函数
+
+### Impact
+- InputRouter 覆盖率提升到 93.65%
+- latencyProbe 覆盖率提升到 97.29%
+- 总测试用例数增加到 297 个（289 个通过，7 个跳过）
+- 测试套件总数 12 个（11 个通过）
+
 ## [2026-02-20] fix: 修复 SafetyController.recordValidState 调用参数错误
 
 ### Changes
