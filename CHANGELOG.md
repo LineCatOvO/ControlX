@@ -1,5 +1,28 @@
 # Changelog
 
+## [2026-02-20] test: 为 validateConfig 添加单元测试（54 个测试用例）
+
+### Changes
+- Server/tests/cases/validateConfig.test.ts: 新建 validateConfig 单元测试（54 个测试用例）
+  - inputUpdateInterval 验证测试（5 个测试）
+  - heartbeatInterval 验证测试（5 个测试）
+  - pingInterval 验证测试（5 个测试）
+  - safeStateTimeout 验证测试（5 个测试）
+  - enableLogging 验证测试（4 个测试）
+  - defaultPort 验证测试（8 个测试）
+  - portRange 验证测试（8 个测试）
+  - isTestMode 验证测试（4 个测试）
+  - 组合配置测试（5 个测试）
+  - 边界条件测试（6 个测试）
+
+- Server/src/config/validate.ts: 添加 null/undefined 处理
+
+### Impact
+- validateConfig 覆盖率从 5.55% 提升到 100%
+- config 模块覆盖率从 34.09% 提升到 100%
+- 总测试用例数增加到 377 个（369 个通过，7 个跳过）
+- 测试套件总数 14 个（13 个通过）
+
 ## [2026-02-20] test: 为 ShadowModeManager 添加单元测试
 
 ### Changes
