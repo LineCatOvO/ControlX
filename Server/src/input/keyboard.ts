@@ -3,6 +3,72 @@ import { InputState, InputDelta, InputEvent } from "../types/ws";
 
 const keySender = require("node-key-sender");
 
+// 日志配置
+const LOG_CONFIG = {
+    enabled: true,           // 是否启用日志
+    verbose: false,          // 是否启用详细日志
+    statsInterval: 100,      // 每多少次操作输出一次统计
+};
+
+// 键盘映射统计
+const keyboardStats = {
+    totalUpdates: 0,
+    totalPresses: 0,
+    totalReleases: 0,
+    redundantPresses: 0,     // 幂等性阻止的重复按键
+    resetCount: 0,
+    errorCount: 0,
+    lastUpdateTs: 0,
+};
+
+/**
+ * 更新键盘统计
+ */
+function updateStats(type: 'press' | 'release' | 'redundant' | 'reset' | 'error', count: number = 1) {
+    keyboardStats.totalUpdates++;
+    keyboardStats.lastUpdateTs = Date.now();
+
+    if (type === 'press') {
+        keyboardStats.totalPresses += count;
+    } else if (type === 'release') {
+        keyboardStats.totalReleases += count;
+    } else if (type === 'redundant') {
+        keyboardStats.redundantPresses += count;
+    } else if (type === 'reset') {
+        keyboardStats.resetCount++;
+    } else if (type === 'error') {
+        keyboardStats.errorCount++;
+    }
+
+    // 定期输出统计
+    if (keyboardStats.totalUpdates % LOG_CONFIG.statsInterval === 0) {
+        console.log('🎹 Keyboard Stats:', {
+            totalUpdates: keyboardStats.totalUpdates,
+            presses: keyboardStats.totalPresses,
+            releases: keyboardStats.totalReleases,
+            redundantPresses: keyboardStats.redundantPresses,
+            resets: keyboardStats.resetCount,
+            errors: keyboardStats.errorCount,
+        });
+    }
+}
+
+/**
+ * 获取键盘统计信息
+ */
+export function getKeyboardStats() {
+    return { ...keyboardStats };
+}
+
+/**
+ * 设置日志配置
+ * @param config 日志配置
+ */
+export function setKeyboardLogConfig(config: Partial<typeof LOG_CONFIG>) {
+    Object.assign(LOG_CONFIG, config);
+    console.log('🎹 Keyboard log config updated:', LOG_CONFIG);
+}
+
 /**
  * 键盘输入执行器
  * 负责将键盘输入状态转换为系统键盘事件
@@ -110,17 +176,28 @@ export class KeyboardExecutor implements InputExecutor {
 
         // 只在状态有变化时记录日志
         if (keysToPress.size > 0 || keysToRelease.size > 0) {
+            // 详细日志
+            if (LOG_CONFIG.verbose) {
+                console.log(`🎹 KeyboardEvent [${new Date().toISOString()}]:`);
+                console.log(`   Previous: [${Array.from(this.previousKeyboardState).join(', ')}]`);
+                console.log(`   Current:  [${Array.from(newState).join(', ')}]`);
+                console.log(`   To Release: [${Array.from(keysToRelease).join(', ')}] (${keysToRelease.size} keys)`);
+                console.log(`   To Press:   [${Array.from(keysToPress).join(', ')}] (${keysToPress.size} keys)`);
+            }
+
             console.log(
-                `KeyboardEvent: State change - Pressing: [${Array.from(keysToPress).join(', ')}], Releasing: [${Array.from(keysToRelease).join(', ')}]`
+                `🎹 KeyboardEvent: State change - Pressing: [${Array.from(keysToPress).join(', ')}], Releasing: [${Array.from(keysToRelease).join(', ')}]`
             );
 
             // 先释放不需要的键（正确的按键顺序）
             if (keysToRelease.size > 0) {
                 try {
                     keySender.sendKey(Array.from(keysToRelease));
-                    console.log(`KeyboardEvent: Released ${keysToRelease.size} key(s)`);
+                    console.log(`✅ KeyboardEvent: Released ${keysToRelease.size} key(s)`);
+                    updateStats('release', keysToRelease.size);
                 } catch (error) {
-                    console.error("KeyboardError: Error releasing keys:", error);
+                    console.error("❌ KeyboardError: Error releasing keys:", error);
+                    updateStats('error', 1);
                 }
             }
 
@@ -128,6 +205,15 @@ export class KeyboardExecutor implements InputExecutor {
             const newKeysToPress = new Set(
                 [...keysToPress].filter((key) => !this.sentKeys.has(key))
             );
+
+            // 统计被幂等性阻止的按键
+            const redundantKeys = keysToPress.size - newKeysToPress.size;
+            if (redundantKeys > 0) {
+                updateStats('redundant', redundantKeys);
+                if (LOG_CONFIG.verbose) {
+                    console.log(`⚠️  KeyboardEvent: Filtered ${redundantKeys} redundant key(s)`);
+                }
+            }
 
             if (newKeysToPress.size > 0) {
                 // 将新按键添加到已发送集合和顺序列表
@@ -139,13 +225,15 @@ export class KeyboardExecutor implements InputExecutor {
                 const allKeysToPress = Array.from(this.keyOrder);
 
                 console.log(
-                    `KeyboardEvent: Pressing ${newKeysToPress.size} new key(s): [${Array.from(newKeysToPress).join(', ')}]`
+                    `🎹 KeyboardEvent: Pressing ${newKeysToPress.size} new key(s): [${Array.from(newKeysToPress).join(', ')}]`
                 );
 
                 try {
                     keySender.sendKey(allKeysToPress);
+                    updateStats('press', newKeysToPress.size);
                 } catch (error) {
-                    console.error("KeyboardError: Error pressing keys:", error);
+                    console.error("❌ KeyboardError: Error pressing keys:", error);
+                    updateStats('error', 1);
                 }
             }
 
@@ -160,12 +248,14 @@ export class KeyboardExecutor implements InputExecutor {
     reset(): void {
         // 遍历所有已按下按键逐一发送 KeyUp（清零时的键盘行为）
         if (this.currentKeyboardState.size > 0) {
-            console.log(`KeyboardEvent: Resetting - Releasing ${this.currentKeyboardState.size} key(s)`);
+            console.log(`🎹 KeyboardEvent: Resetting - Releasing ${this.currentKeyboardState.size} key(s): [${Array.from(this.currentKeyboardState).join(', ')}]`);
 
             try {
                 keySender.sendKey(Array.from(this.currentKeyboardState));
+                updateStats('reset', 1);
             } catch (error) {
-                console.error("KeyboardError: Error resetting keys:", error);
+                console.error("❌ KeyboardError: Error resetting keys:", error);
+                updateStats('error', 1);
             }
         }
 
@@ -175,6 +265,6 @@ export class KeyboardExecutor implements InputExecutor {
         this.sentKeys.clear();
         this.keyOrder = [];
 
-        console.log("KeyboardEvent: Reset complete");
+        console.log("✅ KeyboardEvent: Reset complete");
     }
 }

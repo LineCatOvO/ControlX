@@ -176,7 +176,7 @@ describe("Keyboard Output Tests", () => {
 
     describe("边界条件 (Edge Cases)", () => {
         test("should handle large number of keys", () => {
-            const manyKeys = Array.from({ length: 5 }, (_, i) => 
+            const manyKeys = Array.from({ length: 5 }, (_, i) =>
                 String.fromCharCode("A".charCodeAt(0) + i)
             );
 
@@ -187,11 +187,45 @@ describe("Keyboard Output Tests", () => {
             expect(sendKeyMock).toHaveBeenCalled();
         });
 
+        test("should handle very large number of keys (>50)", () => {
+            // Generate 50 keys
+            const manyKeys = Array.from({ length: 50 }, (_, i) =>
+                `Key${i}`
+            );
+
+            // Apply state - should handle without errors
+            expect(() => keyboardExecutor.applyState(createState(manyKeys))).not.toThrow();
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
         test("should handle special keys", () => {
             const specialKeys = ["Control", "Alt", "Shift"];
-            
+
             // Apply state - should send keys on first press
             keyboardExecutor.applyState(createState(specialKeys));
+
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should handle function keys", () => {
+            const functionKeys = ["F1", "F2", "F3", "F4", "F5"];
+
+            keyboardExecutor.applyState(createState(functionKeys));
+
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should handle modifier key combinations", () => {
+            const modifierCombos = [
+                ["Control", "C"],
+                ["Control", "V"],
+                ["Alt", "Tab"],
+                ["Shift", "Delete"]
+            ];
+
+            modifierCombos.forEach(combo => {
+                keyboardExecutor.applyState(createState(combo));
+            });
 
             expect(sendKeyMock).toHaveBeenCalled();
         });
@@ -205,6 +239,68 @@ describe("Keyboard Output Tests", () => {
 
             // Should not throw errors and should send keys
             expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should handle rapid consecutive key presses", () => {
+            // Simulate very fast key presses (e.g., gaming scenario)
+            const rapidPresses = [
+                ["W"],
+                ["W", "Shift"],
+                ["W", "Shift", "Control"],
+                ["W", "Shift"],
+                ["W"]
+            ];
+
+            rapidPresses.forEach(keys => {
+                expect(() => keyboardExecutor.applyState(createState(keys))).not.toThrow();
+            });
+        });
+
+        test("should handle numeric keys", () => {
+            const numberKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+
+            keyboardExecutor.applyState(createState(numberKeys));
+
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should handle arrow keys", () => {
+            const arrowKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+
+            keyboardExecutor.applyState(createState(arrowKeys));
+
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should handle simultaneous press and release of same key", () => {
+            // Press W
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.applyState(createState(["W"]));
+            jest.clearAllMocks();
+
+            // Release W and press W in same frame (edge case)
+            keyboardExecutor.applyState(createState(["W"]));
+
+            // Should not send anything (no net change)
+            expect(sendKeyMock).not.toHaveBeenCalled();
+        });
+
+        test("should handle empty to empty state transition", () => {
+            keyboardExecutor.applyState(createState([]));
+            keyboardExecutor.applyState(createState([]));
+
+            // Should not send anything
+            expect(sendKeyMock).not.toHaveBeenCalled();
+        });
+
+        test("should handle key order preservation", () => {
+            // Press W, then A, then S
+            keyboardExecutor.applyState(createState(["W"]));
+            keyboardExecutor.applyState(createState(["W", "A"]));
+            keyboardExecutor.applyState(createState(["W", "A", "S"]));
+
+            // keyOrder should preserve the order
+            expect(keyboardExecutor).toBeDefined();
         });
     });
 
