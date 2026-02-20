@@ -5,7 +5,7 @@ import { InputState } from "../types/ws";
  * 安全控制器配置
  */
 interface SafetyConfig {
-    timeoutMs: number; // 超时时间，默认500ms
+    timeoutMs: number; // 超时时间，默认 500ms
     clearReasons?: Record<string, string>; // 清零原因记录
 }
 
@@ -13,6 +13,8 @@ interface SafetyConfig {
  * 安全控制器
  * 负责在异常情况下（超时、断连、状态校验失败等）立即清零所有输入状态
  * SafetyController 是唯一允许触发清零的模块，确保清零操作的单一权威性
+ * 
+ * 时间权威性：ApplyScheduler 是唯一的时间权威，所有时间相关操作都使用 tickTime
  */
 export class SafetyController {
     // 执行器管理器引用
@@ -21,7 +23,7 @@ export class SafetyController {
     // 配置
     private readonly config: SafetyConfig;
 
-    // 最后一次成功接收状态的时间戳
+    // 最后一次成功接收状态的时间戳（使用 ApplyScheduler 的 tickTime）
     private lastValidStateTime: number = 0;
 
     // 超时定时器
@@ -39,6 +41,9 @@ export class SafetyController {
     // 清零原因记录
     private clearReasons: Record<string, string> = {};
 
+    // 当前 tickTime（由 ApplyScheduler 提供）
+    private currentTickTime: number = 0;
+
     /**
      * 构造函数
      * @param executorManager 执行器管理器
@@ -50,20 +55,31 @@ export class SafetyController {
     ) {
         this.executorManager = executorManager;
         this.config = {
-            timeoutMs: 500, // 默认超时时间500ms
+            timeoutMs: 500, // 默认超时时间 500ms
             ...config,
         };
 
-        // 不再自动启动超时检查，由外部调用startTimeoutCheck()手动启动
+        // 不再自动启动超时检查，由外部调用 startTimeoutCheck() 手动启动
+    }
+
+    /**
+     * 更新当前 tickTime（由 ApplyScheduler 调用）
+     * ApplyScheduler 是唯一的时间权威，所有时间戳都来自这里
+     * @param tickTime 当前 tick 时间戳
+     */
+    updateTickTime(tickTime: number): void {
+        this.currentTickTime = tickTime;
     }
 
     /**
      * 记录有效状态接收时间
      * @param state 接收到的状态
-     * @param applyTime 应用时间戳（可选，用于时间一致性）
+     * @param tickTime tick 时间戳（由 ApplyScheduler 提供，用于时间一致性）
      */
-    recordValidState(state: InputState, applyTime?: number): void {
-        this.lastValidStateTime = applyTime || Date.now();
+    recordValidState(state: InputState, tickTime: number): void {
+        // 使用 tickTime 而不是 Date.now()，确保时间一致性
+        this.lastValidStateTime = tickTime;
+        this.currentTickTime = tickTime;
         // 移除重复日志，只记录关键事件
     }
 
@@ -108,7 +124,7 @@ export class SafetyController {
     }
 
     /**
-     * 处理WebSocket断开连接
+     * 处理 WebSocket 断开连接
      * @param reason 清零原因
      */
     handleDisconnect(reason: string = "websocket_disconnected"): void {
@@ -134,7 +150,7 @@ export class SafetyController {
             clearInterval(this.timeoutTimer);
         }
 
-        // 每100ms检查一次超时
+        // 每 100ms 检查一次超时
         this.timeoutTimer = setInterval(() => {
             this.checkTimeout();
         }, 100);
@@ -146,6 +162,7 @@ export class SafetyController {
 
     /**
      * 检查超时
+     * 使用 ApplyScheduler 提供的 tickTime 进行时间一致性检查
      */
     private checkTimeout(): void {
         // 如果已销毁，直接返回
@@ -153,7 +170,8 @@ export class SafetyController {
             return;
         }
 
-        const now = Date.now();
+        // 使用 currentTickTime（由 ApplyScheduler 提供）而不是 Date.now()
+        const now = this.currentTickTime || Date.now();
         const elapsed = now - this.lastValidStateTime;
 
         if (elapsed > this.config.timeoutMs) {
@@ -189,7 +207,7 @@ export class SafetyController {
         // 应用零状态到所有执行器
         this.executorManager.applyState(zeroState);
 
-        // 调用执行器的reset方法，确保彻底清零
+        // 调用执行器的 reset 方法，确保彻底清零
         this.executorManager.reset();
     }
 

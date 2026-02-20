@@ -1,7 +1,7 @@
-# 当前任务：WebSocket 状态处理器完善
+# 当前任务：ApplyScheduler 时间权威明确
 
-**开始时间**: 2026-02-20 18:00
-**目标**: 完善 WebSocket 状态处理器，包括序列号验证集成、错误处理增强、测试编写
+**开始时间**: 2026-02-20 19:00
+**目标**: 明确 ApplyScheduler 为唯一时间权威，重构 SafetyController 时间逻辑
 
 ---
 
@@ -9,112 +9,112 @@
 
 ### 执行的工作
 
-#### 1. 序列号单调性验证集成 ✅
+#### 1. 文档明确时间权威 ✅
 
-**文件**: `Server/src/ws/handlers/state.ts`
+**文件**: `Server/src/input/applyScheduler.ts`
 
 **实现内容**:
 
-##### 1.1 验证器自动调用
-- ✅ `validator.validate(inputState)` 自动包含序列号验证
-- ✅ 序列号递减时自动检测并记录
-- ✅ 序列号错误时自动重置验证器状态
-
-##### 1.2 序列号错误处理
+##### 1.1 类注释说明
 ```typescript
-// 检查是否是序列号错误
-const isSequenceError = validationResult.errors.some(
-    err => err.message.includes('sequence') || err.message.includes('序列号')
-);
-
-if (isSequenceError) {
-    console.warn(`[StateHandler] ⚠️ Sequence number error for state ${stateId}, resetting validator`);
-    // 序列号错误时，重置验证器状态（处理重传场景）
-    validator.reset();
-}
+/**
+ * ApplyScheduler
+ * 负责固定频率（125Hz）状态应用，实现接收与应用解耦
+ * 
+ * **时间权威性：ApplyScheduler 是唯一的时间权威，所有时间戳记录都在这里完成**
+ * - SafetyController 的超时检查使用 ApplyScheduler 提供的 tickTime
+ * - 所有状态应用时间戳都在 ApplyScheduler 中记录
+ * - 时间一致性由 ApplyScheduler 保证
+ */
 ```
-
-##### 1.3 统计增强
-- ✅ 添加 `sequenceErrors` 计数器
-- ✅ 自动检测并统计序列号错误
-- ✅ 定期输出包含序列号错误的统计信息
 
 ---
 
-#### 2. 错误处理增强 ✅
+#### 2. SafetyController 重构 ✅
 
-**文件**: `Server/src/ws/handlers/state.ts`
+**文件**: `Server/src/input/safetyController.ts`
 
 **新增功能**:
 
-##### 2.1 错误码定义
+##### 2.1 添加 tickTime 更新方法
 ```typescript
-const ERROR_CODES = {
-    VALIDATION_FAILED: 'VALIDATION_FAILED',
-    SEQUENCE_ERROR: 'SEQUENCE_ERROR',
-    STATE_STORE_ERROR: 'STATE_STORE_ERROR',
-    INTERNAL_ERROR: 'INTERNAL_ERROR',
-    WEBSOCKET_ERROR: 'WEBSOCKET_ERROR',
-} as const;
+// 当前 tickTime（由 ApplyScheduler 提供）
+private currentTickTime: number = 0;
+
+/**
+ * 更新当前 tickTime（由 ApplyScheduler 调用）
+ * ApplyScheduler 是唯一的时间权威，所有时间戳都来自这里
+ * @param tickTime 当前 tick 时间戳
+ */
+updateTickTime(tickTime: number): void {
+    this.currentTickTime = tickTime;
+}
 ```
 
-##### 2.2 统一错误 ACK 发送
+##### 2.2 重构 recordValidState
 ```typescript
-function sendErrorAck(ws: any, stateId: number, recvTime: number, errorCode: string, reason: string) {
-    const ackMessage: StateAckMessage = {
-        type: 'stateAck',
-        ackStateId: stateId,
-        serverRecvTs: recvTime,
-        serverApplyTs: Date.now(),
-        status: 'rejected',
-        reason: `[${errorCode}] ${reason}`
-    };
+/**
+ * 记录有效状态接收时间
+ * @param state 接收到的状态
+ * @param tickTime tick 时间戳（由 ApplyScheduler 提供，用于时间一致性）
+ */
+recordValidState(state: InputState, tickTime: number): void {
+    // 使用 tickTime 而不是 Date.now()，确保时间一致性
+    this.lastValidStateTime = tickTime;
+    this.currentTickTime = tickTime;
+}
+```
+
+##### 2.3 重构 checkTimeout
+```typescript
+/**
+ * 检查超时
+ * 使用 ApplyScheduler 提供的 tickTime 进行时间一致性检查
+ */
+private checkTimeout(): void {
+    // 使用 currentTickTime（由 ApplyScheduler 提供）而不是 Date.now()
+    const now = this.currentTickTime || Date.now();
+    const elapsed = now - this.lastValidStateTime;
+
+    if (elapsed > this.config.timeoutMs) {
+        this.triggerSafetyClear();
+        console.log(
+            `SafetyController: Timeout detected, elapsed: ${elapsed}ms, timeout: ${this.config.timeoutMs}ms`
+        );
+    }
+}
+```
+
+---
+
+#### 3. ApplyScheduler 集成 ✅
+
+**文件**: `Server/src/input/applyScheduler.ts`
+
+**修改内容**:
+
+##### 3.1 更新 SafetyController tickTime
+```typescript
+private applyCurrentState(): void {
+    // 记录 Tick 时间
+    const tickTime = Date.now();
+    this.lastTickTime = tickTime;
+
+    // 更新 SafetyController 的 tickTime（时间权威性）
+    const safetyController = getSafetyController();
+    safetyController.updateTickTime(tickTime);
+
     // ...
 }
 ```
 
-##### 2.3 详细错误日志
-```
-[StateHandler] ❌ StateStore not available for state 123
-[StateHandler] ❌ Validation error: Invalid key code
-  Field: keyboard
-  Expected: valid key code
-  Actual: InvalidKey
-[StateHandler] ⚠️ Sequence number error for state 123, resetting validator
-[StateHandler] ⚠️ StateStore rejected state 123
-[StateHandler] ❌ Error handling state message 123: Error message
-```
+##### 3.2 使用 tickTime 记录有效状态
+```typescript
+// 普通模式：只写 Executor
+this.executorManager.applyState(latestState);
 
-##### 2.4 错误统计
-- ✅ 所有错误都记录到 `ackStats.errors`
-- ✅ 验证错误分类统计到 `validationStats.errorsByField`
-- ✅ 序列号错误单独统计到 `validationStats.sequenceErrors`
-
----
-
-#### 3. 日志系统增强 ✅
-
-**改进内容**:
-
-##### 3.1 统一日志前缀
-- ✅ `[StateHandler]` 统一标识
-- ✅ ❌ 错误标记，⚠️ 警告标记
-
-##### 3.2 详细错误信息
-- ✅ 错误字段、期望值、实际值
-- ✅ 状态 ID 跟踪
-- ✅ 时间戳记录
-
-##### 3.3 统计输出
-```
-Validation Stats: {
-  total: 100,
-  passed: 95,
-  failed: 5,
-  sequenceErrors: 2,
-  passRate: '95.00%',
-  errorsByField: { keyboard: 3, gamepad: 2 }
-}
+// 记录有效状态时间到安全控制器（使用 tickTime 保证时间一致性）
+safetyController.recordValidState(latestState, tickTime);
 ```
 
 ---
@@ -123,27 +123,25 @@ Validation Stats: {
 
 | 子任务 | 状态 | 文件变更 | 代码行数 |
 |--------|------|----------|----------|
-| 序列号验证集成 | ✅ 完成 | +30 行 | +30 行 |
-| 错误处理增强 | ✅ 完成 | +100 行 | +100 行 |
-| 日志系统增强 | ✅ 完成 | +50 行 | +50 行 |
-| **总计** | **✅ 完成** | **1 文件** | **~180 行** |
+| 文档明确时间权威 | ✅ 完成 | +10 行注释 | +10 行 |
+| SafetyController 重构 | ✅ 完成 | +40 行 | +40 行 |
+| ApplyScheduler 集成 | ✅ 完成 | +5 行 | +5 行 |
+| **总计** | **✅ 完成** | **2 文件** | **~55 行** |
 
 ---
 
 ## 📈 质量指标
 
 ### 功能完整性
-- ✅ 序列号单调性验证集成
-- ✅ 错误码统一定义
-- ✅ 统一错误 ACK 发送
-- ✅ 详细错误日志
-- ✅ 错误统计系统
+- ✅ ApplyScheduler 类注释明确时间权威
+- ✅ SafetyController 使用 tickTime 而不是 Date.now()
+- ✅ ApplyScheduler 每 tick 更新 SafetyController 时间
+- ✅ 时间一致性保证
 
 ### 代码质量
-- ✅ 错误处理覆盖所有异常路径
-- ✅ 日志清晰可读，带 emoji 标记
-- ✅ 统计系统完善
-- ✅ 代码结构清晰，函数职责单一
+- ✅ 注释清晰说明时间权威性
+- ✅ 代码结构清晰，职责单一
+- ✅ 向后兼容（currentTickTime  fallback 到 Date.now()）
 
 ---
 
@@ -151,10 +149,9 @@ Validation Stats: {
 
 | 验收标准 | 状态 | 说明 |
 |----------|------|------|
-| 状态处理正确率 100% | ✅ 完成 | 所有路径正确处理 |
-| 验证失败返回错误 ACK | ✅ 完成 | 带错误码和详细原因 |
-| 序列号验证有效 | ✅ 完成 | 自动检测和重置 |
-| 测试覆盖率 | ⚠️ 待完成 | 需要编写集成测试 |
+| 文档清晰说明时间权威 | ✅ 完成 | 类注释详细说明 |
+| 所有时间逻辑使用 tickTime | ✅ 完成 | SafetyController 重构完成 |
+| 测试覆盖率 | ⚠️ 待完成 | 需要编写测试验证 |
 
 ---
 
@@ -162,49 +159,41 @@ Validation Stats: {
 
 ### 技术方案
 
-#### 1. 序列号单调性验证
-- InputValidator 已实现 `validateSequenceNumberMonotonicity()`
-- 在 `validate()` 中自动调用（除非跳过）
-- 序列号递减时返回错误
-- 错误时调用 `validator.reset()` 重置状态
+#### 1. 时间权威性设计
+- **ApplyScheduler** 是唯一的时间权威
+- 所有时间戳都在 ApplyScheduler 中记录
+- SafetyController 通过 `updateTickTime()` 获取当前 tickTime
+- `checkTimeout()` 使用 `currentTickTime` 而不是`Date.now()`
 
-#### 2. 错误码设计
-- 定义统一的错误码常量
-- 错误 ACK 包含 `[ERROR_CODE] reason` 格式
-- 便于客户端解析和处理
+#### 2. 时间一致性保证
+- ApplyScheduler 每 tick 调用 `safetyController.updateTickTime(tickTime)`
+- `recordValidState()` 使用 tickTime 而不是 Date.now()
+- `checkTimeout()` 使用 `currentTickTime || Date.now()` 降级
 
-#### 3. 统计系统设计
-- 分类统计（success/rejected/errors）
-- 定期输出（每 100 次）
-- 限制时间戳数组大小（1000）
+#### 3. 降级策略
+- 如果 `currentTickTime` 未设置，fallback 到 `Date.now()`
+- 保证在 ApplyScheduler 未启动时仍能工作
 
 ### 注意事项
 
-#### 1. 序列号重置
-- 序列号错误可能是重传导致
-- 重置验证器允许重新建立序列号基准
-- 需要记录日志便于排查
+#### 1. 时间同步
+- ApplyScheduler 必须在启动后每 tick 更新 SafetyController
+- 否则 SafetyController 会使用 fallback 的 Date.now()
 
-#### 2. 错误日志
-- 生产环境注意日志级别
-- 避免敏感信息泄露
-- 使用统一前缀便于过滤
-
-#### 3. 性能考虑
-- 错误处理不应影响正常路径性能
-- 统计输出频率不宜过高
-- 时间戳数组限制大小
+#### 2. 测试验证
+- 需要编写测试验证时间一致性
+- 测试超时检测是否准确
 
 ---
 
 ## 🔄 待迁移内容
 
-- [ ] 将错误码设计迁移到 KNOWLEDGE.md
-- [ ] 将序列号验证经验迁移到 TASKS.md
-- [ ] 编写集成测试（待执行）
+- [ ] 将时间权威性设计迁移到 KNOWLEDGE.md
+- [ ] 编写测试验证时间一致性
+- [ ] 更新 TASKS.md 任务状态
 
 ---
 
-**完成时间**: 2026-02-20 18:30
+**完成时间**: 2026-02-20 19:30
 **执行耗时**: 30 分钟
-**下一步**: 编写集成测试（可选），提交代码更改
+**下一步**: 提交代码更改

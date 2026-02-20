@@ -5,17 +5,21 @@ import { executeInputWithShadow, isShadowModeEnabled } from './executor_shadow';
 import { executeInputRouterOnly, isRouterOnlyModeEnabled } from './RouterOnlyExecutor';
 
 /**
- * ApplyScheduler配置
+ * ApplyScheduler 配置
  */
 interface ApplySchedulerConfig {
-  applyIntervalMs: number; // 应用间隔时间，默认8ms（125Hz）
-  tickTime?: number; // Tick时间戳，用于时间一致性保证
+  applyIntervalMs: number; // 应用间隔时间，默认 8ms（125Hz）
+  tickTime?: number; // Tick 时间戳，用于时间一致性保证
 }
 
 /**
  * ApplyScheduler
  * 负责固定频率（125Hz）状态应用，实现接收与应用解耦
- * ApplyScheduler 是唯一的时间权威，所有时间戳记录都在这里完成
+ * 
+ * **时间权威性：ApplyScheduler 是唯一的时间权威，所有时间戳记录都在这里完成**
+ * - SafetyController 的超时检查使用 ApplyScheduler 提供的 tickTime
+ * - 所有状态应用时间戳都在 ApplyScheduler 中记录
+ * - 时间一致性由 ApplyScheduler 保证
  */
 export class ApplyScheduler {
   // 执行器管理器引用
@@ -36,14 +40,14 @@ export class ApplyScheduler {
   // 应用计数
   private applyCount = 0;
 
-  // Tick回调列表，用于测试
+  // Tick 回调列表，用于测试
   private tickCallbacks: Array<() => void> = [];
 
   // 时间统计
   private lastTickTime: number = 0;
   private lastApplyTime: number = 0;
   private lastReceiveTime: number = 0;
-  
+
   /**
    * 构造函数
    * @param executorManager 执行器管理器
@@ -58,30 +62,30 @@ export class ApplyScheduler {
     this.executorManager = executorManager;
     this.stateStore = stateStore;
     this.config = {
-      applyIntervalMs: 8, // 默认8ms，对应125Hz
+      applyIntervalMs: 8, // 默认 8ms，对应 125Hz
       ...config
     };
   }
-  
+
   /**
-   * 添加tick回调，用于测试
+   * 添加 tick 回调，用于测试
    * @param callback 回调函数
    */
   addTickCallback(callback: () => void): void {
     this.tickCallbacks.push(callback);
   }
-  
+
   /**
-   * 移除tick回调，用于测试
+   * 移除 tick 回调，用于测试
    * @param callback 回调函数
    */
   removeTickCallback(callback: () => void): void {
     this.tickCallbacks = this.tickCallbacks.filter(cb => cb !== callback);
   }
-  
+
   /**
-   * 启动ApplyScheduler
-   * @param tickTime Tick时间戳，用于时间一致性保证
+   * 启动 ApplyScheduler
+   * @param tickTime Tick 时间戳，用于时间一致性保证
    */
   start(tickTime: number): void {
     if (this._isRunning) {
@@ -99,37 +103,41 @@ export class ApplyScheduler {
 
     console.log(`ApplyScheduler: Started with interval ${this.config.applyIntervalMs}ms (${1000 / this.config.applyIntervalMs}Hz)`);
   }
-  
+
   /**
-   * 停止ApplyScheduler
+   * 停止 ApplyScheduler
    */
   stop(): void {
     if (!this._isRunning) {
       console.warn('ApplyScheduler: Already stopped');
       return;
     }
-    
+
     this._isRunning = false;
     if (this.applyTimer) {
       clearInterval(this.applyTimer);
       this.applyTimer = null;
     }
-    
+
     console.log(`ApplyScheduler: Stopped, total applies: ${this.applyCount}`);
   }
-  
+
   /**
    * 应用当前状态
    * ApplyScheduler 是唯一的时间权威，所有时间戳记录都在这里完成
    */
   private applyCurrentState(): void {
     try {
-      // 记录Tick时间
+      // 记录 Tick 时间
       const tickTime = Date.now();
       this.lastTickTime = tickTime;
 
-      // 调用tick回调
+      // 调用 tick 回调
       this.tickCallbacks.forEach(callback => callback());
+
+      // 更新 SafetyController 的 tickTime（时间权威性）
+      const safetyController = getSafetyController();
+      safetyController.updateTickTime(tickTime);
 
       // 获取最新状态
       const latestState = this.stateStore.getLatestState();
@@ -157,9 +165,8 @@ export class ApplyScheduler {
           this.lastApplyTime = applyTime;
           this.stateStore.recordAppliedState(sequenceNumber, applyTime);
 
-          // 记录有效状态时间到安全控制器
-          const safetyController = getSafetyController();
-          safetyController.recordValidState(latestState, applyTime);
+          // 记录有效状态时间到安全控制器（使用 tickTime 保证时间一致性）
+          safetyController.recordValidState(latestState, tickTime);
         }
 
         // 计算时间差
@@ -167,7 +174,7 @@ export class ApplyScheduler {
 
         this.applyCount++;
 
-        // 每100次应用输出一次日志
+        // 每 100 次应用输出一次日志
         if (this.applyCount % 100 === 0) {
           const rtt = tickTime - this.lastReceiveTime;
           console.log(`ApplyScheduler: Applied ${this.applyCount} states, last sequence: ${sequenceNumber}, time diff: ${timeDiff}ms, RTT: ${rtt}ms`);
@@ -184,18 +191,18 @@ export class ApplyScheduler {
       safetyController.triggerExceptionClear('ApplyScheduler error');
     }
   }
-  
+
   /**
    * 提取序列号
    * @param state 状态对象
    * @returns 序列号
    */
   private extractSequenceNumber(state: any): number {
-    // 这里假设state中有frameId字段作为序列号
+    // 这里假设 state 中有 frameId 字段作为序列号
     // 如果没有，则使用时间戳作为序列号
     return state.frameId || Date.now();
   }
-  
+
   /**
    * 获取运行状态
    * @returns 是否运行中
@@ -203,7 +210,7 @@ export class ApplyScheduler {
   isRunning(): boolean {
     return this._isRunning;
   }
-  
+
   /**
    * 获取应用计数
    * @returns 应用计数
