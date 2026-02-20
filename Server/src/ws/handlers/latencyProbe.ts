@@ -41,14 +41,14 @@ function updateRttStats(rtt: number) {
 /**
  * 获取 RTT 统计
  */
-function getRttStats() {
+export function getRttStats() {
   return { ...rttStats };
 }
 
 /**
  * 重置 RTT 统计
  */
-function resetRttStats() {
+export function resetRttStats() {
   rttStats.measurements = [];
   rttStats.average = 0;
   rttStats.min = Infinity;
