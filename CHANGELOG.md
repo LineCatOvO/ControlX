@@ -1,5 +1,28 @@
 # Changelog
 
+## [2026-02-20] feat: 明确 ApplyScheduler 时间权威 - SafetyController 重构
+
+### Changes
+- Server/src/input/applyScheduler.ts: 明确 ApplyScheduler 为唯一时间权威
+  - 添加类注释说明时间权威性
+  - 每 tick 调用 safetyController.updateTickTime(tickTime)
+  - 使用 tickTime 记录有效状态时间
+
+- Server/src/input/safetyController.ts: 重构 SafetyController 使用 ApplyScheduler 时间
+  - 添加 currentTickTime 字段（由 ApplyScheduler 提供）
+  - 新增 updateTickTime() 方法更新 tickTime
+  - 重构 recordValidState() 使用 tickTime 而不是 Date.now()
+  - 重构 checkTimeout() 使用 currentTickTime 而不是 Date.now()
+  - 添加降级策略：currentTickTime 未设置时 fallback 到 Date.now()
+
+- TASKS_CURRENT.md: 记录 ApplyScheduler 时间权威明确任务执行过程
+
+### Impact
+- 时间一致性保证：所有时间戳都来自 ApplyScheduler
+- 消除时间不一致风险：SafetyController 不再使用独立的 Date.now()
+- 提高代码质量：明确的时间权威性设计
+- 为后续时间相关功能奠定基础
+
 ## [2026-02-20] feat: 完善 WebSocket 状态处理器 - 序列号验证、错误处理、日志增强
 
 ### Changes
