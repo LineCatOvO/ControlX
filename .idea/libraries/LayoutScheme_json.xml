@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="LayoutScheme.json">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/AndroidClient/app/build/intermediates/compressed_assets/debug/compressDebugAssets/out/assets/LayoutScheme.json.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
