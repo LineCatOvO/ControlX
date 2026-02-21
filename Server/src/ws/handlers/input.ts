@@ -1,9 +1,11 @@
 import { InputMessage } from "../../types/ws";
 import { formatInputMessageLog } from "../../utils/logInputData";
+import { getExecutorManager } from "../../input/executor";
+import { inputState } from "../../input/state";
 
 /**
  * 处理输入消息
- * @param ws WebSocket连接
+ * @param ws WebSocket 连接
  * @param message 输入消息
  */
 export function handleInput(ws: any, message: InputMessage) {
@@ -12,14 +14,26 @@ export function handleInput(ws: any, message: InputMessage) {
 
     // 检查状态存储是否可用
     if (!stateStore) {
-        // 已注释，减少日志输出
-        // console.error("InputHandlerError: StateStore not available");
+        console.error("InputHandlerError: StateStore not available");
+        
+        // 发送错误消息给客户端
+        const errorMsg = {
+            type: "error",
+            code: "INTERNAL_ERROR",
+            message: "StateStore not available",
+        };
+        
+        try {
+            ws.send(JSON.stringify(errorMsg));
+        } catch (error) {
+            console.error("InputHandlerError: Error sending error message:", error);
+        }
         return;
     }
 
-    // 确保message.data存在
+    // 确保 message.data 存在
     const inputData = message.data || {};
-    
+
     // 存储状态
     const stored = stateStore.storeState(inputData);
 
@@ -30,7 +44,25 @@ export function handleInput(ws: any, message: InputMessage) {
         //     console.log(logMessage);
         // }
 
-        // 发送ACK消息
+        // ✅ 更新全局输入状态
+        if (inputData.keyboard) {
+            inputState.keyboard = new Set(inputData.keyboard);
+        }
+        if (inputData.gamepad) {
+            inputState.gamepad = new Set(inputData.gamepad);
+        }
+        if (inputData.mouse) {
+            inputState.mouse = { ...inputState.mouse, ...inputData.mouse };
+        }
+        if (inputData.joystick) {
+            inputState.joystick = { ...inputState.joystick, ...inputData.joystick };
+        }
+
+        // ✅ 触发输入执行器
+        const executorManager = getExecutorManager();
+        executorManager.applyState(inputState);
+
+        // 发送 ACK 消息
         const ackMessage = {
             type: "ack",
             data: {
@@ -49,7 +81,7 @@ export function handleInput(ws: any, message: InputMessage) {
             // console.error("InputHandlerError: Error sending ACK:", error);
         }
     } else {
-        // 发送错误ACK消息
+        // 发送错误 ACK 消息
         const errorAckMessage = {
             type: "ack",
             data: {

@@ -10,6 +10,7 @@ public class RuntimeEvents {
     public static final String ACTION_RUNTIME_STARTED = "com.linecat.wmmtcontroller.RUNTIME_STARTED";
     public static final String ACTION_PROFILE_LOADED = "com.linecat.wmmtcontroller.PROFILE_LOADED";
     public static final String ACTION_SCRIPT_ENGINE_READY = "com.linecat.wmmtcontroller.SCRIPT_ENGINE_READY";
+    public static final String ACTION_WS_CONNECTING = "com.linecat.wmmtcontroller.WS_CONNECTING";
     public static final String ACTION_WS_CONNECTED = "com.linecat.wmmtcontroller.WS_CONNECTED";
     public static final String ACTION_WS_DISCONNECTED = "com.linecat.wmmtcontroller.WS_DISCONNECTED";
     public static final String ACTION_WS_SENT_FRAME = "com.linecat.wmmtcontroller.WS_SENT_FRAME";

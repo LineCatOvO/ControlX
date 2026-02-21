@@ -1,5 +1,29 @@
 # Changelog
 
+## [2026-02-21] feat: 悬浮球添加连接状态指示器
+
+### Changes
+- **RuntimeEvents.java**: 添加 `ACTION_WS_CONNECTING` 连接中状态广播常量
+- **WebSocketClient.java**: 在 connect() 方法开始处发送连接中广播
+- **FloatWindowManager.java**: 
+  - 添加 `ConnectionState` 枚举（DISCONNECTED, CONNECTING, CONNECTED, ERROR）
+  - 添加连接状态广播接收器，监听所有连接状态变化
+  - 实现 `updateConnectionState()` 方法，根据状态更新悬浮球背景色
+  - 在 `destroyFloatWindow()` 中添加广播接收器注销逻辑
+- **drawable 资源**: 新增 4 个状态背景 drawable
+  - `circle_button_disconnected.xml` (灰色) - 未连接
+  - `circle_button_connecting.xml` (橙色/黄色) - 连接中
+  - `circle_button_connected.xml` (绿色) - 连接成功
+  - `circle_button_error.xml` (红色) - 连接失败
+
+### Impact
+- 用户现在可以通过悬浮球的背景颜色直观看到连接状态
+- 灰色 = 未连接
+- 黄色 = 连接中
+- 绿色 = 连接成功
+- 红色 = 连接失败
+- 状态会实时响应连接过程中的所有变化
+
 ## [2026-02-20] docs: 更新 Appium MCP 测试任务记录
 
 ### Changes

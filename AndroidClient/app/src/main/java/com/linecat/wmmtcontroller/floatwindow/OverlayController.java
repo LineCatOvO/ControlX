@@ -10,27 +10,31 @@ import com.linecat.wmmtcontroller.service.TransportController;
 
 /**
  * 悬浮球控制器
- * 负责悬浮球的创建、管理和命令处理
+ * 职责：协调 FloatWindowManager 和 ConnectionManager
+ * 作为 UI 层和业务层的桥梁
  */
-public class OverlayController {
+public class OverlayController implements FloatWindowCallback {
     private static final String TAG = "OverlayController";
+    
     private final Context context;
     private final FloatWindowManager floatWindowManager;
+    private final ConnectionManager connectionManager;
     private boolean isOverlayVisible = false;
-    private TransportController transportController;
 
     public OverlayController(Context context) {
         this.context = context;
         this.floatWindowManager = FloatWindowManager.getInstance(context);
+        this.connectionManager = new ConnectionManager(context);
+        
+        this.floatWindowManager.setCallback(this);
     }
     
     /**
      * 设置TransportController实例
      */
     public void setTransportController(TransportController transportController) {
-        this.transportController = transportController;
-        // 将TransportController传递给FloatWindowManager
-        floatWindowManager.setTransportController(transportController);
+        connectionManager.setTransportController(transportController);
+        Log.d(TAG, "TransportController已设置到ConnectionManager");
     }
 
     /**
@@ -66,7 +70,7 @@ public class OverlayController {
      * 显示连接错误提示
      */
     public void showConnectionError() {
-        floatWindowManager.showConnectionError();
+        connectionManager.showConnectionError();
     }
 
     /**
@@ -103,6 +107,44 @@ public class OverlayController {
      * 销毁悬浮球控制器
      */
     public void destroy() {
+        Log.d(TAG, "OverlayController destroy called");
         hideOverlay();
+        floatWindowManager.destroyFloatWindow();
+    }
+    
+    // ========== FloatWindowCallback 实现 ==========
+    
+    @Override
+    public void onConnectRequested() {
+        Log.d(TAG, "[Callback] 连接请求");
+        connectionManager.onConnectRequested();
+    }
+    
+    @Override
+    public void onDisconnectRequested() {
+        Log.d(TAG, "[Callback] 断开连接请求");
+        connectionManager.onDisconnectRequested();
+    }
+    
+    @Override
+    public void onSettingsSaved(com.linecat.wmmtcontroller.model.ConnectionInfo info) {
+        Log.d(TAG, "[Callback] 设置保存");
+        connectionManager.onSettingsSaved(info);
+    }
+    
+    @Override
+    public void onLayoutEnabledChanged(boolean enabled) {
+        Log.d(TAG, "[Callback] 布局启用状态变更: " + enabled);
+        connectionManager.onLayoutEnabledChanged(enabled);
+    }
+    
+    @Override
+    public com.linecat.wmmtcontroller.model.ConnectionInfo getConnectionInfo() {
+        return connectionManager.getConnectionInfo();
+    }
+    
+    @Override
+    public boolean isConnectionInfoValid() {
+        return connectionManager.isConnectionInfoValid();
     }
 }

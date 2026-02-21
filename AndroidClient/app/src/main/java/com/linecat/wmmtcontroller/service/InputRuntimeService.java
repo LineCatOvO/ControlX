@@ -212,7 +212,7 @@ public class InputRuntimeService extends Service {
         // 检查debug模式设置
         DebugModeManager debugManager = DebugModeManager.getInstance(this);
         boolean useTestMode = debugManager.shouldBypassOverlayPermission();
-        
+
         // 创建网络层
         networkLayer = new NetworkLayer(this);
         networkLayer.setRuntimeConfig(runtimeConfig);
@@ -238,32 +238,34 @@ public class InputRuntimeService extends Service {
             public void onPointerFrame(InputAbstractionLayer.PointerFrame frame) {
                 // 处理指针帧（根据需要实现）
             }
-            
+
             @Override
             public void onGyroFrame(InputAbstractionLayer.GyroFrame frame) {
                 // 处理陀螺仪帧（根据需要实现）
             }
         });
-        
+
         // 检查浮窗权限并选择合适的模式
         boolean hasOverlayPermission = android.provider.Settings.canDrawOverlays(this);
-        
+
         if (hasOverlayPermission) {
             // 有浮窗权限，使用系统浮窗模式
             Log.d(TAG, "Using SYSTEM_OVERLAY mode with overlay permission");
             platformAdaptationLayer = new PlatformAdaptationLayer(
-                this, 
-                inputAbstractionLayer, 
-                PlatformAdaptationLayer.OverlayMode.SYSTEM_OVERLAY, 
+                this,
+                inputAbstractionLayer,
+                PlatformAdaptationLayer.OverlayMode.SYSTEM_OVERLAY,
                 null
             );
         } else {
+            //todo 无浮窗权限禁止运行
+
             // 无浮窗权限，使用Activity面板模式（无需权限）
             Log.d(TAG, "Using ACTIVITY_PANEL mode without overlay permission");
             platformAdaptationLayer = new PlatformAdaptationLayer(
-                this, 
-                inputAbstractionLayer, 
-                PlatformAdaptationLayer.OverlayMode.ACTIVITY_PANEL, 
+                this,
+                inputAbstractionLayer,
+                PlatformAdaptationLayer.OverlayMode.ACTIVITY_PANEL,
                 null
             );
         }
@@ -298,6 +300,11 @@ public class InputRuntimeService extends Service {
     private void stopAllLayers() {
         Log.d(TAG, "Stopping all layers");
 
+        // 先停止UI输入层，防止UI更新问题
+        if (uiInputLayer != null) {
+            uiInputLayer.stop();
+        }
+
         // 停止平台适配层的 overlay
         if (platformAdaptationLayer != null) {
             platformAdaptationLayer.stopOverlay();
@@ -313,7 +320,7 @@ public class InputRuntimeService extends Service {
             mappingLayer.stop();
         }
 
-        // 停止网络层
+        // 最后停止网络层，确保广播发送顺序正确
         if (networkLayer != null) {
             networkLayer.stop();
         }

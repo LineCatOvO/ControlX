@@ -3,13 +3,25 @@ import { handleMessage } from "./router";
 import { registerWsConnection } from "../utils/errorManager";
 
 /**
- * 处理单个WebSocket连接的生命周期
- * @param ws WebSocket连接对象
+ * 处理单个 WebSocket 连接的生命周期
+ * @param ws WebSocket 连接对象
+ * @param event 事件类型（可选，用于 server.ts 中的 close 事件）
  */
-export function handleConnection(ws: any) {
+export function handleConnection(ws: any, event?: string) {
+    // 如果是 close 事件，只处理断开逻辑
+    if (event === 'close') {
+        // 更新终端监控器状态
+        if (process.env.NODE_ENV !== "test" && global && (global as any).terminalMonitor) {
+            (global as any).terminalMonitor.setClientConnected(false);
+        }
+        // 回退到安全状态
+        revertToSafeState();
+        return;
+    }
+    
     // 注册连接到错误管理器
     registerWsConnection(ws);
-    
+
     // 发送欢迎消息
     const welcomeMsg = {
         type: "welcome",
@@ -30,73 +42,7 @@ export function handleConnection(ws: any) {
     }
 
     // 处理客户端消息
-    ws.on("message", (data: any) => {
-        try {
-            // 正确处理WebSocket消息数据类型
-            const messageStr =
-                typeof data === "string" ? data : data.toString();
-            const message = JSON.parse(messageStr);
-
-            // 检查消息是否为null或undefined
-            if (message === null || message === undefined) {
-                console.error(
-                    "Error: Received null/undefined message after parsing",
-                    {
-                        originalData: data,
-                        parsedMessage: message,
-                        messageStr: messageStr,
-                        timestamp: new Date().toISOString(),
-                    }
-                );
-                return;
-            }
-
-            handleMessage(ws, message);
-        } catch (error: any) {
-            console.error(
-                "Error parsing message:",
-                error,
-                "Original message:",
-                data
-            );
-            // 发送解析错误消息给客户端
-            const errorMsg = {
-                type: "error",
-                code: "PARSE_ERROR",
-                message: "Invalid JSON format",
-            };
-            console.log(
-                "Sending error message to client:",
-                JSON.stringify(errorMsg)
-            );
-            ws.send(JSON.stringify(errorMsg));
-        }
-    });
-
-    // 客户端断开连接
-    ws.on("close", () => {
-        if (typeof console !== "undefined") {
-            // 只在非测试环境中打印日志，避免测试输出混乱
-            if (process.env.NODE_ENV !== "test") {
-                console.log("Client disconnected");
-                // 更新终端监控器状态
-                if (global && (global as any).terminalMonitor) {
-                    (global as any).terminalMonitor.setClientConnected(false);
-                }
-            }
-            // 回退到安全状态，无论是否在测试环境中
-            try {
-                revertToSafeState();
-            } catch (error) {
-                console.debug("Failed to revert to safe state:", error);
-            }
-        }
-    });
-
-    // 连接错误
-    ws.on("error", (error: any) => {
-        console.error("Client error:", error);
-    });
+    // 注意：server.ts 中已经设置了 message 监听器，这里不再重复设置
 }
 
 /**

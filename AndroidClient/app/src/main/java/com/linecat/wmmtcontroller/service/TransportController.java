@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.util.Log;
 import androidx.core.content.ContextCompat;
 
@@ -39,6 +38,13 @@ public class TransportController {
         public void onReceive(Context context, Intent intent) {
             if (RuntimeEvents.ACTION_CONNECTION_INFO_UPDATED.equals(intent.getAction())) {
                 Log.d(TAG, "Connection info updated, refreshing WebSocket URL");
+                
+                // 检查关键组件是否有效
+                if (webSocketClient == null || runtimeConfig == null) {
+                    Log.w(TAG, "webSocketClient or runtimeConfig is null, skipping update");
+                    return;
+                }
+                
                 // 获取新的WebSocket URL
                 String newUrl = runtimeConfig.getWebSocketUrl();
                 Log.d(TAG, "New WebSocket URL: " + newUrl);
@@ -81,12 +87,6 @@ public class TransportController {
     public void connect() {
         Log.d(TAG, "[传输控制] 开始执行connect()方法");
         
-        // 检查webSocketClient是否为null
-        if (webSocketClient == null) {
-            Log.e(TAG, "[传输控制] webSocketClient为null，无法执行connect()方法");
-            return;
-        }
-        
         // 获取WebSocket URL
         String wsUrl = runtimeConfig.getWebSocketUrl();
         Log.d(TAG, "[传输控制] WebSocket URL: " + wsUrl);
@@ -105,9 +105,16 @@ public class TransportController {
         webSocketClient.disconnect();
         Log.d(TAG, "Disconnected from server");
         
-        // 主动断开连接时，也发送广播触发安全清零
-        Intent disconnectIntent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
-        context.sendBroadcast(disconnectIntent);
+        // 检查context是否有效再发送广播
+        if (context != null) {
+            try {
+                // 主动断开连接时，也发送广播触发安全清零
+                Intent disconnectIntent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
+                context.sendBroadcast(disconnectIntent);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to send disconnect broadcast: " + e.getMessage(), e);
+            }
+        }
     }
 
     /**
@@ -204,13 +211,18 @@ public class TransportController {
      * 清理资源
      */
     public void cleanup() {
+        Log.d(TAG, "TransportController cleanup called");
+        
         // 注销广播接收器
         try {
             context.unregisterReceiver(connectionInfoUpdateReceiver);
         } catch (Exception e) {
             Log.e(TAG, "Error unregistering connection info update receiver: " + e.getMessage());
         }
+        
+        // 关闭WebSocket客户端
         webSocketClient.shutdown();
+        
         Log.d(TAG, "Transport controller cleaned up");
     }
 }

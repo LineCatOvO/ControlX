@@ -186,6 +186,7 @@ export interface InputMessage extends WsMessage {
         frameId?: number;
         runtimeStatus?: "ok" | "degraded" | "rollback";
         keyboard?: string[];
+        gamepad?: string[]; // 游戏手柄按钮数组
         mouse?: {
             x?: number;
             y?: number;

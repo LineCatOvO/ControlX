@@ -502,7 +502,9 @@ public final class PlatformAdaptationLayer {
         @Override
         public boolean onTouchEvent(MotionEvent event) {
             handleTouchEvent(event);
-            return true;
+            // 返回 false 让事件穿透到下层应用
+            // 这样可以在捕获事件的同时，不影响下层应用的触摸交互
+            return false;
         }
     }
 }

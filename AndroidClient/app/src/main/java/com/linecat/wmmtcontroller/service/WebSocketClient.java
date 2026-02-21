@@ -109,6 +109,11 @@ public class WebSocketClient {
             return;
         }
         
+        // 发送连接中广播
+        Intent connectingIntent = new Intent(RuntimeEvents.ACTION_WS_CONNECTING);
+        context.sendBroadcast(connectingIntent);
+        Log.d(TAG, "[连接开始] 发送连接中广播");
+        
         // 重置连接结果报告标志
         connectionResultReported = false;
         // 记录连接开始时间
@@ -157,7 +162,9 @@ public class WebSocketClient {
                     Log.d(TAG, "[连接成功] WebSocket连接成功，耗时: " + elapsedTime + "ms");
                     
                     // 取消超时任务
-                    timeoutHandler.removeCallbacksAndMessages(null);
+                    if (timeoutHandler != null) {
+                        timeoutHandler.removeCallbacksAndMessages(null);
+                    }
                     
                     isConnected = true;
                     connectionResultReported = true;
@@ -165,9 +172,16 @@ public class WebSocketClient {
                     // 连接成功，重置重连尝试次数
                     reconnectAttempts = 0;
                     
-                    // 发送WebSocket连接成功广播
-                    Intent intent = new Intent(RuntimeEvents.ACTION_WS_CONNECTED);
-                    context.sendBroadcast(intent);
+                    // 检查context是否有效再发送广播
+                    if (context != null) {
+                        try {
+                            // 发送WebSocket连接成功广播
+                            Intent intent = new Intent(RuntimeEvents.ACTION_WS_CONNECTED);
+                            context.sendBroadcast(intent);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to send connected broadcast: " + e.getMessage());
+                        }
+                    }
                     
                     // 显示连接成功toast
                     showConnectionToast(true, elapsedTime);
@@ -175,7 +189,6 @@ public class WebSocketClient {
                 
                 @Override
                 public void onMessage(WebSocket webSocket, String text) {
-                    
                     try {
                         // 解析JSON消息
                         org.json.JSONObject jsonObj = new org.json.JSONObject(text);
@@ -209,10 +222,17 @@ public class WebSocketClient {
                             Exception error = new RuntimeException(fullErrorMsg);
                             Log.e(TAG, fullErrorMsg, error);
                             
-                            // 发送WebSocket错误广播
-                            Intent intent = new Intent(RuntimeEvents.ACTION_RUNTIME_ERROR);
-                            intent.putExtra(RuntimeEvents.EXTRA_ERROR_TYPE, RuntimeEvents.ERROR_TYPE_WEBSOCKET_ERROR);
-                            context.sendBroadcast(intent);
+                            // 检查context是否有效再发送广播
+                            if (context != null) {
+                                try {
+                                    // 发送WebSocket错误广播
+                                    Intent intent = new Intent(RuntimeEvents.ACTION_RUNTIME_ERROR);
+                                    intent.putExtra(RuntimeEvents.EXTRA_ERROR_TYPE, RuntimeEvents.ERROR_TYPE_WEBSOCKET_ERROR);
+                                    context.sendBroadcast(intent);
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Failed to send error broadcast: " + e.getMessage());
+                                }
+                            }
                         }
                     } catch (org.json.JSONException e) {
                         Log.e(TAG, "[消息接收] 解析WebSocket消息失败: " + e.getMessage() + ", 原始消息: " + text);
@@ -236,9 +256,16 @@ public class WebSocketClient {
                     Log.d(TAG, "[连接已关闭] WebSocket已关闭: " + code + " - " + reason);
                     isConnected = false;
                     
-                    // 发送WebSocket断开连接广播
-                    Intent intent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
-                    context.sendBroadcast(intent);
+                    // 检查context是否有效再发送广播
+                    if (context != null) {
+                        try {
+                            // 发送WebSocket断开连接广播
+                            Intent intent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
+                            context.sendBroadcast(intent);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to send disconnected broadcast: " + e.getMessage());
+                        }
+                    }
                 }
                 
                 @Override
@@ -247,14 +274,23 @@ public class WebSocketClient {
                     Log.e(TAG, "[连接失败] WebSocket连接失败，耗时: " + elapsedTime + "ms，错误原因: " + t.getMessage(), t);
                     
                     // 取消超时任务
-                    timeoutHandler.removeCallbacksAndMessages(null);
+                    if (timeoutHandler != null) {
+                        timeoutHandler.removeCallbacksAndMessages(null);
+                    }
                     
                     isConnected = false;
                     connectionResultReported = true;
                     
-                    // 发送WebSocket断开连接广播
-                    Intent intent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
-                    context.sendBroadcast(intent);
+                    // 检查context是否有效再发送广播
+                    if (context != null) {
+                        try {
+                            // 发送WebSocket断开连接广播
+                            Intent intent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
+                            context.sendBroadcast(intent);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to send disconnected broadcast: " + e.getMessage());
+                        }
+                    }
                     
                     // 确保webSocket被正确清理
                     if (WebSocketClient.this.webSocket != null) {
@@ -277,9 +313,16 @@ public class WebSocketClient {
             isConnected = false;
             connectionResultReported = true;
             
-            // 发送WebSocket连接失败广播
-            Intent intent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
-            context.sendBroadcast(intent);
+            // 检查context是否有效再发送广播
+            if (context != null) {
+                try {
+                    // 发送WebSocket连接失败广播
+                    Intent intent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
+                    context.sendBroadcast(intent);
+                } catch (Exception e2) {
+                    Log.e(TAG, "Failed to send disconnected broadcast: " + e2.getMessage());
+                }
+            }
             
             // 显示连接失败toast
             showConnectionToast(false, elapsedTime);
@@ -290,9 +333,16 @@ public class WebSocketClient {
             isConnected = false;
             connectionResultReported = true;
             
-            // 发送WebSocket连接失败广播
-            Intent intent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
-            context.sendBroadcast(intent);
+            // 检查context是否有效再发送广播
+            if (context != null) {
+                try {
+                    // 发送WebSocket连接失败广播
+                    Intent intent = new Intent(RuntimeEvents.ACTION_WS_DISCONNECTED);
+                    context.sendBroadcast(intent);
+                } catch (Exception e2) {
+                    Log.e(TAG, "Failed to send disconnected broadcast: " + e2.getMessage());
+                }
+            }
             
             // 显示连接失败toast
             showConnectionToast(false, elapsedTime);
@@ -325,6 +375,11 @@ public class WebSocketClient {
      * @param inputState 输入状态
      */
     public void sendInputState(InputState inputState) {
+        if (context == null || gson == null) {
+            Log.w(TAG, "context or gson is null, skipping sendInputState");
+            return;
+        }
+        
         try {
             // 创建包含类型字段的消息对象
             // 创建符合服务端格式的消息对象
@@ -361,10 +416,16 @@ public class WebSocketClient {
         } catch (Exception e) {
             Log.e(TAG, "Error sending input state: " + e.getMessage(), e);
             
-            // 发送WebSocket发送帧失败广播
-            Intent intent = new Intent(RuntimeEvents.ACTION_RUNTIME_ERROR);
-            intent.putExtra(RuntimeEvents.EXTRA_ERROR_TYPE, RuntimeEvents.ERROR_TYPE_WEBSOCKET_ERROR);
-            context.sendBroadcast(intent);
+            if (context != null) {
+                try {
+                    // 发送WebSocket发送帧失败广播
+                    Intent intent = new Intent(RuntimeEvents.ACTION_RUNTIME_ERROR);
+                    intent.putExtra(RuntimeEvents.EXTRA_ERROR_TYPE, RuntimeEvents.ERROR_TYPE_WEBSOCKET_ERROR);
+                    context.sendBroadcast(intent);
+                } catch (Exception e2) {
+                    Log.e(TAG, "Failed to send error broadcast: " + e2.getMessage());
+                }
+            }
         }
     }
     
@@ -375,6 +436,11 @@ public class WebSocketClient {
      * @param zeroOutput 是否为零输出
      */
     public void sendStateMessage(List<KeyboardEvent> keyboardState, StateMessage.GamepadState gamepadState, boolean zeroOutput) {
+        if (context == null || gson == null) {
+            Log.w(TAG, "context or gson is null, skipping sendStateMessage");
+            return;
+        }
+        
         try {
             // 生成新的状态ID
             long currentStateId = ++stateId;
@@ -402,10 +468,16 @@ public class WebSocketClient {
         } catch (Exception e) {
             Log.e(TAG, "Error sending state message: " + e.getMessage(), e);
             
-            // 发送WebSocket发送帧失败广播
-            Intent intent = new Intent(RuntimeEvents.ACTION_RUNTIME_ERROR);
-            intent.putExtra(RuntimeEvents.EXTRA_ERROR_TYPE, RuntimeEvents.ERROR_TYPE_WEBSOCKET_ERROR);
-            context.sendBroadcast(intent);
+            if (context != null) {
+                try {
+                    // 发送WebSocket发送帧失败广播
+                    Intent intent = new Intent(RuntimeEvents.ACTION_RUNTIME_ERROR);
+                    intent.putExtra(RuntimeEvents.EXTRA_ERROR_TYPE, RuntimeEvents.ERROR_TYPE_WEBSOCKET_ERROR);
+                    context.sendBroadcast(intent);
+                } catch (Exception e2) {
+                    Log.e(TAG, "Failed to send error broadcast: " + e2.getMessage());
+                }
+            }
         }
     }
     
@@ -415,6 +487,11 @@ public class WebSocketClient {
      * @param zeroOutput 是否为零输出
      */
     public void sendEventMessage(EventDelta delta, boolean zeroOutput) {
+        if (context == null || gson == null) {
+            Log.w(TAG, "context or gson is null, skipping sendEventMessage");
+            return;
+        }
+        
         try {
             // 生成新的事件ID
             long currentEventId = ++eventId;
@@ -448,10 +525,16 @@ public class WebSocketClient {
         } catch (Exception e) {
             Log.e(TAG, "Error sending event message: " + e.getMessage(), e);
             
-            // 发送WebSocket发送帧失败广播
-            Intent intent = new Intent(RuntimeEvents.ACTION_RUNTIME_ERROR);
-            intent.putExtra(RuntimeEvents.EXTRA_ERROR_TYPE, RuntimeEvents.ERROR_TYPE_WEBSOCKET_ERROR);
-            context.sendBroadcast(intent);
+            if (context != null) {
+                try {
+                    // 发送WebSocket发送帧失败广播
+                    Intent intent = new Intent(RuntimeEvents.ACTION_RUNTIME_ERROR);
+                    intent.putExtra(RuntimeEvents.EXTRA_ERROR_TYPE, RuntimeEvents.ERROR_TYPE_WEBSOCKET_ERROR);
+                    context.sendBroadcast(intent);
+                } catch (Exception e2) {
+                    Log.e(TAG, "Failed to send error broadcast: " + e2.getMessage());
+                }
+            }
         }
     }
     
@@ -470,21 +553,31 @@ public class WebSocketClient {
      * @param elapsedTime 连接耗时（毫秒）
      */
     private void showConnectionToast(boolean success, long elapsedTime) {
+        // 检查context是否有效
+        if (context == null) {
+            Log.w(TAG, "Context is null, skipping Toast");
+            return;
+        }
+        
         // 在主线程显示Toast
         new Handler(context.getMainLooper()).post(() -> {
-            String message;
-            if (success) {
-                message = "连接成功，耗时 " + elapsedTime + "ms";
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "[Toast提示] 显示连接成功提示: " + message);
-            } else {
-                if (elapsedTime >= CONNECTION_TIMEOUT) {
-                    message = "连接超时，超过 " + CONNECTION_TIMEOUT + "ms";
+            try {
+                String message;
+                if (success) {
+                    message = "连接成功，耗时 " + elapsedTime + "ms";
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "[Toast提示] 显示连接成功提示: " + message);
                 } else {
-                    message = "连接失败，耗时 " + elapsedTime + "ms";
+                    if (elapsedTime >= CONNECTION_TIMEOUT) {
+                        message = "连接超时，超过 " + CONNECTION_TIMEOUT + "ms";
+                    } else {
+                        message = "连接失败，耗时 " + elapsedTime + "ms";
+                    }
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "[Toast提示] 显示连接失败提示: " + message);
                 }
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "[Toast提示] 显示连接失败提示: " + message);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to show Toast: " + e.getMessage(), e);
             }
         });
     }
@@ -493,18 +586,26 @@ public class WebSocketClient {
      * 关闭WebSocket客户端
      */
     public void shutdown() {
-        if (webSocket != null) {
-            webSocket.close(1000, "Client shutdown");
-        }
-        if (client != null) {
-            client.dispatcher().executorService().shutdown();
-        }
+        Log.d(TAG, "WebSocketClient shutdown called");
+        
         // 清理超时任务
         if (timeoutHandler != null) {
             timeoutHandler.removeCallbacksAndMessages(null);
         }
+        
+        if (webSocket != null) {
+            webSocket.close(1000, "Client shutdown");
+            webSocket = null;
+        }
+        if (client != null) {
+            client.dispatcher().executorService().shutdown();
+            client = null;
+        }
+        
         isConnected = false;
-        Log.d(TAG, "WebSocketClient shutdown");
+        context = null;
+        gson = null;
+        Log.d(TAG, "WebSocketClient shutdown completed");
     }
     
     /**

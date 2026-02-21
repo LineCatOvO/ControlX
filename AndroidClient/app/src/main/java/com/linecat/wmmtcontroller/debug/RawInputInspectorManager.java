@@ -58,8 +58,10 @@ public class RawInputInspectorManager {
         mWindowParams = new WindowManager.LayoutParams();
         mWindowParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
         mWindowParams.format = android.graphics.PixelFormat.TRANSLUCENT;
+        // 添加 FLAG_NOT_TOUCHABLE 让触摸事件穿透到下层
         mWindowParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                 | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
         mWindowParams.width = WindowManager.LayoutParams.MATCH_PARENT;
         mWindowParams.height = WindowManager.LayoutParams.MATCH_PARENT;
@@ -128,7 +130,7 @@ public class RawInputInspectorManager {
      * 处理触摸事件
      */
     public void onTouchEvent(MotionEvent event) {
-        if (mInspectorView != null) {
+        if (mInspectorView != null && event != null) {
             float x = event.getX();
             float y = event.getY();
             mInspectorView.updateTouchData(x, y);

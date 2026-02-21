@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.linecat.wmmtcontroller.floatwindow.TouchThroughFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:layout_height="wrap_content">
+
+    <!-- 布局渲染容器 - 全屏，用于渲染用户自定义布局 -->
+    <FrameLayout
+        android:id="@+id/layout_render_container"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone" />
 
     <!-- 圆形主入口按钮 -->
     <LinearLayout
@@ -310,4 +316,4 @@
             android:backgroundTint="@android:color/darker_gray"
             android:layout_marginTop="16dp" />
     </LinearLayout>
-</FrameLayout>
+</com.linecat.wmmtcontroller.floatwindow.TouchThroughFrameLayout>
