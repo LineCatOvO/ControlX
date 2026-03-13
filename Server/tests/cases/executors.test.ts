@@ -32,16 +32,23 @@ describe("MouseExecutor Tests", () => {
         test("should not log when state doesn't change", () => {
             const consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
 
-            const state: InputState = {
+            // First, set a non-default state to trigger a log
+            const state1: InputState = {
                 keyboard: new Set(),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                mouse: { x: 100, y: 100, left: false, right: false, middle: false },
                 joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
             };
+            mouseExecutor.applyState(state1);
 
-            mouseExecutor.applyState(state);
-            mouseExecutor.applyState(state);
+            // Then apply the same state again - should not log
+            const state2: InputState = {
+                keyboard: new Set(),
+                mouse: { x: 100, y: 100, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+            mouseExecutor.applyState(state2);
 
-            // Should only log once (first time)
+            // Should only log once (first time state changed)
             expect(consoleLogSpy).toHaveBeenCalledTimes(1);
 
             consoleLogSpy.mockRestore();
@@ -50,9 +57,10 @@ describe("MouseExecutor Tests", () => {
         test("should handle x coordinate change", () => {
             const consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
 
+            // First, set a non-default state to trigger first log
             const state1: InputState = {
                 keyboard: new Set(),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                mouse: { x: 50, y: 0, left: false, right: false, middle: false },
                 joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
             };
 
@@ -65,6 +73,7 @@ describe("MouseExecutor Tests", () => {
             mouseExecutor.applyState(state1);
             mouseExecutor.applyState(state2);
 
+            // Both state changes should trigger logs
             expect(consoleLogSpy).toHaveBeenCalledTimes(2);
 
             consoleLogSpy.mockRestore();
@@ -73,21 +82,23 @@ describe("MouseExecutor Tests", () => {
         test("should handle button state change", () => {
             const consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
 
+            // First, set a non-default state to trigger first log
             const state1: InputState = {
                 keyboard: new Set(),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                mouse: { x: 0, y: 0, left: false, right: true, middle: false },
                 joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
             };
 
             const state2: InputState = {
                 keyboard: new Set(),
-                mouse: { x: 0, y: 0, left: true, right: false, middle: false },
+                mouse: { x: 0, y: 0, left: true, right: true, middle: false },
                 joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
             };
 
             mouseExecutor.applyState(state1);
             mouseExecutor.applyState(state2);
 
+            // Both state changes should trigger logs
             expect(consoleLogSpy).toHaveBeenCalledTimes(2);
 
             consoleLogSpy.mockRestore();
@@ -118,7 +129,7 @@ describe("MouseExecutor Tests", () => {
             mouseExecutor.applyEvent({
                 type: "mouse_move",
                 data: { x: 10, y: 20 },
-                metadata: { timestamp: Date.now() },
+                metadata: { clientId: "test-client", timestamp: Date.now() },
             });
 
             expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -136,7 +147,7 @@ describe("MouseExecutor Tests", () => {
             mouseExecutor.applyEvent({
                 type: "mouse_click",
                 data: { button: "left", pressed: true },
-                metadata: { timestamp: Date.now() },
+                metadata: { clientId: "test-client", timestamp: Date.now() },
             });
 
             expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -259,16 +270,23 @@ describe("JoystickExecutor Tests", () => {
         test("should not log when state doesn't change", () => {
             const consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
 
-            const state: InputState = {
+            // First, set a non-default state to trigger a log
+            const state1: InputState = {
                 keyboard: new Set(),
                 mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0.1, smoothing: 0.5 },
+                joystick: { x: 0.5, y: 0.5, deadzone: 0.1, smoothing: 0.5 },
             };
+            joystickExecutor.applyState(state1);
 
-            joystickExecutor.applyState(state);
-            joystickExecutor.applyState(state);
+            // Then apply the same state again - should not log
+            const state2: InputState = {
+                keyboard: new Set(),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0.5, y: 0.5, deadzone: 0.1, smoothing: 0.5 },
+            };
+            joystickExecutor.applyState(state2);
 
-            // Should only log once
+            // Should only log once (first time state changed)
             expect(consoleLogSpy).toHaveBeenCalledTimes(1);
 
             consoleLogSpy.mockRestore();
@@ -299,7 +317,7 @@ describe("JoystickExecutor Tests", () => {
             joystickExecutor.applyEvent({
                 type: "joystick_move",
                 data: { axis: "lx", value: 0.5 },
-                metadata: { timestamp: Date.now() },
+                metadata: { clientId: "test-client", timestamp: Date.now() },
             });
 
             expect(consoleLogSpy).toHaveBeenCalledWith(
