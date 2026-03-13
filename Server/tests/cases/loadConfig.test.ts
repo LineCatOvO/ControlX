@@ -18,11 +18,14 @@ jest.mock('fs', () => ({
     readFileSync: jest.fn(),
 }));
 
-jest.mock('path', () => ({
-    isAbsolute: jest.fn().mockReturnValue(false),
-    resolve: jest.fn().mockImplementation((...args) => args.join('/')),
-    ...jest.requireActual('path'),
-}));
+jest.mock('path', () => {
+    const actualPath = jest.requireActual('path');
+    return {
+        ...actualPath,
+        isAbsolute: jest.fn().mockReturnValue(false),
+        resolve: jest.fn().mockImplementation((...args: string[]) => args.join('/')),
+    };
+});
 
 describe('loadConfig Tests', () => {
     beforeEach(() => {

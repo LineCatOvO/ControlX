@@ -15,14 +15,14 @@ export function handleInput(ws: any, message: InputMessage) {
     // 检查状态存储是否可用
     if (!stateStore) {
         console.error("InputHandlerError: StateStore not available");
-        
+
         // 发送错误消息给客户端
         const errorMsg = {
             type: "error",
             code: "INTERNAL_ERROR",
             message: "StateStore not available",
         };
-        
+
         try {
             ws.send(JSON.stringify(errorMsg));
         } catch (error) {

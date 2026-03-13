@@ -24,8 +24,10 @@ describe("WebSocket Message Handling Integration Tests", () => {
     let serverPort: number;
 
     beforeAll(async () => {
-        // 初始化全局 stateStore
-        (global as any).stateStore = new StateStore();
+        // 初始化全局 stateStore（必须在服务器启动之前）
+        const stateStore = new StateStore();
+        (global as any).stateStore = stateStore;
+        // 启动服务器
         serverPort = await startWsServer();
     });
 
@@ -44,14 +46,18 @@ describe("WebSocket Message Handling Integration Tests", () => {
         inputState.mouse = { ...safeState.mouse };
         inputState.joystick = { ...safeState.joystick };
         inputState.gamepad = new Set(safeState.gamepad || []);
+        // Reset stateStore
+        (global as any).stateStore = new StateStore();
     });
 
     describe("Input Messages (type: input)", () => {
         test("should handle keyboard input message", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
-            const inputMessage = {
+            const ackPromise = client.waitForMessage("ack", 2000);
+            await client.send({
                 type: "input",
                 data: {
                     frameId: 1,
@@ -59,9 +65,8 @@ describe("WebSocket Message Handling Integration Tests", () => {
                     mouse: { x: 0, y: 0, left: false, right: false, middle: false },
                     joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
                 },
-            };
-
-            await client.send(inputMessage);
+            });
+            await ackPromise;
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             expect(inputState.keyboard).toEqual(new Set(["W", "A"]));
@@ -70,8 +75,10 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle mouse input message", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
-            const inputMessage = {
+            const ackPromise = client.waitForMessage("ack", 2000);
+            await client.send({
                 type: "input",
                 data: {
                     frameId: 1,
@@ -79,9 +86,8 @@ describe("WebSocket Message Handling Integration Tests", () => {
                     mouse: { x: 100, y: 200, left: true, right: false, middle: false },
                     joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
                 },
-            };
-
-            await client.send(inputMessage);
+            });
+            await ackPromise;
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             expect(inputState.mouse.x).toBe(100);
@@ -92,8 +98,10 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle joystick input message", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
-            const inputMessage = {
+            const ackPromise = client.waitForMessage("ack", 2000);
+            await client.send({
                 type: "input",
                 data: {
                     frameId: 1,
@@ -101,9 +109,8 @@ describe("WebSocket Message Handling Integration Tests", () => {
                     mouse: { x: 0, y: 0, left: false, right: false, middle: false },
                     joystick: { x: 0.5, y: -0.5, deadzone: 0.1, smoothing: 0.5 },
                 },
-            };
-
-            await client.send(inputMessage);
+            });
+            await ackPromise;
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             expect(inputState.joystick.x).toBe(0.5);
@@ -113,8 +120,10 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle gamepad input message", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
-            const inputMessage = {
+            const ackPromise = client.waitForMessage("ack", 2000);
+            await client.send({
                 type: "input",
                 data: {
                     frameId: 1,
@@ -123,9 +132,8 @@ describe("WebSocket Message Handling Integration Tests", () => {
                     mouse: { x: 0, y: 0, left: false, right: false, middle: false },
                     joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
                 },
-            };
-
-            await client.send(inputMessage);
+            });
+            await ackPromise;
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             expect(inputState.gamepad).toEqual(new Set(["A", "B", "X"]));
@@ -134,8 +142,10 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle combined input message", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
-            const inputMessage = {
+            const ackPromise = client.waitForMessage("ack", 2000);
+            await client.send({
                 type: "input",
                 data: {
                     frameId: 1,
@@ -144,9 +154,8 @@ describe("WebSocket Message Handling Integration Tests", () => {
                     mouse: { x: 50, y: 100, left: true, right: false, middle: false },
                     joystick: { x: 0.3, y: -0.7, deadzone: 0.1, smoothing: 0.5 },
                 },
-            };
-
-            await client.send(inputMessage);
+            });
+            await ackPromise;
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             expect(inputState.keyboard).toEqual(new Set(["W", "S"]));
@@ -158,9 +167,9 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should receive ACK after input message", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             const ackPromise = client.waitForMessage("ack");
-
             await client.send({
                 type: "input",
                 data: {
@@ -181,9 +190,9 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle input_event message and receive ACK", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             const ackPromise = client.waitForMessage("ack");
-
             await client.send({
                 type: "input_event",
                 data: {
@@ -201,9 +210,9 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should return error for missing data", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             const errorPromise = client.waitForMessage("error");
-
             await client.send({
                 type: "input_event",
             });
@@ -218,9 +227,9 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should respond to ping with pong", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             const pingResponse = client.waitForMessage("pong");
-
             await client.send({ type: "ping", timestamp: Date.now() });
 
             const response = await pingResponse;
@@ -231,10 +240,10 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should include server timestamp in pong", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             const clientTimestamp = Date.now();
             const pingResponse = client.waitForMessage("pong");
-
             await client.send({ type: "ping", timestamp: clientTimestamp });
 
             const response = await pingResponse;
@@ -247,10 +256,10 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should respond to latency probe", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             const probeResponse = client.waitForMessage("latency_probe_response");
             const clientTimestamp = Date.now();
-
             await client.send({
                 type: "latency_probe",
                 timestamp: clientTimestamp,
@@ -267,12 +276,13 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle unknown message type gracefully", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             // Send unknown message type - should not crash
             await client.send({ type: "unknown_message_type", data: {} });
 
             // Connection should still be alive
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             const pingResponse = client.waitForMessage("pong");
             await client.send({ type: "ping" });
             await expect(pingResponse).resolves.toBeDefined();
@@ -281,12 +291,13 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle missing type field", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             // Send message without type - should not crash
             await client.send({ data: {} });
 
             // Connection should still be alive
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             const pingResponse = client.waitForMessage("pong");
             await client.send({ type: "ping" });
             await expect(pingResponse).resolves.toBeDefined();
@@ -297,6 +308,7 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle rapid sequential messages", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             // Send multiple messages rapidly
             const messages = [];
@@ -321,7 +333,7 @@ describe("WebSocket Message Handling Integration Tests", () => {
             }
 
             await Promise.all(messages);
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 500));
 
             // Last message should be reflected in state
             expect(inputState.keyboard).toEqual(new Set(["9"]));
@@ -330,6 +342,7 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle interleaved message types", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             // Send different message types in sequence
             await client.send({ type: "ping" });
@@ -348,7 +361,7 @@ describe("WebSocket Message Handling Integration Tests", () => {
             });
 
             // All should be processed correctly
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 500));
 
             expect(inputState.keyboard).toEqual(new Set(["W"]));
         });
@@ -358,6 +371,7 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should process messages with increasing frame IDs", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
             for (let i = 1; i <= 5; i++) {
                 await client.send({
@@ -379,7 +393,9 @@ describe("WebSocket Message Handling Integration Tests", () => {
         test("should handle messages without frame ID", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
+            await client.waitForMessage("welcome", 2000);
 
+            const ackPromise = client.waitForMessage("ack", 2000);
             await client.send({
                 type: "input",
                 data: {
@@ -389,6 +405,7 @@ describe("WebSocket Message Handling Integration Tests", () => {
                 },
             });
 
+            await ackPromise;
             await new Promise((resolve) => setTimeout(resolve, 100));
             expect(inputState.keyboard).toEqual(new Set(["W"]));
         });
@@ -397,7 +414,7 @@ describe("WebSocket Message Handling Integration Tests", () => {
     describe("Welcome Message", () => {
         test("should receive welcome message on connect", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
-            
+
             const welcomePromise = client.waitForMessage("welcome");
             await client.connect();
 

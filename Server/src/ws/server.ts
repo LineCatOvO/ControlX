@@ -1,6 +1,7 @@
 // 使用正确的 ws 导入方式
 const WebSocket = require('ws');
 import { handleConnection } from './connection';
+import { handleMessage } from './router';
 import { loadConfigFromFile, getConfigPathFromArgs } from '../config/loadConfig';
 import { getMetricsCollector } from '../utils/metrics';
 
@@ -153,7 +154,17 @@ export function startWsServer(): Promise<number> {
                     ws.on('pong', () => {
                         ws.isAlive = true;
                     });
-                    
+
+                    // 处理消息
+                    ws.on('message', (data: any) => {
+                        try {
+                            const message = JSON.parse(data.toString());
+                            handleMessage(ws, message);
+                        } catch (error) {
+                            console.error(`Message parse error: \${clientId}`, error);
+                        }
+                    });
+
                     // 处理连接
                     handleConnection(ws);
                 });

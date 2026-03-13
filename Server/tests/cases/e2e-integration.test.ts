@@ -74,6 +74,14 @@ describe("End-to-End Integration Tests", () => {
             // 等待客户端关闭完成
             await new Promise((resolve) => setTimeout(resolve, 50));
         }
+        // Reset input state
+        inputState.keyboard = new Set(safeState.keyboard);
+        inputState.mouse = { ...safeState.mouse };
+        inputState.joystick = { ...safeState.joystick };
+        inputState.gamepad = new Set(safeState.gamepad || []);
+        // Reset stateStore
+        stateStore = new StateStore();
+        (global as any).stateStore = stateStore;
     });
 
     describe("Complete Input Flow", () => {

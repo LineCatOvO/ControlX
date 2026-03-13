@@ -96,24 +96,23 @@ export class StateStore {
         
         // 验证状态完整性
         if (!this.isValidState(normalizedState)) {
-            // 已注释，减少日志输出
-            // console.error("StateStoreError: Invalid state received");
             return false;
         }
 
         // 验证序列号单调性
         const sequenceNumber = this.extractSequenceNumber(normalizedState);
         if (!this.isValidSequenceNumber(sequenceNumber)) {
-            // 已注释，减少日志输出
-            // console.error(
-            //     `StateStoreError: Invalid sequence number ${sequenceNumber}, last applied: ${this.lastAppliedSequenceNumber}`
-            // );
             return false;
         }
 
         // 存储状态
         const receivedTime = Date.now();
         this.latestState = normalizedState;
+
+        // 更新最后应用的序列号
+        if (!isNaN(sequenceNumber)) {
+            this.lastAppliedSequenceNumber = sequenceNumber;
+        }
 
         // 添加到历史记录
         this.stateHistory.push({
@@ -272,23 +271,14 @@ export class StateStore {
             return true;
         }
 
-        // If no state has been stored yet, any sequence number is valid
-        if (!this.latestState) {
-            return true;
-        }
-
-        // Get the sequence number of the latest stored state
-        const latestSequenceNumber = this.extractSequenceNumber(
-            this.latestState
-        );
-
-        // 如果最新状态没有序列号，任何序列号都有效
-        if (isNaN(latestSequenceNumber)) {
+        // 如果没有状态被存储过，任何序列号都有效
+        if (this.lastAppliedSequenceNumber === 0) {
             return true;
         }
 
         // 允许序列号相同或更大（处理重传和重新连接的情况）
-        return sequenceNumber >= latestSequenceNumber;
+        // 注意：使用 lastAppliedSequenceNumber 而不是 latestState 的序列号
+        return sequenceNumber >= this.lastAppliedSequenceNumber;
     }
 
     /**
