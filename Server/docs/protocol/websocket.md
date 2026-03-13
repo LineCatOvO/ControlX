@@ -133,6 +133,52 @@
 }
 ```
 
+### 3.6.1 配置保存消息（新增）
+
+**客户端 → 服务端**：客户端请求保存配置到文件
+
+```json
+{
+  "type": "config_save",
+  "path": "/path/to/config.json"
+}
+```
+
+### 3.6.2 配置重置消息（新增）
+
+**客户端 → 服务端**：客户端请求重置配置为默认值
+
+```json
+{
+  "type": "config_reset"
+}
+```
+
+### 3.6.3 配置验证消息（新增）
+
+**客户端 → 服务端**：客户端请求验证配置有效性
+
+```json
+{
+  "type": "config_validate",
+  "data": {
+    "inputUpdateInterval": 16
+  }
+}
+```
+
+**服务端 → 客户端**：服务端返回验证结果
+
+```json
+{
+  "type": "config_validate_result",
+  "valid": true,
+  "data": {
+    "inputUpdateInterval": 16
+  }
+}
+```
+
 ### 3.7 配置返回消息
 
 **服务端 → 客户端**：服务端返回当前配置
@@ -211,8 +257,58 @@
   "type": "debug",
   "level": "info",
   "message": "Input state updated",
+  "timestamp": 1679347200000,
+  "source": "InputHandler",
   "data": {
     "keyboard": ["up", "right"]
+  }
+}
+```
+
+**日志级别**：
+- `DEBUG` - 调试信息，详细的内部状态
+- `INFO` - 一般信息，正常的操作日志
+- `WARN` - 警告信息，潜在问题
+- `ERROR` - 错误信息，需要关注的问题
+
+### 3.12.1 调试配置设置消息（新增）
+
+**客户端 → 服务端**：客户端设置调试配置
+
+```json
+{
+  "type": "debug_config_set",
+  "data": {
+    "enabled": true,
+    "level": "INFO",
+    "filters": ["InputHandler", "ConfigManager"],
+    "includeTimestamp": true,
+    "includeSource": true
+  }
+}
+```
+
+### 3.12.2 调试配置获取消息（新增）
+
+**客户端 → 服务端**：客户端请求获取调试配置
+
+```json
+{
+  "type": "debug_config_get"
+}
+```
+
+**服务端 → 客户端**：服务端返回调试配置
+
+```json
+{
+  "type": "debug_config",
+  "data": {
+    "enabled": true,
+    "level": "INFO",
+    "filters": [],
+    "includeTimestamp": true,
+    "includeSource": true
   }
 }
 ```
@@ -386,6 +482,8 @@
 | 1.0 | 2026-01-21 | 初始版本 |
 | 1.1 | YYYY-MM-DD | 添加陀螺仪支持 |
 | 1.2 | YYYY-MM-DD | 添加延迟测量功能 |
+| 1.3 | 2026-03-13 | 添加配置管理增强（config_save, config_reset, config_validate） |
+| 1.3 | 2026-03-13 | 添加调试消息增强（debug_config_set, debug_config_get, 日志级别控制） |
 
 ## 10. 附录
 
@@ -413,12 +511,19 @@
 | `input_event` | 客户端→服务端 | 瞬时输入事件 |
 | `config_get` | 客户端→服务端 | 获取配置 |
 | `config_set` | 客户端→服务端 | 设置配置 |
+| `config_save` | 客户端→服务端 | 保存配置到文件（v1.3新增） |
+| `config_reset` | 客户端→服务端 | 重置配置为默认值（v1.3新增） |
+| `config_validate` | 客户端→服务端 | 验证配置有效性（v1.3新增） |
+| `config_validate_result` | 服务端→客户端 | 配置验证结果（v1.3新增） |
 | `config` | 服务端→客户端 | 返回配置 |
 | `config_ack` | 服务端→客户端 | 配置更新确认 |
 | `config_error` | 服务端→客户端 | 配置错误 |
 | `latency_probe` | 客户端→服务端 | 延迟测量请求 |
 | `latency_probe_response` | 服务端→客户端 | 延迟测量响应 |
 | `debug` | 双向 | 调试信息 |
+| `debug_config_set` | 客户端→服务端 | 设置调试配置（v1.3新增） |
+| `debug_config_get` | 客户端→服务端 | 获取调试配置（v1.3新增） |
+| `debug_config` | 服务端→客户端 | 返回调试配置（v1.3新增） |
 | `error` | 服务端→客户端 | 错误信息 |
 | `ack` | 服务端→客户端 | 消息确认 |
 | `ping` | 双向 | 心跳检测 |

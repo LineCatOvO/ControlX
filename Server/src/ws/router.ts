@@ -2,7 +2,18 @@ import { WsMessage } from "../types/ws";
 import { handleInput } from "./handlers/input";
 import { handleInputDelta } from "./handlers/inputDelta";
 import { handleInputEvent } from "./handlers/inputEvent";
-import { handleConfigGet, handleConfigSet } from "./handlers/config";
+import { 
+    handleConfigGet, 
+    handleConfigSet, 
+    handleConfigSave, 
+    handleConfigReset,
+    handleConfigValidate 
+} from "./handlers/config";
+import { 
+    handleDebugConfigSet, 
+    handleDebugConfigGet,
+    debugManager 
+} from "./handlers/debug";
 import { handlePing } from "./handlers/ping";
 import { handleWelcome } from "./handlers/welcome";
 import { handleLatencyProbe } from "./handlers/latencyProbe";
@@ -19,6 +30,11 @@ const handlers: Record<string, (ws: any, message: any) => void> = {
     event: handleEvent,
     config_get: handleConfigGet,
     config_set: handleConfigSet,
+    config_save: handleConfigSave,
+    config_reset: handleConfigReset,
+    config_validate: handleConfigValidate,
+    debug_config_set: handleDebugConfigSet,
+    debug_config_get: handleDebugConfigGet,
     latency_probe: handleLatencyProbe,
     ping: handlePing,
 };
