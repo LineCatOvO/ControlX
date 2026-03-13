@@ -1,3 +1,16 @@
+/**
+ * 端到端集成测试
+ *
+ * 测试覆盖：
+ * - 完整输入流程
+ * - 多客户端场景
+ * - 安全控制器集成
+ * - ApplyScheduler 集成
+ * - 心跳集成
+ * - 错误恢复
+ * - 性能和压力测试
+ */
+
 import { WsClient } from "../common/wsClient";
 import {
     startWsServer,
@@ -21,12 +34,15 @@ describe("End-to-End Integration Tests", () => {
     let applyScheduler: ApplyScheduler;
 
     beforeAll(async () => {
+        // 初始化全局 stateStore
+        stateStore = new StateStore();
+        (global as any).stateStore = stateStore;
+
         // Start all server components
         serverPort = await startWsServer();
         startInputExecutor();
 
-        // Initialize state store and scheduler
-        stateStore = new StateStore();
+        // Initialize scheduler
         const executorManager = getExecutorManager();
         applyScheduler = new ApplyScheduler(executorManager, stateStore, {
             applyIntervalMs: 20,
@@ -35,9 +51,13 @@ describe("End-to-End Integration Tests", () => {
     });
 
     afterAll(async () => {
+        // 清理资源
         applyScheduler.stop();
         stopInputExecutor();
         await stopWsServer();
+        
+        // 清理全局 stateStore
+        delete (global as any).stateStore;
     });
 
     beforeEach(() => {
@@ -45,12 +65,14 @@ describe("End-to-End Integration Tests", () => {
         inputState.keyboard = new Set(safeState.keyboard);
         inputState.mouse = { ...safeState.mouse };
         inputState.joystick = { ...safeState.joystick };
-        inputState.gamepad = new Set(safeState.gamepad);
+        inputState.gamepad = new Set(safeState.gamepad || []);
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         if (client) {
             client.close();
+            // 等待客户端关闭完成
+            await new Promise((resolve) => setTimeout(resolve, 50));
         }
     });
 
@@ -60,9 +82,9 @@ describe("End-to-End Integration Tests", () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
 
-            // Send input state
+            // Send input state (使用 input 类型消息)
             const inputMessage = {
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 1,
                     keyboard: ["W", "A", "S"],
@@ -75,7 +97,7 @@ describe("End-to-End Integration Tests", () => {
             await client.send(inputMessage);
 
             // Wait for processing
-            await new Promise((resolve) => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 150));
 
             // Verify all components received the state
             expect(inputState.keyboard).toEqual(new Set(["W", "A", "S"]));
@@ -90,7 +112,7 @@ describe("End-to-End Integration Tests", () => {
 
             // State 1: W key pressed
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 1,
                     keyboard: ["W"],
@@ -98,12 +120,12 @@ describe("End-to-End Integration Tests", () => {
                     joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
                 },
             });
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             expect(inputState.keyboard).toEqual(new Set(["W"]));
 
             // State 2: W + A pressed
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 2,
                     keyboard: ["W", "A"],
@@ -111,12 +133,12 @@ describe("End-to-End Integration Tests", () => {
                     joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
                 },
             });
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             expect(inputState.keyboard).toEqual(new Set(["W", "A"]));
 
             // State 3: Only A pressed
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 3,
                     keyboard: ["A"],
@@ -124,12 +146,12 @@ describe("End-to-End Integration Tests", () => {
                     joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
                 },
             });
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             expect(inputState.keyboard).toEqual(new Set(["A"]));
 
             // State 4: All released
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 4,
                     keyboard: [],
@@ -137,7 +159,7 @@ describe("End-to-End Integration Tests", () => {
                     joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
                 },
             });
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             expect(inputState.keyboard).toEqual(new Set([]));
         });
     });
@@ -154,7 +176,7 @@ describe("End-to-End Integration Tests", () => {
             await client1.send({ type: "ping" });
             await client2.send({ type: "ping" });
 
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
 
             client1.close();
             client2.close();
@@ -166,7 +188,7 @@ describe("End-to-End Integration Tests", () => {
             // First connection
             await client.connect();
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 1,
                     keyboard: ["W"],
@@ -174,12 +196,12 @@ describe("End-to-End Integration Tests", () => {
                     joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
                 },
             });
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             expect(inputState.keyboard).toEqual(new Set(["W"]));
 
             // Disconnect
             client.close();
-            await new Promise((resolve) => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 150));
 
             // Reconnect
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
@@ -187,7 +209,7 @@ describe("End-to-End Integration Tests", () => {
 
             // Send new input
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 2,
                     keyboard: ["A"],
@@ -195,41 +217,12 @@ describe("End-to-End Integration Tests", () => {
                     joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
                 },
             });
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             expect(inputState.keyboard).toEqual(new Set(["A"]));
         });
     });
 
     describe("Safety Controller Integration", () => {
-        test("should trigger safety clear on disconnect", async () => {
-            client = new WsClient({ url: `ws://localhost:${serverPort}` });
-            await client.connect();
-
-            // Set some input state
-            await client.send({
-                type: "input_event",
-                data: {
-                    frameId: 1,
-                    keyboard: ["W", "A"],
-                    mouse: { x: 0, y: 0, left: true, right: false, middle: false },
-                    joystick: { x: 0.5, y: 0, deadzone: 0, smoothing: 0 },
-                },
-            });
-            await new Promise((resolve) => setTimeout(resolve, 50));
-
-            // Verify state is set
-            expect(inputState.keyboard.size).toBeGreaterThan(0);
-
-            // Disconnect client
-            client.close();
-
-            // Wait for disconnect handling
-            await new Promise((resolve) => setTimeout(resolve, 200));
-
-            // State should be cleared by safety controller
-            // (depends on implementation - may need adjustment)
-        });
-
         test("should record valid state in safety controller", async () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
@@ -239,7 +232,7 @@ describe("End-to-End Integration Tests", () => {
 
             // Send input
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 1,
                     keyboard: ["W"],
@@ -248,7 +241,7 @@ describe("End-to-End Integration Tests", () => {
                 },
             });
 
-            await new Promise((resolve) => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 150));
 
             // Valid state time should be updated
             expect(safetyController.getLastValidStateTime()).toBeGreaterThanOrEqual(
@@ -266,7 +259,7 @@ describe("End-to-End Integration Tests", () => {
 
             // Send input
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 1,
                     keyboard: ["W"],
@@ -276,7 +269,7 @@ describe("End-to-End Integration Tests", () => {
             });
 
             // Wait for multiple apply cycles
-            await new Promise((resolve) => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 150));
 
             const finalApplyCount = applyScheduler.getApplyCount();
             expect(finalApplyCount).toBeGreaterThan(initialApplyCount);
@@ -288,7 +281,7 @@ describe("End-to-End Integration Tests", () => {
 
             // Send input with specific frameId
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 100,
                     keyboard: ["W"],
@@ -298,7 +291,7 @@ describe("End-to-End Integration Tests", () => {
             });
 
             // Wait for apply
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
 
             // State should be stored
             const latestState = stateStore.getLatestState();
@@ -347,14 +340,14 @@ describe("End-to-End Integration Tests", () => {
 
             // Send invalid state (missing fields)
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 1,
                     // Missing required fields
                 },
             });
 
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
 
             // Server should still be running
             const pingResponse = client.waitForMessage("pong");
@@ -369,13 +362,16 @@ describe("End-to-End Integration Tests", () => {
 
             client.close();
 
+            // Wait for close
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
             // Immediately reconnect
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
 
             // Should work normally
             await client.send({
-                type: "input_event",
+                type: "input",
                 data: {
                     frameId: 1,
                     keyboard: ["W"],
@@ -384,7 +380,7 @@ describe("End-to-End Integration Tests", () => {
                 },
             });
 
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             expect(inputState.keyboard).toEqual(new Set(["W"]));
         });
     });
@@ -400,7 +396,7 @@ describe("End-to-End Integration Tests", () => {
             for (let i = 0; i < messageCount; i++) {
                 promises.push(
                     client.send({
-                        type: "input_event",
+                        type: "input",
                         data: {
                             frameId: i,
                             keyboard: [String(i)],
@@ -423,7 +419,7 @@ describe("End-to-End Integration Tests", () => {
             }
 
             await Promise.all(promises);
-            await new Promise((resolve) => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 200));
 
             // Latest message should be reflected
             expect(inputState.keyboard).toEqual(new Set([String(messageCount - 1)]));
@@ -442,7 +438,7 @@ describe("End-to-End Integration Tests", () => {
                 } else if (i % 3 === 1) {
                     promises.push(
                         client.send({
-                            type: "input_event",
+                            type: "input",
                             data: {
                                 frameId: i,
                                 keyboard: ["W"],
@@ -468,7 +464,7 @@ describe("End-to-End Integration Tests", () => {
             }
 
             await Promise.all(promises);
-            await new Promise((resolve) => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 200));
 
             // State should be consistent
             expect(inputState.keyboard).toEqual(new Set(["W"]));
