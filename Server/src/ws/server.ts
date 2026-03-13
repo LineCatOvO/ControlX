@@ -2,6 +2,7 @@
 const WebSocket = require('ws');
 import { handleConnection } from './connection';
 import { loadConfigFromFile, getConfigPathFromArgs } from '../config/loadConfig';
+import { getMetricsCollector } from '../utils/metrics';
 
 let wss: any = null;
 let actualPort: number = 0;
@@ -17,6 +18,10 @@ function generateClientId(): string {
 
 // 加载配置
 const config = loadConfigFromFile(getConfigPathFromArgs());
+
+// 初始化指标收集器
+const metricsCollector = getMetricsCollector();
+metricsCollector.initializeDefaultMetrics();
 
 /**
  * 启动心跳检测
@@ -116,15 +121,21 @@ export function startWsServer(): Promise<number> {
                     const clientId = generateClientId();
                     ws.clientId = clientId;
                     ws.isAlive = true;
+                    ws.connectedAt = Date.now(); // 记录连接时间
                     
                     // 存储连接
                     clients.set(clientId, ws);
+                    // 记录连接指标
+                    metricsCollector.recordConnection(clientId);
                     
                     console.log(`Client connected: ${clientId}, total: ${clients.size}`);
                     
                     // 连接关闭时的处理
                     ws.on('close', () => {
                         clients.delete(clientId);
+                        
+                        // 记录断开连接指标
+                        metricsCollector.recordDisconnection(clientId);
                         console.log(`Client disconnected: ${clientId}, total: ${clients.size}`);
                         
                         // 通知连接管理器
@@ -134,6 +145,8 @@ export function startWsServer(): Promise<number> {
                     // 连接错误处理
                     ws.on('error', (error: any) => {
                         console.error(`Client error: ${clientId}`, error);
+                        // 记录错误指标
+                        metricsCollector.recordError(clientId);
                     });
                     
                     // 心跳响应

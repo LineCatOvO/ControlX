@@ -46,6 +46,7 @@ import { InputExecutor, InputExecutorManager } from "./interfaces";
 import { TestModeKeyboardExecutor } from "./test-keyboard";
 import { DryRunExecutor } from "./dryRunExecutor";
 import { ApplyScheduler } from "./applyScheduler";
+import { getMetricsCollector } from "../utils/metrics";
 
 // 检查运行模式
 const isTestMode = process.env.TEST_MODE === "true";
@@ -199,6 +200,43 @@ export function stopInputExecutor() {
  * 执行输入
  */
 function executeInput() {
+    // 获取指标收集器
+    const metricsCollector = getMetricsCollector();
+    
+    // 检查输入状态变化并记录指标
+    const state = inputState as any;
+    
+    // 记录键盘事件
+    if (state.keyboard && Object.keys(state.keyboard).length > 0) {
+        const keyCount = Object.values(state.keyboard).filter((v: any) => v === true || v === 1).length;
+        if (keyCount > 0) {
+            for (let i = 0; i < keyCount; i++) {
+                metricsCollector.recordInputEvent('keyboard');
+            }
+        }
+    }
+    
+    // 记录鼠标事件
+    if (state.mouse && (state.mouse.x !== 0 || state.mouse.y !== 0 || state.mouse.buttons)) {
+        metricsCollector.recordInputEvent('mouse');
+    }
+    
+    // 记录游戏手柄事件
+    if (state.gamepad && (state.gamepad.buttons || state.gamepad.axes)) {
+        const hasButtonPress = state.gamepad.buttons && 
+            Object.values(state.gamepad.buttons).some((v: any) => v > 0);
+        const hasAxisMove = state.gamepad.axes && 
+            Object.values(state.gamepad.axes).some((v: any) => Math.abs(v) > 0.1);
+        if (hasButtonPress || hasAxisMove) {
+            metricsCollector.recordInputEvent('gamepad');
+        }
+    }
+    
+    // 记录摇杆事件
+    if (state.joystick && (state.joystick.x !== 0 || state.joystick.y !== 0)) {
+        metricsCollector.recordInputEvent('joystick');
+    }
+    
     // 应用当前输入状态到所有执行器
     executorManager.applyState(inputState);
 
