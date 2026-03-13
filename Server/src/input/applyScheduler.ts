@@ -16,10 +16,27 @@ interface ApplySchedulerConfig {
  * ApplyScheduler
  * 负责固定频率（125Hz）状态应用，实现接收与应用解耦
  * 
- * **时间权威性：ApplyScheduler 是唯一的时间权威，所有时间戳记录都在这里完成**
- * - SafetyController 的超时检查使用 ApplyScheduler 提供的 tickTime
- * - 所有状态应用时间戳都在 ApplyScheduler 中记录
- * - 时间一致性由 ApplyScheduler 保证
+ * ============================================================================
+ * 时间权威性说明
+ * ============================================================================
+ * ApplyScheduler 是整个输入系统的【唯一时间权威】，所有时间相关操作都必须使用
+ * ApplyScheduler 提供的 tickTime，禁止其他模块自行调用 Date.now() 获取时间。
+ * 
+ * 设计原则：
+ * 1. 单一时间源：所有时间戳都由 ApplyScheduler 统一生成和分发
+ * 2. 时间一致性：同一 tick 周期内所有操作使用相同的时间戳
+ * 3. 可追溯性：所有时间相关操作都有明确的时间来源
+ * 
+ * 时间流向：
+ * ApplyScheduler.tickTime → SafetyController.currentTickTime
+ *                        → StateStore.recordAppliedState(tickTime)
+ *                        → SafetyController.recordValidState(tickTime)
+ * 
+ * 禁止行为：
+ * - SafetyController 禁止自行调用 Date.now() 进行超时判断
+ * - StateStore 禁止自行记录时间戳
+ * - 其他模块禁止缓存或推测时间
+ * ============================================================================
  */
 export class ApplyScheduler {
   // 执行器管理器引用

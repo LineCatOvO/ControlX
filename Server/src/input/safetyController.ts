@@ -14,7 +14,24 @@ interface SafetyConfig {
  * 负责在异常情况下（超时、断连、状态校验失败等）立即清零所有输入状态
  * SafetyController 是唯一允许触发清零的模块，确保清零操作的单一权威性
  * 
- * 时间权威性：ApplyScheduler 是唯一的时间权威，所有时间相关操作都使用 tickTime
+ * ============================================================================
+ * 时间权威性说明
+ * ============================================================================
+ * SafetyController 的所有时间相关操作都必须使用 ApplyScheduler 提供的 tickTime，
+ * 禁止自行调用 Date.now() 获取时间，以确保时间一致性。
+ * 
+ * 时间来源：
+ * - currentTickTime: 由 ApplyScheduler.updateTickTime() 更新
+ * - lastValidStateTime: 由 ApplyScheduler.recordValidState() 更新
+ * 
+ * 超时检查机制：
+ * - checkTimeout() 使用 currentTickTime 而非 Date.now()
+ * - 当 currentTickTime - lastValidStateTime > timeoutMs 时触发清零
+ * 
+ * 注意事项：
+ * - 在 ApplyScheduler 未启动时，currentTickTime 为 0，此时会回退到 Date.now()
+ * - 这是临时兼容机制，正式运行时必须确保 ApplyScheduler 先启动
+ * ============================================================================
  */
 export class SafetyController {
     // 执行器管理器引用
