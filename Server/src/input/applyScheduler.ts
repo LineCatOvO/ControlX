@@ -1,3 +1,51 @@
+/**
+ * ============================================================================
+ * 应用调度器模块 (Apply Scheduler Module)
+ * ============================================================================
+ * 
+ * 【模块职责】
+ * 本模块是输入系统的【唯一时间权威】，负责固定频率（125Hz）的状态应用调度。
+ * 
+ * 【核心功能】
+ * 1. 时间权威：生成和分发统一的tickTime，确保整个系统时间一致性
+ * 2. 状态调度：以固定频率（8ms/125Hz）应用最新状态到执行器
+ * 3. 时间同步：将tickTime同步给SafetyController和StateStore
+ * 4. 模式支持：支持普通模式、影子模式、Router-only模式
+ * 
+ * 【模块边界】
+ * - ✅ 允许：生成tickTime、调度状态应用、同步时间到其他模块
+ * - ❌ 禁止：状态验证（由Validator负责）、直接操作执行器（通过ExecutorManager）、安全清零（由SafetyController负责）
+ * 
+ * 【时间权威性】
+ * ApplyScheduler是整个输入系统的唯一时间源：
+ * - 所有时间戳都由ApplyScheduler统一生成和分发
+ * - 同一tick周期内所有操作使用相同的时间戳
+ * - 其他模块禁止自行调用Date.now()获取时间
+ * 
+ * 【时间流向】
+ * ApplyScheduler.tickTime → SafetyController.currentTickTime
+ *                        → StateStore.recordAppliedState(tickTime)
+ *                        → SafetyController.recordValidState(tickTime)
+ * 
+ * 【依赖关系】
+ * - 依赖：StateStore（状态获取）、ExecutorManager（状态应用）、SafetyController（时间同步）
+ * - 被依赖：app.ts（启动入口）
+ * 
+ * 【关键设计】
+ * - 调度器模式：固定频率调度，解耦状态接收和应用
+ * - 时间权威模式：单一时间源，确保一致性
+ * - 回调机制：支持tick回调，用于测试和扩展
+ * 
+ * 【注意事项】
+ * - 必须在所有其他模块之前启动
+ * - tickTime是系统唯一的时间基准
+ * - 异常情况下会触发SafetyController清零
+ * 
+ * @module input/applyScheduler
+ * @version 2.0.0
+ * @last-updated 2026-03-13
+ */
+
 import { StateStore } from './stateStore';
 import { InputExecutorManager } from './interfaces';
 import { getSafetyController } from './executor';
