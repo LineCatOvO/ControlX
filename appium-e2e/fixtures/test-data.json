@@ -14,19 +14,26 @@
         }
     ],
     "testInputs": {
+        "_comment": "坐标值使用相对坐标（百分比），由 device.js 动态计算实际像素坐标",
         "touchEvents": [
             {
-                "x": 540,
-                "y": 960,
+                "xPercent": 0.5,
+                "yPercent": 0.5,
                 "action": "tap",
-                "description": "Tap center of screen"
+                "description": "Tap center of screen (50%, 50%)"
             },
             {
-                "x": 200,
-                "y": 300,
+                "xPercent": 0.2,
+                "yPercent": 0.3,
                 "action": "long_press",
                 "duration": 2000,
-                "description": "Long press top left"
+                "description": "Long press top left area (20%, 30%)"
+            },
+            {
+                "xPercent": 0.8,
+                "yPercent": 0.7,
+                "action": "tap",
+                "description": "Tap bottom right area (80%, 70%)"
             }
         ],
         "gyroEvents": [
@@ -36,6 +43,24 @@
                 "roll": -0.3,
                 "duration": 1000,
                 "description": "Basic gyro movement"
+            }
+        ],
+        "swipeEvents": [
+            {
+                "startXPercent": 0.5,
+                "startYPercent": 0.8,
+                "endXPercent": 0.5,
+                "endYPercent": 0.2,
+                "duration": 500,
+                "description": "Swipe up (center, 80% to 20%)"
+            },
+            {
+                "startXPercent": 0.8,
+                "startYPercent": 0.5,
+                "endXPercent": 0.2,
+                "endYPercent": 0.5,
+                "duration": 500,
+                "description": "Swipe left (80% to 20%, center)"
             }
         ]
     },
