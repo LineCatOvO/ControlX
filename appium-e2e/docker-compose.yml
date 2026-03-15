@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  appium:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: controlx-appium
+    ports:
+      - "4723:4723"
+    networks:
+      - controlx-network
+    volumes:
+      - ./test-results:/app/test-results
+      - ./configs:/app/configs
+      - ./fixtures:/app/fixtures
+    environment:
+      - APPIUM_PORT=4723
+      - NODE_ENV=test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4723/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+  backend:
+    image: node:18-bullseye
+    container_name: controlx-backend
+    ports:
+      - "10000-60000:10000-60000"
+    networks:
+      - controlx-network
+    volumes:
+      - ../Server:/app/server
+      - ./test-results:/app/test-results
+    working_dir: /app/server
+    environment:
+      - NODE_ENV=test
+      - TEST_MODE=true
+      - DISABLE_ACTUAL_INPUT=true
+      - TUI=0
+    command: >
+      bash -c "
+        npm install &&
+        npm run build &&
+        node dist/app.js
+      "
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').createConnection(3000, 'localhost').on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    depends_on:
+      appium:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+
+networks:
+  controlx-network:
+    driver: bridge
+    name: controlx-network
+
+volumes:
+  test-results:
+  configs:
+  fixtures:

@@ -14,6 +14,35 @@ interface BackendConfig {
     };
 }
 
+interface DockerConfig {
+    enabled: boolean;
+    appiumHost: string;
+    appiumPort: number;
+    backendHost: string;
+    backendPortRange: {
+        start: number;
+        end: number;
+    };
+    networkName: string;
+    containers: {
+        appium: string;
+        backend: string;
+    };
+}
+
+interface AppiumConfig {
+    host: string;
+    port: number;
+    basePath: string;
+    capabilities: {
+        platformName: string;
+        automationName: string;
+        deviceName: string;
+        noReset: boolean;
+        fullReset: boolean;
+    };
+}
+
 interface AndroidConfig {
     gradlePath: string;
     gradleCwd: string;
@@ -61,11 +90,16 @@ interface TimeoutsConfig {
 
 interface Config {
     backend: BackendConfig;
+    docker: DockerConfig;
+    appium: AppiumConfig;
     android: AndroidConfig;
     device: DeviceConfig;
     ui: UIConfig;
     timeouts: TimeoutsConfig;
 }
+
+const isDockerEnvironment = process.env.DOCKER_ENV === 'true' || 
+                            process.env.NODE_ENV === 'docker';
 
 const config: Config = {
     backend: {
@@ -74,11 +108,44 @@ const config: Config = {
             end: 60000
         },
         startupTimeout: 3000,
-        serverPath: path.join(__dirname, "..", "..", "..", "Server", "dist", "app.js"),
-        serverCwd: path.join(__dirname, "..", "..", "..", "Server"),
+        serverPath: isDockerEnvironment 
+            ? "/app/server/dist/app.js"
+            : path.join(__dirname, "..", "..", "..", "Server", "dist", "app.js"),
+        serverCwd: isDockerEnvironment 
+            ? "/app/server"
+            : path.join(__dirname, "..", "..", "..", "Server"),
         env: {
             TEST_MODE: "true",
             DISABLE_ACTUAL_INPUT: "true"
+        }
+    },
+
+    docker: {
+        enabled: isDockerEnvironment,
+        appiumHost: process.env.APPIUM_HOST || "localhost",
+        appiumPort: parseInt(process.env.APPIUM_PORT || "4723", 10),
+        backendHost: process.env.BACKEND_HOST || "localhost",
+        backendPortRange: {
+            start: 10000,
+            end: 60000
+        },
+        networkName: "controlx-network",
+        containers: {
+            appium: "controlx-appium",
+            backend: "controlx-backend"
+        }
+    },
+
+    appium: {
+        host: process.env.APPIUM_HOST || "localhost",
+        port: parseInt(process.env.APPIUM_PORT || "4723", 10),
+        basePath: "/wd/hub",
+        capabilities: {
+            platformName: "android",
+            automationName: "uiautomator2",
+            deviceName: "Android Device",
+            noReset: true,
+            fullReset: false
         }
     },
 
