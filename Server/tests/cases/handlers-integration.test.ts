@@ -258,6 +258,202 @@ describe('WebSocket Handlers Integration Tests', () => {
             expect(response.type).toBe('error');
             expect(response.code).toBe('INVALID_MESSAGE');
         });
+
+        test('should handle key_down event', () => {
+            const message = {
+                type: 'input_event' as const,
+                data: {
+                    type: 'key_down',
+                    data: { key: 'W' },
+                    metadata: { clientId: 'test-client', timestamp: Date.now() },
+                },
+            } as any;
+
+            handleInputEvent(ws, message);
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('ack');
+            expect(response.data.status).toBe('success');
+        });
+
+        test('should handle key_up event', () => {
+            const message = {
+                type: 'input_event' as const,
+                data: {
+                    type: 'key_up',
+                    data: { key: 'A' },
+                    metadata: { clientId: 'test-client', timestamp: Date.now() },
+                },
+            } as any;
+
+            handleInputEvent(ws, message);
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('ack');
+            expect(response.data.status).toBe('success');
+        });
+
+        test('should handle mouse_click event', () => {
+            const message = {
+                type: 'input_event' as const,
+                data: {
+                    type: 'mouse_click',
+                    data: { button: 'left', pressed: true },
+                    metadata: { clientId: 'test-client', timestamp: Date.now() },
+                },
+            } as any;
+
+            handleInputEvent(ws, message);
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('ack');
+            expect(response.data.status).toBe('success');
+        });
+
+        test('should handle WebSocket send error when sending error message', () => {
+            const errorWs = {
+                sentMessages: [] as any[],
+                send: jest.fn().mockImplementationOnce(() => {
+                    throw new Error('Send error');
+                }),
+                getLastMessage: function() {
+                    if (this.sentMessages.length === 0) return null;
+                    return JSON.parse(this.sentMessages[this.sentMessages.length - 1]);
+                }
+            };
+
+            const message = {
+                type: 'input_event' as const,
+                // Missing data to trigger error path
+            } as any;
+
+            // Should not throw
+            expect(() => handleInputEvent(errorWs, message)).not.toThrow();
+        });
+
+        test('should handle WebSocket send error when sending ACK', () => {
+            const errorWs = {
+                sentMessages: [] as any[],
+                send: jest.fn()
+                    .mockImplementationOnce(() => {
+                        // First call (ACK) throws
+                        throw new Error('Send ACK error');
+                    }),
+                getLastMessage: function() {
+                    if (this.sentMessages.length === 0) return null;
+                    return JSON.parse(this.sentMessages[this.sentMessages.length - 1]);
+                }
+            };
+
+            const message = {
+                type: 'input_event' as const,
+                data: {
+                    type: 'key_down',
+                    data: { key: 'W' },
+                },
+            } as any;
+
+            // Should not throw
+            expect(() => handleInputEvent(errorWs, message)).not.toThrow();
+        });
+
+        test('should handle null data field', () => {
+            const message = {
+                type: 'input_event' as const,
+                data: null,
+            } as any;
+
+            handleInputEvent(ws, message);
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('error');
+            expect(response.code).toBe('INVALID_MESSAGE');
+        });
+
+        test('should handle undefined data field', () => {
+            const message = {
+                type: 'input_event' as const,
+                data: undefined,
+            } as any;
+
+            handleInputEvent(ws, message);
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('error');
+            expect(response.code).toBe('INVALID_MESSAGE');
+        });
+
+        test('should include sequenceNumber and timestamp in ACK', () => {
+            const message = {
+                type: 'input_event' as const,
+                data: {
+                    type: 'key_down',
+                    data: { key: 'W' },
+                },
+            } as any;
+
+            handleInputEvent(ws, message);
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('ack');
+            expect(response.data.sequenceNumber).toBeDefined();
+            expect(response.data.timestamp).toBeDefined();
+            expect(typeof response.data.sequenceNumber).toBe('number');
+            expect(typeof response.data.timestamp).toBe('number');
+        });
+
+        test('should handle executor throwing error', () => {
+            // Mock getExecutorManager to throw error
+            const originalGetExecutorManager = require('../../src/input/executor').getExecutorManager;
+            jest.spyOn(require('../../src/input/executor'), 'getExecutorManager').mockImplementationOnce(() => {
+                throw new Error('Executor error');
+            });
+
+            const message = {
+                type: 'input_event' as const,
+                data: {
+                    type: 'key_down',
+                    data: { key: 'W' },
+                },
+            } as any;
+
+            handleInputEvent(ws, message);
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('error');
+            expect(response.code).toBe('INTERNAL_ERROR');
+            expect(response.message).toBe('Error processing input event');
+        });
+
+        test('should handle error when sending internal error message', () => {
+            // Mock getExecutorManager to throw error
+            jest.spyOn(require('../../src/input/executor'), 'getExecutorManager').mockImplementationOnce(() => {
+                throw new Error('Executor error');
+            });
+
+            const errorWs = {
+                sentMessages: [] as any[],
+                send: jest.fn()
+                    .mockImplementationOnce(() => {
+                        throw new Error('Send internal error failed');
+                    }),
+                getLastMessage: function() {
+                    if (this.sentMessages.length === 0) return null;
+                    return JSON.parse(this.sentMessages[this.sentMessages.length - 1]);
+                }
+            };
+
+            const message = {
+                type: 'input_event' as const,
+                data: {
+                    type: 'key_down',
+                    data: { key: 'W' },
+                },
+            } as any;
+
+            // Should not throw
+            expect(() => handleInputEvent(errorWs, message)).not.toThrow();
+        });
     });
 
     describe('handleWelcome()', () => {
