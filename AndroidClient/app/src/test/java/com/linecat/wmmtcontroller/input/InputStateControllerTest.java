@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.After;
 
 import com.linecat.controlx.model.InputState;
+import com.linecat.controlx.testutil.AndroidLogMocker;
 
 import static org.junit.Assert.*;
 
@@ -18,12 +19,14 @@ public class InputStateControllerTest {
 
     @Before
     public void setUp() {
+        AndroidLogMocker.mock();
         controller = new InputStateController();
     }
 
     @After
     public void tearDown() {
         controller.destroy();
+        AndroidLogMocker.unmock();
     }
 
     /**

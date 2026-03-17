@@ -4,6 +4,8 @@ import org.junit.Test;
 import org.junit.Before;
 import org.junit.After;
 
+import com.linecat.controlx.testutil.AndroidLogMocker;
+
 import static org.junit.Assert.*;
 
 /**
@@ -16,12 +18,14 @@ public class SafetyControllerTest {
 
     @Before
     public void setUp() {
+        AndroidLogMocker.mock();
         safetyController = new SafetyController();
     }
 
     @After
     public void tearDown() {
         safetyController.disable();
+        AndroidLogMocker.unmock();
     }
 
     /**
