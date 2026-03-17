@@ -44,8 +44,8 @@ class PipelineTestRunner {
             deviceId,
             backendPort: null,
             apkOutputPath: path.join(__dirname, "..", "..", "..", "AndroidClient", "app", "build", "outputs", "apk", "debug", "app-debug.apk"),
-            packageName: "com.linecat.wmmtcontroller",
-            mainActivity: "com.linecat.wmmtcontroller/.MainActivity",
+            packageName: "com.linecat.controlx",
+            mainActivity: "com.linecat.controlx/.MainActivity",
             serverPath: path.join(__dirname, "..", "..", "..", "Server", "dist", "app.js"),
             serverCwd: path.join(__dirname, "..", "..", "..", "Server"),
             androidProjectPath: path.join(__dirname, "..", "..", "..", "AndroidClient")
@@ -409,7 +409,7 @@ class PipelineTestRunner {
         const dumpOutput = this.execAdb("shell cat /sdcard/window_dump.xml");
 
         const checks = [
-            { pattern: "WMMT", name: "App title" },
+            { pattern: "ControlX", name: "App title" },
             { pattern: "启动", name: "Start button" },
             { pattern: "停止", name: "Stop button" }
         ];

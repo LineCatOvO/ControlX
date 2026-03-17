@@ -34,7 +34,7 @@
 
 ### 2.2 主要组件
 
-#### 2.2.1 UI层 (com.linecat.wmmtcontroller.control.ui)
+#### 2.2.1 UI层 (com.linecat.controlx.control.ui)
 
 - `ControlNode`：控制节点基类
 - `ButtonControlNode`：按钮控制节点
@@ -42,20 +42,20 @@
 - `GyroControlNode`：陀螺仪控制节点
 - `UINodeManager`：UI节点管理器
 
-#### 2.2.2 Operation层 (com.linecat.wmmtcontroller.control.operation)
+#### 2.2.2 Operation层 (com.linecat.controlx.control.operation)
 
 - `ControlAction`：控制动作类
 - `OperationNodeManager`：操作节点管理器
 - `ControlArchitectureExample`：架构使用示例
 
-#### 2.2.3 Mapping层 (com.linecat.wmmtcontroller.control.mapping)
+#### 2.2.3 Mapping层 (com.linecat.controlx.control.mapping)
 
 - `DeviceMapping`：设备映射类
 - `MappingNodeManager`：映射节点管理器
 - `ControlLayerCoordinator`：三层协调器
 - `ThreeTierControlManager`：三层总控管理器
 
-#### 2.2.4 布局引擎层 (com.linecat.wmmtcontroller.core.layout)
+#### 2.2.4 布局引擎层 (com.linecat.controlx.core.layout)
 
 - `NewLayoutEngine`：新版布局引擎
 - `EnhancedLayoutEngine`：增强版布局引擎

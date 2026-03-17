@@ -1,4 +1,4 @@
-package com.linecat.wmmtcontroller;
+package com.linecat.controlx;
 
 import org.junit.Test;
 

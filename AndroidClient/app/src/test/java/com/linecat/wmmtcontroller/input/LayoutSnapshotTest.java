@@ -1,4 +1,4 @@
-package com.linecat.wmmtcontroller.input;
+package com.linecat.controlx.input;
 
 import org.junit.Test;
 import org.junit.Before;

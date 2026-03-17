@@ -467,7 +467,7 @@ describe('WebSocket Handlers Integration Tests', () => {
 
             const response = ws.getLastMessage();
             expect(response.type).toBe('welcome');
-            expect(response.message).toBe('Connected to WMMT Controller Server');
+            expect(response.message).toBe('Connected to ControlX Server');
         });
     });
 

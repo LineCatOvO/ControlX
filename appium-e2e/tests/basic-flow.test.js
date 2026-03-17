@@ -4,7 +4,7 @@ const { api, helpers } = require("../helpers/api");
 const testData = require("../fixtures/test-data.json");
 
 /**
- * WMMT Remote Controller E2E 测试套件
+ * ControlX E2E 测试套件
  * 
  * 测试范围：
  * - 应用启动和基础 UI 验证
@@ -17,9 +17,9 @@ const testData = require("../fixtures/test-data.json");
  * 前置条件：
  * - Android 设备或模拟器已启动
  * - Appium 服务器运行在 localhost:4723
- * - WMMTController.apk 已安装或可访问
+ * - ControlX.apk 已安装或可访问
  */
-test.describe("WMMT Remote Controller E2E Tests", () => {
+test.describe("ControlX E2E Tests", () => {
     /**
      * 测试套件初始化
      * - 初始化 Appium 驱动

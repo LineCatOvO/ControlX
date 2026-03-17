@@ -78,7 +78,7 @@ class CoreE2ETestRunner {
         console.log("=".repeat(60));
         
         try {
-            const apkPath = path.join(__dirname, "..", "android", "WMMTController.apk");
+            const apkPath = path.join(__dirname, "..", "android", "ControlX.apk");
             
             if (!fs.existsSync(apkPath)) {
                 throw new Error(`APK file not found at ${apkPath}`);

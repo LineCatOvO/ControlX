@@ -55,7 +55,7 @@
 
 ```java
 /**
- * @deprecated 请使用 {@link com.linecat.wmmtcontroller.core.layout.LayoutEngine} 代替
+ * @deprecated 请使用 {@link com.linecat.controlx.core.layout.LayoutEngine} 代替
  * 该类将在 v2.0 版本中移除
  */
 @Deprecated
@@ -117,7 +117,7 @@ grep -r "implements.*ClassName" src/
 **原类:**
 
 ```java
-package com.linecat.wmmtcontroller.input;
+package com.linecat.controlx.input;
 
 /**
  * 布局引擎
@@ -132,11 +132,11 @@ public class LayoutEngine {
 **更新为:**
 
 ```java
-package com.linecat.wmmtcontroller.input;
+package com.linecat.controlx.input;
 
 /**
  * @deprecated 旧版布局引擎，请使用 
- * {@link com.linecat.wmmtcontroller.control.EnhancedLayoutEngine} 代替
+ * {@link com.linecat.controlx.control.EnhancedLayoutEngine} 代替
  * 该类将在 v2.0 版本中移除
  * 
  * 迁移示例:

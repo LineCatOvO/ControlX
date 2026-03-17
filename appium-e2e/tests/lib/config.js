@@ -1,8 +1,8 @@
 const path = require("path");
 
 const CONFIG = {
-    packageName: "com.linecat.wmmtcontroller",
-    mainActivity: "com.linecat.wmmtcontroller/.MainActivity",
+    packageName: "com.linecat.controlx",
+    mainActivity: "com.linecat.controlx/.MainActivity",
     projectRoot: path.join(__dirname, "..", "..", ".."),
     get serverPath() { return path.join(this.projectRoot, "Server", "dist", "app.js"); },
     get serverCwd() { return path.join(this.projectRoot, "Server"); },

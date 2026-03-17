@@ -1,7 +1,7 @@
 {
   "name": "appium-e2e",
   "version": "1.0.0",
-  "description": "Appium E2E tests for WMMT Remote Controller",
+  "description": "Appium E2E tests for ControlX",
   "main": "index.js",
   "scripts": {
     "test": "npm run test:all",
@@ -22,7 +22,7 @@
     "android",
     "remote-controller"
   ],
-  "author": "WMMT Team",
+  "author": "ControlX Team",
   "license": "MIT",
   "devDependencies": {
     "appium": "^3.2.0",

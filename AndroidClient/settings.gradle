@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WMMTController"
+rootProject.name = "ControlX"
 include ':app'

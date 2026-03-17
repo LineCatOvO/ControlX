@@ -91,7 +91,7 @@ export function startWsServer(): Promise<number> {
 
                 wss.on('listening', () => {
                     actualPort = currentPort;
-                    console.log(`WMMT Controller Server is running on ws://localhost:${currentPort}`);
+                    console.log(`ControlX Server is running on ws://localhost:${currentPort}`);
                     
                     // 启动心跳检测
                     startHeartbeat();

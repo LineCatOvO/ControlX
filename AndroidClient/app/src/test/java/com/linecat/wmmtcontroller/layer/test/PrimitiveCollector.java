@@ -1,6 +1,6 @@
-package com.linecat.wmmtcontroller.layer.test;
+package com.linecat.controlx.layer.test;
 
-import com.linecat.wmmtcontroller.layer.InputAbstractionLayer;
+import com.linecat.controlx.layer.InputAbstractionLayer;
 
 import java.util.ArrayList;
 import java.util.List;

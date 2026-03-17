@@ -64,7 +64,7 @@ wss.on('connection', (ws) => {
   clients.add(ws);
 
   // 发送欢迎消息
-  ws.send(JSON.stringify({ type: 'welcome', message: 'Connected to WMMT Controller Server' }));
+  ws.send(JSON.stringify({ type: 'welcome', message: 'Connected to ControlX Server' }));
 
   // 心跳检测定时器
   const heartbeatTimer = setInterval(() => {
@@ -114,7 +114,7 @@ function handleClientMessage(client, message) {
   switch (message.type) {
     case 'welcome':
       // 客户端请求欢迎消息（重连时可能需要）
-      client.send(JSON.stringify({ type: 'welcome', message: 'Connected to WMMT Controller Server' }));
+      client.send(JSON.stringify({ type: 'welcome', message: 'Connected to ControlX Server' }));
       break;
     case 'input':
       updateInputState(message.data);
@@ -265,4 +265,4 @@ function handleJoystickInput() {
   // TODO: 实现摇杆输入映射到键盘或鼠标
 }
 
-console.log(`WMMT Controller Server is running on ws://localhost:${PORT}`);
+console.log(`ControlX Server is running on ws://localhost:${PORT}`);

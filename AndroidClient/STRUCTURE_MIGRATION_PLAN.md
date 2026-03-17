@@ -32,7 +32,7 @@ git commit -m "Backup before structure migration"
 #### 3.1 创建新的包结构
 
 ```
-src/main/java/com/linecat/wmmtcontroller/
+src/main/java/com/linecat/controlx/
 ├── control/
 │   ├── ui/                 # UI层相关类
 │   │   ├── ControlNode.java
@@ -77,26 +77,26 @@ src/main/java/com/linecat/wmmtcontroller/
 
 ```bash
 # 移动Control包中的UI层类到control.ui
-mv src/main/java/com/linecat/wmmtcontroller/control/{ControlNode.java,ButtonControlNode.java,AxisControlNode.java,GyroControlNode.java,UINodeManager.java} \
-   src/main/java/com/linecat/wmmtcontroller/control/ui/
+mv src/main/java/com/linecat/controlx/control/{ControlNode.java,ButtonControlNode.java,AxisControlNode.java,GyroControlNode.java,UINodeManager.java} \
+   src/main/java/com/linecat/controlx/control/ui/
 
 # 移动Control包中的Operation层类到control.operation
-mv src/main/java/com/linecat/wmmtcontroller/control/{ControlAction.java,OperationNodeManager.java,ControlArchitectureExample.java} \
-   src/main/java/com/linecat/wmmtcontroller/control/operation/
+mv src/main/java/com/linecat/controlx/control/{ControlAction.java,OperationNodeManager.java,ControlArchitectureExample.java} \
+   src/main/java/com/linecat/controlx/control/operation/
 
 # 移动Control包中的Mapping层类到control.mapping
-mv src/main/java/com/linecat/wmmtcontroller/control/{DeviceMapping.java,MappingNodeManager.java,ControlLayerCoordinator.java} \
-   src/main/java/com/linecat/wmmtcontroller/control/mapping/
+mv src/main/java/com/linecat/controlx/control/{DeviceMapping.java,MappingNodeManager.java,ControlLayerCoordinator.java} \
+   src/main/java/com/linecat/controlx/control/mapping/
 
 # 移动布局相关类到core.layout
-mkdir -p src/main/java/com/linecat/wmmtcontroller/core/layout
-mv src/main/java/com/linecat/wmmtcontroller/input/{LayoutEngine.java,NewLayoutEngine.java,EnhancedLayoutEngine.java,LayoutLoader.java,LayoutManager.java,LayoutRenderer.java} \
-   src/main/java/com/linecat/wmmtcontroller/core/layout/
+mkdir -p src/main/java/com/linecat/controlx/core/layout
+mv src/main/java/com/linecat/controlx/input/{LayoutEngine.java,NewLayoutEngine.java,EnhancedLayoutEngine.java,LayoutLoader.java,LayoutManager.java,LayoutRenderer.java} \
+   src/main/java/com/linecat/controlx/core/layout/
 
 # 移动脚本相关类到core.script
-mkdir -p src/main/java/com/linecat/wmmtcontroller/core/script
-mv src/main/java/com/linecat/wmmtcontroller/input/{InputScriptEngine.java,JsInputScriptEngine.java,ScriptProfile.java,ProfileManager.java,ScriptContext.java,ScriptTestHarness.java} \
-   src/main/java/com/linecat/wmmtcontroller/core/script/
+mkdir -p src/main/java/com/linecat/controlx/core/script
+mv src/main/java/com/linecat/controlx/input/{InputScriptEngine.java,JsInputScriptEngine.java,ScriptProfile.java,ProfileManager.java,ScriptContext.java,ScriptTestHarness.java} \
+   src/main/java/com/linecat/controlx/core/script/
 ```
 
 #### 3.3 更新import语句
@@ -105,14 +105,14 @@ mv src/main/java/com/linecat/wmmtcontroller/input/{InputScriptEngine.java,JsInpu
 
 ```java
 // 从
-import com.linecat.wmmtcontroller.control.ControlNode;
-import com.linecat.wmmtcontroller.control.ControlAction;
-import com.linecat.wmmtcontroller.control.DeviceMapping;
+import com.linecat.controlx.control.ControlNode;
+import com.linecat.controlx.control.ControlAction;
+import com.linecat.controlx.control.DeviceMapping;
 
 // 到
-import com.linecat.wmmtcontroller.control.ui.ControlNode;
-import com.linecat.wmmtcontroller.control.operation.ControlAction;
-import com.linecat.wmmtcontroller.control.mapping.DeviceMapping;
+import com.linecat.controlx.control.ui.ControlNode;
+import com.linecat.controlx.control.operation.ControlAction;
+import com.linecat.controlx.control.mapping.DeviceMapping;
 ```
 
 ### 阶段2：标记旧类为废弃 (第2周)
@@ -153,13 +153,13 @@ public class MappingLayerHandler {
 #### 3.1 创建新旧架构适配器
 
 ```java
-// src/main/java/com/linecat/wmmtcontroller/util/LayoutEngineAdapter.java
-package com.linecat.wmmtcontroller.util;
+// src/main/java/com/linecat/controlx/util/LayoutEngineAdapter.java
+package com.linecat.controlx.util;
 
-import com.linecat.wmmtcontroller.core.layout.LayoutEngine;
-import com.linecat.wmmtcontroller.control.mapping.EnhancedLayoutEngine;
-import com.linecat.wmmtcontroller.model.RawInput;
-import com.linecat.wmmtcontroller.model.InputState;
+import com.linecat.controlx.core.layout.LayoutEngine;
+import com.linecat.controlx.control.mapping.EnhancedLayoutEngine;
+import com.linecat.controlx.model.RawInput;
+import com.linecat.controlx.model.InputState;
 
 /**
  * 布局引擎适配器

@@ -43,7 +43,7 @@ require("chai").use(chaiAsPromised);
 const CONFIG = {
     appiumHost: "localhost",
     appiumPort: 4723,
-    packageName: "com.linecat.wmmtcontroller",
+    packageName: "com.linecat.controlx",
     backendPort: null,
     wsClient: null,
     receivedInputs: [],

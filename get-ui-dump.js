@@ -7,7 +7,7 @@ console.log('Getting UI dump...');
 try {
     // 启动应用
     console.log('1. Starting app...');
-    execSync(`adb -s ${deviceId} shell am start -n com.linecat.wmmtcontroller/.MainActivity`, { stdio: 'pipe' });
+    execSync(`adb -s ${deviceId} shell am start -n com.linecat.controlx/.MainActivity`, { stdio: 'pipe' });
     console.log('App started');
     
     // 等待应用初始化
@@ -31,7 +31,7 @@ try {
             // 查找关键元素
             console.log('\n=== Key Elements Found ===');
             const elements = {
-                titleText: dumpOutput.includes('title_text') || dumpOutput.includes('WMMT 远程控制器'),
+                titleText: dumpOutput.includes('title_text') || dumpOutput.includes('ControlX 远程控制器'),
                 statusText: dumpOutput.includes('status_text') || dumpOutput.includes('服务状态'),
                 startButton: dumpOutput.includes('btn_start_service') || dumpOutput.includes('启动服务'),
                 stopButton: dumpOutput.includes('btn_stop_service') || dumpOutput.includes('停止服务'),

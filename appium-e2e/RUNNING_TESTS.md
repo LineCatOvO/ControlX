@@ -458,7 +458,7 @@ npm install -g appium
 
 ```bash
 # 卸载旧版本
-adb uninstall com.linecat.wmmtcontroller
+adb uninstall com.linecat.controlx
 
 # 清理构建
 cd ../AndroidClient

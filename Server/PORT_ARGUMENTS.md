@@ -45,7 +45,7 @@ node dist/app.js --port 3001
 ## 示例输出
 
 ```
-2026-02-10 10:30:15 INFO  Starting WMMT Controller Server...
+2026-02-10 10:30:15 INFO  Starting ControlX Server...
 2026-02-10 10:30:15 INFO  Configuration loaded from: config.json
 2026-02-10 10:30:15 INFO  Port overridden by command line argument: 3001
 2026-02-10 10:30:15 INFO  Listening on port: 3001

@@ -251,8 +251,8 @@ cd /home/linecat/agent-workspace/projects/ControlX/AndroidClient
 ### 运行特定测试类
 
 ```bash
-./gradlew testDebugUnitTest --tests "com.linecat.wmmtcontroller.model.InputStateTest"
-./gradlew testDebugUnitTest --tests "com.linecat.wmmtcontroller.input.SafetyControllerTest"
+./gradlew testDebugUnitTest --tests "com.linecat.controlx.model.InputStateTest"
+./gradlew testDebugUnitTest --tests "com.linecat.controlx.input.SafetyControllerTest"
 ```
 
 ### 运行所有测试（含 Android 测试）

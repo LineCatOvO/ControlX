@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/WMMTControllerServer.iml" filepath="$PROJECT_DIR$/WMMTControllerServer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ControlXServer.iml" filepath="$PROJECT_DIR$/ControlXServer.iml" />
     </modules>
   </component>
 </project>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.linecat.wmmtcontroller.test">
+    package="com.linecat.controlx.test">
 
     <application>
         <!-- 注册测试专用Activity -->
         <activity
-            android:name="com.linecat.wmmtcontroller.layer.test.TestHostActivity"
+            android:name="com.linecat.controlx.layer.test.TestHostActivity"
             android:exported="true"
             android:theme="@android:style/Theme.Material.Light.NoActionBar">
             <intent-filter>

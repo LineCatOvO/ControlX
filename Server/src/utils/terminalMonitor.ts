@@ -111,7 +111,7 @@ export class TerminalMonitor {
         
         // 添加头部
         lines.push('┌─────────────────────────────────────────────────┐');
-        lines.push('│ WMMT Controller Server Input Monitor           │');
+        lines.push('│ ControlX Server Input Monitor           │');
         lines.push('├─────────────────────────────────────────────────┤');
         lines.push(`│ Client:   ${this.clientConnected ? 'connected' : 'disconnected'}                        │`);
         lines.push(`│ FPS:      ${displayFps.toString().padEnd(2)} (${renderTime}ms)                               │`);

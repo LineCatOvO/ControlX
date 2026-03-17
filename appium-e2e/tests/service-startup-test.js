@@ -20,7 +20,7 @@ async function testServiceWithoutOverlayPermission() {
         console.log("\\n2️⃣ Checking current overlay permission status...");
         try {
             const permissionCheck = execSync(
-                `adb -s ${deviceId} shell settings get secure enabled_accessibility_services | grep wmmtcontroller`,
+                `adb -s ${deviceId} shell settings get secure enabled_accessibility_services | grep controlx`,
                 {
                     stdio: "pipe",
                     encoding: "utf8",
@@ -40,7 +40,7 @@ async function testServiceWithoutOverlayPermission() {
         console.log("\\n3️⃣ Force stopping app if running...");
         try {
             execSync(
-                `adb -s ${deviceId} shell am force-stop com.linecat.wmmtcontroller`,
+                `adb -s ${deviceId} shell am force-stop com.linecat.controlx`,
                 {
                     stdio: "pipe",
                 }
@@ -53,7 +53,7 @@ async function testServiceWithoutOverlayPermission() {
         // 4. 启动应用主Activity
         console.log("\\n4️⃣ Starting main activity...");
         execSync(
-            `adb -s ${deviceId} shell am start -n com.linecat.wmmtcontroller/.MainActivity`,
+            `adb -s ${deviceId} shell am start -n com.linecat.controlx/.MainActivity`,
             {
                 stdio: "pipe",
             }
@@ -71,11 +71,11 @@ async function testServiceWithoutOverlayPermission() {
             encoding: "utf8",
         });
 
-        if (psOutput.includes("wmmtcontroller")) {
+        if (psOutput.includes("controlx")) {
             console.log("✅ App process is running");
             const processLines = psOutput
                 .split("\\n")
-                .filter((line) => line.includes("wmmtcontroller"));
+                .filter((line) => line.includes("controlx"));
             processLines.forEach((line) =>
                 console.log("   Process:", line.trim())
             );
@@ -87,7 +87,7 @@ async function testServiceWithoutOverlayPermission() {
         console.log("\\n7️⃣ Attempting to start input service...");
         try {
             execSync(
-                `adb -s ${deviceId} shell am startservice com.linecat.wmmtcontroller/.service.InputRuntimeService`,
+                `adb -s ${deviceId} shell am startservice com.linecat.controlx/.service.InputRuntimeService`,
                 {
                     stdio: "pipe",
                 }
@@ -108,7 +108,7 @@ async function testServiceWithoutOverlayPermission() {
         console.log("\\n9️⃣ Checking service status...");
         try {
             const serviceDump = execSync(
-                `adb -s ${deviceId} shell dumpsys activity services com.linecat.wmmtcontroller`,
+                `adb -s ${deviceId} shell dumpsys activity services com.linecat.controlx`,
                 {
                     stdio: "pipe",
                     encoding: "utf8",
@@ -134,7 +134,7 @@ async function testServiceWithoutOverlayPermission() {
         console.log("\\n🔟 Checking log output...");
         try {
             const logOutput = execSync(
-                `adb -s ${deviceId} logcat -d | grep wmmtcontroller | tail -10`,
+                `adb -s ${deviceId} logcat -d | grep controlx | tail -10`,
                 {
                     stdio: "pipe",
                     encoding: "utf8",
@@ -168,7 +168,7 @@ async function testServiceWithoutOverlayPermission() {
                     );
                 }
             } else {
-                console.log("ℹ️  No recent logs found for wmmtcontroller");
+                console.log("ℹ️  No recent logs found for controlx");
             }
         } catch (error) {
             console.log("⚠️  Unable to retrieve logs:", error.message);

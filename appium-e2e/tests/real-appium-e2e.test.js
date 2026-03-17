@@ -6,8 +6,8 @@ const WebSocket = require("ws");
 
 // 测试配置
 const CONFIG = {
-    packageName: "com.linecat.wmmtcontroller",
-    mainActivity: "com.linecat.wmmtcontroller/.MainActivity",
+    packageName: "com.linecat.controlx",
+    mainActivity: "com.linecat.controlx/.MainActivity",
     appiumHost: "localhost",
     appiumPort: 4723,
     backendPort: null,
@@ -150,7 +150,7 @@ async function startBackendAndListen() {
 }
 
 // 测试用例
-test.describe("WMMT Controller - Real E2E Tests with Appium", () => {
+test.describe("ControlX - Real E2E Tests with Appium", () => {
     let driver = null;
     let backendProcess = null;
     

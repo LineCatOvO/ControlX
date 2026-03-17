@@ -1,4 +1,4 @@
-# WMMT Remote Controller - 需求驱动的完整Appium测试方案
+# ControlX - 需求驱动的完整Appium测试方案
 
 **设计日期**：2026-02-10
 **设计目标**：根据项目需求文档，设计完整的Appium端到端测试架构，覆盖Android客户端和Server项目的所有核心功能
@@ -9,7 +9,7 @@
 
 ### 1.1 核心需求概述
 
-根据[requirements.md](file:///c:\Users\15013\Projects\WMMTRemoteController\doc\requirements.md)，项目的核心需求包括：
+根据[requirements.md](file:///c:\Users\15013\Projects\ControlX\doc\requirements.md)，项目的核心需求包括：
 
 **项目目标**：
 - 在安卓设备上，通过用户操作生成控制结果
@@ -51,7 +51,7 @@
 
 ### 1.2 功能文档需求总结
 
-根据[function.md](file:///c:\Users\15013\Projects\WMMTRemoteController\doc\function.md)，功能需求包括：
+根据[function.md](file:///c:\Users\15013\Projects\ControlX\doc\function.md)，功能需求包括：
 
 **输入源采集功能**：
 - 连续输入可被持续感知
@@ -105,7 +105,7 @@
 
 ### 1.3 测试流程需求总结
 
-根据[tests/AndroidClient/main.md](file:///c:\Users\15013\Projects\WMMTRemoteController\doc\tests\AndroidClient\main.md)，Android客户端测试流程包括：
+根据[tests/AndroidClient/main.md](file:///c:\Users\15013\Projects\ControlX\doc\tests\AndroidClient\main.md)，Android客户端测试流程包括：
 
 **测试范围**：
 - 触控输入采集
@@ -140,7 +140,7 @@
 ### 2.1 整体架构
 
 ```
-WMMT Remote Controller E2E Test Architecture (Requirements-Driven)
+ControlX E2E Test Architecture (Requirements-Driven)
 ├── Test Framework (测试框架)
 │   ├── Test Runner (测试运行器)
 │   ├── Test Reporter (测试报告器)
@@ -1447,4 +1447,4 @@ class CleanupManager {
 7. **可扩展性**：易于添加新的测试模块和测试用例
 8. **资源清理**：完善的资源清理机制
 
-该测试方案能够全面验证WMMT Remote Controller项目的功能完整性和稳定性，确保满足所有需求文档中的要求。
+该测试方案能够全面验证ControlX项目的功能完整性和稳定性，确保满足所有需求文档中的要求。

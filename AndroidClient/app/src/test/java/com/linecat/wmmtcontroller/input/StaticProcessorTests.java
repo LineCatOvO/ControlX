@@ -1,4 +1,4 @@
-package com.linecat.wmmtcontroller.input;
+package com.linecat.controlx.input;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

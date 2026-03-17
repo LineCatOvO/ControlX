@@ -9,7 +9,7 @@ export function handleWelcome(ws: any, message: WelcomeMessage) {
     // 发送欢迎消息
     const welcomeMsg = {
         type: "welcome",
-        message: "Connected to WMMT Controller Server",
+        message: "Connected to ControlX Server",
     };
     console.log(
         "Sending welcome message to client:",

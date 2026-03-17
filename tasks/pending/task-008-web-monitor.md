@@ -1478,20 +1478,20 @@ console.log("=".repeat(60));
 搜索内容（old_str）：
 // 启动日志
 if (dryRunMode) {
-    console.log("🏃 WMMT Controller Server started in DRY RUN MODE");
+    console.log("🏃 ControlX Server started in DRY RUN MODE");
     console.log("📋 Dry run features:");
     console.log("   • All inputs logged for verification");
     console.log("   • No actual system events generated");
     console.log("   • Full state tracking and statistics");
     console.log("   • Safe for debugging and testing");
 } else if (isTestMode) {
-    console.log("🎮 WMMT Controller Server started in TEST MODE");
+    console.log("🎮 ControlX Server started in TEST MODE");
     console.log("📋 Test mode features:");
     console.log("   • No actual keyboard/mouse events generated");
     console.log("   • All inputs logged for verification");
     console.log("   • Safe for automated testing");
 } else {
-    console.log("🎮 WMMT Controller Server started successfully");
+    console.log("🎮 ControlX Server started successfully");
 }
 
 替换内容（new_str）：

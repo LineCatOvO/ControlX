@@ -1,4 +1,4 @@
-# WMMT Remote Controller - 完整Appium测试方案
+# ControlX - 完整Appium测试方案
 
 **设计日期**：2026-02-10
 **设计目标**：设计完整的Appium端到端测试架构，覆盖Android客户端和Server项目的所有核心功能
@@ -10,7 +10,7 @@
 ### 1.1 整体架构
 
 ```
-WMMT Remote Controller E2E Test Architecture
+ControlX E2E Test Architecture
 ├── Test Framework (测试框架)
 │   ├── Test Runner (测试运行器)
 │   ├── Test Reporter (测试报告器)
@@ -766,7 +766,7 @@ class CleanupManager {
     "disableActualInput": true
   },
   "android": {
-    "packageName": "com.linecat.wmmtcontroller",
+    "packageName": "com.linecat.controlx",
     "mainActivity": ".MainActivity",
     "buildCommand": "assembleDebug --no-daemon",
     "buildTimeout": 300000
@@ -877,4 +877,4 @@ TEST_REPORT_FORMAT=json,html,junit
 5. **灵活的配置**：支持配置文件和环境变量
 6. **可扩展性**：易于添加新的测试模块和测试用例
 
-该测试方案能够全面验证WMMT Remote Controller项目的功能完整性和稳定性。
+该测试方案能够全面验证ControlX项目的功能完整性和稳定性。

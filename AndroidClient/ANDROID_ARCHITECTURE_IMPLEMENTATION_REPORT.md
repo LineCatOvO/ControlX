@@ -123,7 +123,7 @@
 ### 包结构
 
 ```
-com.linecat.wmmtcontroller/
+com.linecat.controlx/
 ├── core/                          # 核心业务逻辑 (纯 Java)
 │   ├── input/
 │   │   ├── pipeline/              # 输入管道

@@ -1,6 +1,6 @@
 # 系统依赖文档
 
-本文档记录 WMMT Controller 项目所需的所有系统级依赖、安装步骤和验证方法。
+本文档记录 ControlX 项目所需的所有系统级依赖、安装步骤和验证方法。
 
 ## 📋 依赖清单
 
@@ -126,11 +126,11 @@ echo $env:VIGEM_CLIENT_PATH
 创建文件 `install-dependencies.ps1`：
 
 ```powershell
-# WMMT Controller 依赖安装脚本
+# ControlX 依赖安装脚本
 # 需要以管理员身份运行
 
 Write-Host "=====================================" -ForegroundColor Cyan
-Write-Host "WMMT Controller 依赖安装脚本" -ForegroundColor Cyan
+Write-Host "ControlX 依赖安装脚本" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -237,7 +237,7 @@ Write-Host "请重启计算机使所有更改生效。" -ForegroundColor Yellow
 # 依赖验证脚本
 
 Write-Host "=====================================" -ForegroundColor Cyan
-Write-Host "WMMT Controller 依赖验证" -ForegroundColor Cyan
+Write-Host "ControlX 依赖验证" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host ""
 

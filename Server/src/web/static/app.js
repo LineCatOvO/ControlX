@@ -1,4 +1,4 @@
-// WMMT Controller Server - Monitor Frontend
+// ControlX Server - Monitor Frontend
 // WebSocket连接和状态更新
 
 // 配置

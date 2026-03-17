@@ -11,14 +11,14 @@
 - **原结构**：
 
   ```
-  com.linecat.wmmtcontroller/
+  com.linecat.controlx/
   └── control/ (混合了UI、Operation、Mapping三层)
   ```
 
 - **新结构**：
 
   ```
-  com.linecat.wmmtcontroller/
+  com.linecat.controlx/
   ├── control/
   │   ├── ui/ (UI层相关类)
   │   │   ├── ControlNode.java
@@ -70,9 +70,9 @@
 
 所有受影响的类文件均已更新相应的导入语句，包括：
 
-- `ControlNode` → `com.linecat.wmmtcontroller.control.ui.ControlNode`
-- `ControlAction` → `com.linecat.wmmtcontroller.control.operation.ControlAction`
-- `DeviceMapping` → `com.linecat.wmmtcontroller.control.mapping.DeviceMapping`
+- `ControlNode` → `com.linecat.controlx.control.ui.ControlNode`
+- `ControlAction` → `com.linecat.controlx.control.operation.ControlAction`
+- `DeviceMapping` → `com.linecat.controlx.control.mapping.DeviceMapping`
 - 等等
 
 ## 3. 兼容性处理

@@ -156,7 +156,7 @@ WindowManager 分发事件
 
 ### 4.3 核心问题
 
-**[FloatWindowManager.java:211](file:///c:/Users/15013/Projects/AgentWorkspace/projects/ControlX/AndroidClient/app/src/main/java/com/linecat/wmmtcontroller/floatwindow/FloatWindowManager.java#L211)** 的 `OnTouchListener` 总是返回 `true`，导致触摸事件无法穿透到下层应用。
+**[FloatWindowManager.java:211](file:///c:/Users/15013/Projects/AgentWorkspace/projects/ControlX/AndroidClient/app/src/main/java/com/linecat/controlx/floatwindow/FloatWindowManager.java#L211)** 的 `OnTouchListener` 总是返回 `true`，导致触摸事件无法穿透到下层应用。
 
 ---
 

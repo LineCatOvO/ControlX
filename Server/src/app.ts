@@ -77,7 +77,7 @@ startWebMonitor();
 
 // 打印启动信息
 console.log("=".repeat(60));
-console.log("  WMMT Controller Server");
+console.log("  ControlX Server");
 console.log("=".repeat(60));
 console.log(`  Mode:         ${dryRunMode ? "DRY RUN" : isTestMode ? "TEST" : "PRODUCTION"}`);
 console.log(`  WebSocket:    ws://localhost:${process.env.WS_PORT || 3000}`);
@@ -91,20 +91,20 @@ console.log("=".repeat(60));
 
 // 启动日志
 if (dryRunMode) {
-    console.log("🏃 WMMT Controller Server started in DRY RUN MODE");
+    console.log("🏃 ControlX Server started in DRY RUN MODE");
     console.log("📋 Dry run features:");
     console.log("   • All inputs logged for verification");
     console.log("   • No actual system events generated");
     console.log("   • Full state tracking and statistics");
     console.log("   • Safe for debugging and testing");
 } else if (isTestMode) {
-    console.log("🎮 WMMT Controller Server started in TEST MODE");
+    console.log("🎮 ControlX Server started in TEST MODE");
     console.log("📋 Test mode features:");
     console.log("   • No actual keyboard/mouse events generated");
     console.log("   • All inputs logged for verification");
     console.log("   • Safe for automated testing");
 } else {
-    console.log("🎮 WMMT Controller Server started successfully");
+    console.log("🎮 ControlX Server started successfully");
 }
 
 // 处理进程终止

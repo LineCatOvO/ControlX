@@ -3,7 +3,7 @@
 
 FROM node:18-bullseye
 
-LABEL maintainer="WMMT Team"
+LABEL maintainer="ControlX Team"
 LABEL description="Docker environment for ControlX E2E testing with Appium 2.x"
 
 ENV DEBIAN_FRONTEND=noninteractive

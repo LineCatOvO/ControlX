@@ -1,4 +1,4 @@
-package com.linecat.wmmtcontroller.core.safety;
+package com.linecat.controlx.core.safety;
 
 import org.junit.Test;
 import org.junit.Before;

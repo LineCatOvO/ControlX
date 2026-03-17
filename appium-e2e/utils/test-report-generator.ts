@@ -323,7 +323,7 @@ class TestReportGenerator {
         }).join("\n");
 
         return `<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="WMMTController E2E Tests" tests="${report.summary.totalTests}" failures="${report.summary.failedTests}" skipped="${report.summary.skippedTests}" time="${this.parseDuration(report.summary.duration)}">
+<testsuite name="ControlX E2E Tests" tests="${report.summary.totalTests}" failures="${report.summary.failedTests}" skipped="${report.summary.skippedTests}" time="${this.parseDuration(report.summary.duration)}">
 ${testCases}
 </testsuite>`;
     }

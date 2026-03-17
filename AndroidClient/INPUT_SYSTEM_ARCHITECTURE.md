@@ -2,7 +2,7 @@
 
 ## 1. 概述
 
-本文档描述了 WMMT 远程控制器的输入系统架构，该系统负责将 Android 设备的传感器数据和用户交互转换为游戏输入指令。
+本文档描述了 ControlX 远程控制器的输入系统架构，该系统负责将 Android 设备的传感器数据和用户交互转换为游戏输入指令。
 
 ## 2. 核心设计原则
 
@@ -178,7 +178,7 @@ UI 组件应该是**被动的**：
 ## 5. 代码结构
 
 ```
-com.linecat.wmmtcontroller
+com.linecat.controlx
 ├── input/
 │   ├── InteractionCapture.java      # 交互捕获器
 │   ├── IntentComposer.java          # 意图合成器

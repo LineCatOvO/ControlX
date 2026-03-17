@@ -1,6 +1,6 @@
-package com.linecat.wmmtcontroller.layer.test;
+package com.linecat.controlx.layer.test;
 
-import com.linecat.wmmtcontroller.layer.PlatformAdaptationLayer;
+import com.linecat.controlx.layer.PlatformAdaptationLayer;
 
 import java.util.ArrayList;
 import java.util.List;

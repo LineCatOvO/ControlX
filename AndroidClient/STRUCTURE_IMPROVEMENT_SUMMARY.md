@@ -21,14 +21,14 @@
 
 ```
 原结构:
-com.linecat.wmmtcontroller/
+com.linecat.controlx/
 ├── input/ (混杂了多种功能)
 ├── control/ (新架构类)
 ├── service/ (核心服务)
 └── 其他功能包
 
 新结构:
-com.linecat.wmmtcontroller/
+com.linecat.controlx/
 ├── control/
 │   ├── ui/ (UI层相关)
 │   ├── operation/ (操作层相关)

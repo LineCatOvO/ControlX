@@ -1,4 +1,4 @@
-package com.linecat.wmmtcontroller.model.layout;
+package com.linecat.controlx.model.layout;
 
 import com.google.gson.JsonSyntaxException;
 

@@ -239,7 +239,7 @@ class DeviceManager {
 class AppInstaller {
     constructor(deviceManager) {
         this.deviceManager = deviceManager;
-        this.packageName = "com.linecat.wmmtcontroller";
+        this.packageName = "com.linecat.controlx";
         this.mainActivity = ".MainActivity";
     }
 
@@ -318,7 +318,7 @@ class AppInstaller {
                 encoding: "utf8"
             });
             
-            if (psOutput && psOutput.includes("wmmtcontroller")) {
+            if (psOutput && psOutput.includes("controlx")) {
                 console.log("✅ App process is running");
                 return true;
             } else {
@@ -392,7 +392,7 @@ class UIInteractor {
             const dumpOutput = await this.dumpUI();
             
             const elements = {
-                titleText: dumpOutput.includes("title_text") || dumpOutput.includes("WMMT 远程控制器"),
+                titleText: dumpOutput.includes("title_text") || dumpOutput.includes("ControlX 远程控制器"),
                 statusText: dumpOutput.includes("status_text") || dumpOutput.includes("服务状态"),
                 startButton: dumpOutput.includes("btn_start_service") || dumpOutput.includes("启动服务"),
                 stopButton: dumpOutput.includes("btn_stop_service") || dumpOutput.includes("停止服务"),

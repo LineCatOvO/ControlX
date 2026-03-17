@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# WMMT Controller - Real Appium E2E Test Runner
+# ControlX - Real Appium E2E Test Runner
 # 使用真正的 Appium 进行 UI 交互测试
 
 set -e
 
-echo "🚀 Starting WMMT Controller Real Appium E2E Tests"
+echo "🚀 Starting ControlX Real Appium E2E Tests"
 echo "=================================================="
 
 cd "$(dirname "$0")"

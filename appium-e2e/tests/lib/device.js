@@ -269,7 +269,7 @@ async function runUITests() {
     const dumpOutput = execAdb("shell cat /sdcard/window_dump.xml");
 
     const checks = [
-        { pattern: "WMMT", name: "App title", required: true },
+        { pattern: "ControlX", name: "App title", required: true },
         { pattern: "启动", name: "Start button text", required: false },
         { pattern: "停止", name: "Stop button text", required: false }
     ];

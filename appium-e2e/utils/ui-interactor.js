@@ -28,7 +28,7 @@ class UIInteractor {
             const dumpOutput = await this.dumpUI();
             
             const elements = {
-                titleText: dumpOutput.includes("title_text") || dumpOutput.includes("WMMT 远程控制器"),
+                titleText: dumpOutput.includes("title_text") || dumpOutput.includes("ControlX 远程控制器"),
                 statusText: dumpOutput.includes("status_text") || dumpOutput.includes("服务状态"),
                 startButton: dumpOutput.includes("btn_start_service") || dumpOutput.includes("启动服务"),
                 stopButton: dumpOutput.includes("btn_stop_service") || dumpOutput.includes("停止服务"),
@@ -89,8 +89,8 @@ class UIInteractor {
         console.log("🔒 Strict verification mode enabled");
         
         const deviceId = this.deviceManager.getDeviceId();
-        const appName = "WMMTController";
-        const packageName = "com.linecat.wmmtcontroller";
+        const appName = "ControlX";
+        const packageName = "com.linecat.controlx";
         
         try {
             // 1. 点击获取浮窗权限按钮
@@ -306,7 +306,7 @@ class UIInteractor {
             for (let i = 0; i < 3; i++) {
                 try {
                     const dumpOutput = await this.dumpUI();
-                    if (dumpOutput.includes("WMMT 远程控制器")) {
+                    if (dumpOutput.includes("ControlX 远程控制器")) {
                         console.log("✅ Successfully returned to app");
                         appReturned = true;
                         break;
@@ -328,7 +328,7 @@ class UIInteractor {
                 // 再次验证
                 try {
                     const dumpOutput = await this.dumpUI();
-                    if (dumpOutput.includes("WMMT 远程控制器")) {
+                    if (dumpOutput.includes("ControlX 远程控制器")) {
                         console.log("✅ App restarted successfully");
                         appReturned = true;
                     } else {
@@ -351,7 +351,7 @@ class UIInteractor {
         console.log("📱 Checking overlay permission status...");
         
         const deviceId = this.deviceManager.getDeviceId();
-        const packageName = "com.linecat.wmmtcontroller";
+        const packageName = "com.linecat.controlx";
         
         try {
             // 尝试多种方法检查权限

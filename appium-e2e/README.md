@@ -1,6 +1,6 @@
 # Appium E2E 测试项目
 
-这是一个专门为 WMMT Remote Controller 设计的端到端自动化测试项目，基于 Appium 和 Playwright Test Runner。
+这是一个专门为 ControlX 设计的端到端自动化测试项目，基于 Appium 和 Playwright Test Runner。
 
 ## 🚀 主要特性
 
@@ -28,7 +28,7 @@ appium-e2e/
 ├── fixtures/
 │   └── test-data.json
 ├── android/
-│   └── WMMTController.apk
+│   └── ControlX.apk
 ├── screenshots/
 └── README.md
 ```
@@ -50,7 +50,7 @@ npm install
 
 ### 准备测试APK
 
-将 WMMT Remote Controller 的 APK 文件放置在 `android/WMMTController.apk`
+将 ControlX 的 APK 文件放置在 `android/ControlX.apk`
 
 ## ▶️ 运行测试
 
@@ -114,7 +114,7 @@ npm run backend:stop
     platformName: 'Android',
     automationName: 'UiAutomator2',
     deviceName: 'Android Emulator',
-    app: './android/WMMTController.apk',
+    app: './android/ControlX.apk',
     noReset: false
   }
 }

@@ -177,9 +177,9 @@
 - [ ] 性能基准测试
 
 **相关文件**:
-- `AndroidClient/app/src/main/java/com/linecat/wmmtcontroller/core/RuntimeFacade.java`
-- `AndroidClient/app/src/main/java/com/linecat/wmmtcontroller/core/input/pipeline/`
-- `AndroidClient/app/src/main/java/com/linecat/wmmtcontroller/control/`
+- `AndroidClient/app/src/main/java/com/linecat/controlx/core/RuntimeFacade.java`
+- `AndroidClient/app/src/main/java/com/linecat/controlx/core/input/pipeline/`
+- `AndroidClient/app/src/main/java/com/linecat/controlx/control/`
 
 ---
 

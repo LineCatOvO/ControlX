@@ -32,9 +32,9 @@ class CompleteE2ETestRunner {
             testRunId: `test-${Date.now()}`,
             backendPort: null,
             deviceId: null,
-            apkPath: path.join(__dirname, "..", "android", "WMMTController.apk"),
-            packageName: "com.linecat.wmmtcontroller",
-            mainActivity: "com.linecat.wmmtcontroller/.MainActivity"
+            apkPath: path.join(__dirname, "..", "android", "ControlX.apk"),
+            packageName: "com.linecat.controlx",
+            mainActivity: "com.linecat.controlx/.MainActivity"
         };
         this.backendManager = new BackendManager();
         this.deviceManager = new DeviceManager();

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * WMMT Controller E2E Test Runner (简化版 - 使用 axios)
+ * ControlX E2E Test Runner (简化版 - 使用 axios)
  * 
  * 测试流程：
  * 1. 环境搭建 - 启动 Appium、后端、安装应用
@@ -26,8 +26,8 @@ const CONFIG = {
     serverPath: path.join(__dirname, "..", "..", "Server", "dist", "app.js"),
     serverCwd: path.join(__dirname, "..", "..", "Server"),
     apkPath: path.join(__dirname, "..", "..", "AndroidClient", "app", "build", "outputs", "apk", "debug", "app-debug.apk"),
-    packageName: "com.linecat.wmmtcontroller",
-    mainActivity: "com.linecat.wmmtcontroller/.MainActivity",
+    packageName: "com.linecat.controlx",
+    mainActivity: "com.linecat.controlx/.MainActivity",
     appiumHost: "localhost",
     appiumPort: 4723,
     backendPort: null,
@@ -425,7 +425,7 @@ async function cleanup() {
 async function runE2ETests() {
     state.startTime = Date.now();
 
-    log("WMMT Controller E2E 测试启动", "🚀");
+    log("ControlX E2E 测试启动", "🚀");
     console.log("=".repeat(60));
 
     try {

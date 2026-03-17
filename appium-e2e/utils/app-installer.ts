@@ -7,7 +7,7 @@ interface DeviceManager {
 
 class AppInstaller {
     private deviceManager: DeviceManager;
-    private packageName: string = "com.linecat.wmmtcontroller";
+    private packageName: string = "com.linecat.controlx";
 
     constructor(deviceManager: DeviceManager) {
         this.deviceManager = deviceManager;
@@ -103,7 +103,7 @@ class AppInstaller {
                 encoding: "utf8"
             });
             
-            if (psOutput && psOutput.includes("wmmtcontroller")) {
+            if (psOutput && psOutput.includes("controlx")) {
                 console.log("✅ App process is running");
                 return true;
             } else {

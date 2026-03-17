@@ -2,7 +2,7 @@
 
 ## 1. 概述
 
-本文档定义了 WMMT 远程赛车输入控制系统的 WebSocket 通信协议。该协议用于在 Android 客户端和 Node.js 服务端之间传输输入数据和配置信息。
+本文档定义了 ControlX 远程赛车输入控制系统的 WebSocket 通信协议。该协议用于在 Android 客户端和 Node.js 服务端之间传输输入数据和配置信息。
 
 ## 2. 基本格式
 
@@ -33,7 +33,7 @@
 ```json
 {
   "type": "welcome",
-  "message": "Connected to WMMT Controller Server"
+  "message": "Connected to ControlX Server"
 }
 ```
 

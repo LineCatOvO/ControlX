@@ -1,4 +1,4 @@
-package com.linecat.wmmtcontroller.model;
+package com.linecat.controlx.model;
 
 import org.junit.Test;
 import org.junit.Before;

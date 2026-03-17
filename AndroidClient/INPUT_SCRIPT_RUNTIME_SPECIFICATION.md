@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This document specifies the Input Script Runtime for the WMMT Remote Controller Android application. The runtime enables the execution of custom JavaScript scripts to process input data and generate output commands.
+This document specifies the Input Script Runtime for the ControlX Android application. The runtime enables the execution of custom JavaScript scripts to process input data and generate output commands.
 
 ## 2. Core Design Principles
 
@@ -125,10 +125,10 @@ function reset() {
 
 ```json
 {
-  "name": "WMMT Gamepad Profile",
+  "name": "ControlX Gamepad Profile",
   "version": "1.0.0",
   "author": "Line",
-  "description": "Gamepad input profile for WMMT",
+  "description": "Gamepad input profile for ControlX",
   "entry": "gamepad_input.js",
   "compatibility": {
     "gamepads": ["*"],
@@ -136,7 +136,7 @@ function reset() {
   },
   "dependencies": [],
   "createdAt": "2026-01-21T12:00:00Z",
-  "id": "wmmt-gamepad-1.0.0"
+  "id": "controlx-gamepad-1.0.0"
 }
 ```
 

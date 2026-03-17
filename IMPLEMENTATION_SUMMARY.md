@@ -1,4 +1,4 @@
-# WMMT Controller - 实现总结报告
+# ControlX - 实现总结报告
 
 生成时间：2026-02-18
 

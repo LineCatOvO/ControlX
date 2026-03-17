@@ -172,8 +172,8 @@ npm run test:real
 
 ```javascript
 {
-    packageName: "com.linecat.wmmtcontroller",
-    mainActivity: "com.linecat.wmmtcontroller/.MainActivity",
+    packageName: "com.linecat.controlx",
+    mainActivity: "com.linecat.controlx/.MainActivity",
     appiumHost: "localhost",
     appiumPort: 4723,
     // ...
@@ -207,13 +207,13 @@ npm run test:real
 
 3. **应用安装失败**
    ```bash
-   adb uninstall com.linecat.wmmtcontroller
+   adb uninstall com.linecat.controlx
    # 然后重新运行测试
    ```
 
 4. **权限授予失败**
    ```bash
-   adb shell appops set com.linecat.wmmtcontroller SYSTEM_ALERT_WINDOW allow
+   adb shell appops set com.linecat.controlx SYSTEM_ALERT_WINDOW allow
    ```
 
 ### 日志位置
@@ -260,4 +260,4 @@ async function testNewFeature() {
 ---
 
 **最后更新**: 2026-02-19  
-**维护者**: WMMT Team
+**维护者**: ControlX Team

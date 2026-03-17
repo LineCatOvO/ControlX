@@ -1,8 +1,8 @@
-package com.linecat.wmmtcontroller.input;
-import com.linecat.wmmtcontroller.model.InputState;
+package com.linecat.controlx.input;
+import com.linecat.controlx.model.InputState;
 
-import com.linecat.wmmtcontroller.model.InputState;
-import com.linecat.wmmtcontroller.model.RawInput;
+import com.linecat.controlx.model.InputState;
+import com.linecat.controlx.model.RawInput;
 
 import org.junit.Test;
 import org.junit.Before;

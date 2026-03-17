@@ -125,7 +125,7 @@ class DeviceHelper {
             platformName: "Android",
             automationName: "UiAutomator2",
             deviceName: "Android Emulator",
-            app: "./android/WMMTController.apk",
+            app: "./android/ControlX.apk",
             noReset: false,
             unicodeKeyboard: true,
             resetKeyboard: true,

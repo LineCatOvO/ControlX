@@ -23,7 +23,7 @@
 ### 1.1 现有包结构
 
 ```
-com.linecat.wmmtcontroller/
+com.linecat.controlx/
 ├── annotation/              # 注解类 (Experimental, Stable)
 ├── control/                 # 三层控制架构 (新旧混杂)
 │   ├── ui/                  # UI 层节点 (ControlNode 等)
@@ -139,7 +139,7 @@ PlatformAdaptationLayer (Android API)
 ### 3.2 优化后包结构
 
 ```
-com.linecat.wmmtcontroller/
+com.linecat.controlx/
 ├── annotation/                    # 注解类
 │   ├── Experimental.java
 │   └── Stable.java

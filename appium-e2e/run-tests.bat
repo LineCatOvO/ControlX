@@ -1,12 +1,12 @@
 @echo off
-REM WMMT Remote Controller E2E Test Runner for Windows
+REM ControlX E2E Test Runner for Windows
 
-echo 🚀 Starting WMMT Remote Controller E2E Tests
+echo 🚀 Starting ControlX E2E Tests
 
 REM Check if APK exists
-if not exist ".\android\WMMTController.apk" (
-    echo ⚠️  Warning: APK file not found at .\android\WMMTController.apk
-    echo Please place your WMMT Controller APK in the android directory
+if not exist ".\android\ControlX.apk" (
+    echo ⚠️  Warning: APK file not found at .\android\ControlX.apk
+    echo Please place your ControlX APK in the android directory
 )
 
 REM Start Appium server

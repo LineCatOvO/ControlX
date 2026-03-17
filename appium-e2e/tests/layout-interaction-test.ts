@@ -59,7 +59,7 @@ class LayoutInteractionTest {
             throw new Error("Device ID not available");
         }
 
-        const packageName = "com.linecat.wmmtcontroller";
+        const packageName = "com.linecat.controlx";
         const mainActivity = `${packageName}/.MainActivity`;
 
         try {

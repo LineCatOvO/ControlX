@@ -16,7 +16,7 @@
 | **文件大小** | 13 MB |
 | **文件类型** | Android APK |
 | **构建类型** | Debug |
-| **应用 ID** | com.linecat.wmmtcontroller |
+| **应用 ID** | com.linecat.controlx |
 | **版本号** | 1.0 (versionCode: 1) |
 
 ### SDK 配置
@@ -67,11 +67,11 @@ android.nonTransitiveRClass=true
 
 ```groovy
 android {
-    namespace 'com.linecat.wmmtcontroller'
+    namespace 'com.linecat.controlx'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.linecat.wmmtcontroller"
+        applicationId "com.linecat.controlx"
         minSdk 28
         targetSdk 34
         versionCode 1

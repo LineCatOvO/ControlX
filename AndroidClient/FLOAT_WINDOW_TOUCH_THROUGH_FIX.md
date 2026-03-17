@@ -131,7 +131,7 @@ private void updateLayoutRenderContainerTouchability(boolean enabled) {
 #### 4. float_window.xml
 
 ```xml
-<com.linecat.wmmtcontroller.floatwindow.TouchThroughFrameLayout 
+<com.linecat.controlx.floatwindow.TouchThroughFrameLayout 
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
@@ -146,7 +146,7 @@ private void updateLayoutRenderContainerTouchability(boolean enabled) {
     <LinearLayout ... />
     
     <!-- 其他 UI 元素 -->
-</com.linecat.wmmtcontroller.floatwindow.TouchThroughFrameLayout>
+</com.linecat.controlx.floatwindow.TouchThroughFrameLayout>
 ```
 
 ---

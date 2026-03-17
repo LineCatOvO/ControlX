@@ -5,7 +5,7 @@
 ### 1.1 当前包结构
 
 ```
-com.linecat.wmmtcontroller/
+com.linecat.controlx/
 ├── annotation/           # 注解类
 ├── control/             # 控制层（新增的三层架构）
 ├── database/            # 数据库相关
@@ -21,7 +21,7 @@ com.linecat.wmmtcontroller/
 ### 1.2 推荐的包结构调整
 
 ```
-com.linecat.wmmtcontroller/
+com.linecat.controlx/
 ├── annotation/              # 注解类
 ├── control/                 # 控制层（三层架构）
 │   ├── ui/                  # UI层节点管理

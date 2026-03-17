@@ -4,7 +4,7 @@ const fs = require("fs");
 class AppInstaller {
     constructor(deviceManager) {
         this.deviceManager = deviceManager;
-        this.packageName = "com.linecat.wmmtcontroller";
+        this.packageName = "com.linecat.controlx";
     }
 
     async install(apkPath) {
@@ -85,7 +85,7 @@ class AppInstaller {
                 encoding: "utf8"
             });
             
-            if (psOutput && psOutput.includes("wmmtcontroller")) {
+            if (psOutput && psOutput.includes("controlx")) {
                 console.log("✅ App process is running");
                 return true;
             } else {

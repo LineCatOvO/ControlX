@@ -1,7 +1,7 @@
-package com.linecat.wmmtcontroller.layer;
+package com.linecat.controlx.layer;
 
-import com.linecat.wmmtcontroller.layer.test.NDJSONParser;
-import com.linecat.wmmtcontroller.layer.test.PrimitiveCollector;
+import com.linecat.controlx.layer.test.NDJSONParser;
+import com.linecat.controlx.layer.test.PrimitiveCollector;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-# WMMT Controller Server 测试文档
+# ControlX Server 测试文档
 
 ## 测试统计摘要（2026-02-19 更新）
 

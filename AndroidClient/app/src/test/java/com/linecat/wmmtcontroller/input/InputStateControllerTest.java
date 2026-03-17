@@ -1,10 +1,10 @@
-package com.linecat.wmmtcontroller.input;
+package com.linecat.controlx.input;
 
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.After;
 
-import com.linecat.wmmtcontroller.model.InputState;
+import com.linecat.controlx.model.InputState;
 
 import static org.junit.Assert.*;
 

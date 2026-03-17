@@ -19,7 +19,7 @@ const { expect } = require("chai");
 const CONFIG = {
     appiumHost: "localhost",
     appiumPort: 4723,
-    packageName: "com.linecat.wmmtcontroller",
+    packageName: "com.linecat.controlx",
     backendPort: null,
     backendProcess: null,
     wsClient: null,

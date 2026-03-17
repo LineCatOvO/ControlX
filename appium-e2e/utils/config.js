@@ -19,10 +19,10 @@ const config = {
         gradlePath: path.join(__dirname, "..", "..", "..", "AndroidClient", "gradlew.bat"),
         gradleCwd: path.join(__dirname, "..", "..", "..", "AndroidClient"),
         buildCommand: "assembleDebug --no-daemon",
-        packageName: "com.linecat.wmmtcontroller",
-        mainActivity: "com.linecat.wmmtcontroller/.MainActivity",
+        packageName: "com.linecat.controlx",
+        mainActivity: "com.linecat.controlx/.MainActivity",
         apkPath: path.join(__dirname, "..", "..", "..", "AndroidClient", "app", "build", "outputs", "apk", "debug", "app-debug.apk"),
-        processName: "wmmtcontroller"
+        processName: "controlx"
     },
 
     device: {

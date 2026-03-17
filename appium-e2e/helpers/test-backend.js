@@ -111,7 +111,7 @@ class TestBackendManager {
                 const output = data.toString();
                 this.outputBuffer.push(output);
 
-                const portMatch = output.match(/WMMT Controller Server is running on ws:\/\/localhost:(\d+)/);
+                const portMatch = output.match(/ControlX Server is running on ws:\/\/localhost:(\d+)/);
                 if (portMatch) {
                     this.backendPort = parseInt(portMatch[1]);
                 }
@@ -155,7 +155,7 @@ class TestBackendManager {
                 output.includes("started") ||
                 output.includes("running") ||
                 output.includes("ready") ||
-                output.includes("WMMT Controller Server is running") ||
+                output.includes("ControlX Server is running") ||
                 output.includes("applyState")
             ) {
                 serverStartedDetected = true;
