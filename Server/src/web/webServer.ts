@@ -4,8 +4,10 @@
 import { createServer } from 'http';
 import { readFileSync, existsSync } from 'fs';
 import { join, extname } from 'path';
-import { WebSocketServer, WebSocket } from 'ws';
 import { inputState } from '../input/state';
+
+// 使用 require 导入 ws 模块（与项目中其他文件保持一致）
+const WebSocket = require('ws');
 
 // 配置
 const WEB_PORT = parseInt(process.env.WEB_PORT || '8080', 10);
@@ -25,11 +27,11 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 // WebSocket客户端集合
-const wsClients: Set<WebSocket> = new Set();
+const wsClients: Set<any> = new Set();
 
 // HTTP服务器
 let httpServer: ReturnType<typeof createServer> | null = null;
-let wsServer: WebSocketServer | null = null;
+let wsServer: any = null;
 let statusInterval: ReturnType<typeof setInterval> | null = null;
 
 /**
@@ -42,8 +44,8 @@ export function startWebMonitor(): void {
     });
 
     // 创建WebSocket服务器
-    wsServer = new WebSocketServer({ server: httpServer });
-    wsServer.on('connection', (ws) => {
+    wsServer = new WebSocket.WebSocketServer({ server: httpServer });
+    wsServer.on('connection', (ws: any) => {
         handleWsConnection(ws);
     });
 
@@ -121,7 +123,7 @@ function handleHttpRequest(req: any, res: any): void {
 /**
  * 处理WebSocket连接
  */
-function handleWsConnection(ws: WebSocket): void {
+function handleWsConnection(ws: any): void {
     wsClients.add(ws);
     console.log(`WebSocket client connected. Total: ${wsClients.size}`);
 
@@ -133,7 +135,7 @@ function handleWsConnection(ws: WebSocket): void {
         console.log(`WebSocket client disconnected. Total: ${wsClients.size}`);
     });
 
-    ws.on('error', (error) => {
+    ws.on('error', (error: Error) => {
         console.error('WebSocket error:', error);
         wsClients.delete(ws);
     });
@@ -148,7 +150,7 @@ function broadcastStatus(): void {
     const status = getStatusPayload();
     const message = JSON.stringify(status);
 
-    wsClients.forEach((client) => {
+    wsClients.forEach((client: any) => {
         if (client.readyState === WebSocket.OPEN) {
             client.send(message);
         }
@@ -158,7 +160,7 @@ function broadcastStatus(): void {
 /**
  * 发送状态到单个客户端
  */
-function sendStatus(ws: WebSocket): void {
+function sendStatus(ws: any): void {
     if (ws.readyState === WebSocket.OPEN) {
         const status = getStatusPayload();
         ws.send(JSON.stringify(status));
