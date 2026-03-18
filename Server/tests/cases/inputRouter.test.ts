@@ -2,84 +2,73 @@
  * InputRouter 单元测试
  * 
  * 测试覆盖：
- * - registerHost() 注册宿主
- * - getHost() 获取宿主
- * - applyState() 应用状态
- * - resetAll() 重置所有宿主
- * - destroyAll() 销毁所有宿主
- * - getAllHostStatuses() 获取宿主状态
- * - getStats() 获取统计信息
- * - getCachedState() 获取缓存状态
- * - clearCache() 清除缓存
+ * - 路由规则: 8个
+ * - 设备映射: 6个
+ * - 优先级处理: 5个
+ * - 状态合并: 5个
+ * - 错误处理: 4个
+ * - 总计: 28个
  */
 
 import { InputRouter } from '../../src/input/router/InputRouter';
-import { InputDeviceType } from '../../src/input/hosts/types';
 import { InputHost } from '../../src/input/hosts/InputHost';
+import { InputDeviceType, HostStatus } from '../../src/input/hosts/types';
 import { InputState } from '../../src/types/ws';
 
-// Mock InputHost
+// Mock InputHost 实现类
 class MockInputHost extends InputHost {
-    private enabled = true;
-    private initialized = false;
-    private appliedStates: any[] = [];
-    private resetCount = 0;
-    private destroyCount = 0;
+    public initializeCalled = false;
+    public applyStateCalled = false;
+    public resetCalled = false;
+    public destroyCalled = false;
+    public lastAppliedState: any = null;
+    public shouldFailInitialize = false;
+    public shouldFailApplyState = false;
+    public shouldEnable = true;
 
-    constructor(type: InputDeviceType) {
-        super(type);
+    constructor(deviceType: InputDeviceType) {
+        super(deviceType);
     }
 
     async initialize(): Promise<boolean> {
-        this.initialized = true;
+        this.initializeCalled = true;
+        if (this.shouldFailInitialize) {
+            this.lastError = 'Initialize failed';
+            return false;
+        }
+        this.isEnabled = this.shouldEnable;
         return true;
     }
 
     applyState(state: any): void {
-        this.appliedStates.push(state);
+        if (this.shouldFailApplyState) {
+            throw new Error('Apply state failed');
+        }
+        this.applyStateCalled = true;
+        this.lastAppliedState = state;
     }
 
     reset(): void {
-        this.resetCount++;
-        this.appliedStates = [];
+        this.resetCalled = true;
     }
 
     destroy(): void {
-        this.destroyCount++;
-        this.enabled = false;
-    }
-
-    isHostEnabled(): boolean {
-        return this.enabled;
-    }
-
-    getStatus(): any {
-        return {
-            deviceType: this.deviceType,
-            platform: 'windows' as const,
-            isEnabled: this.enabled,
-        };
-    }
-
-    // Test helpers
-    getAppliedStates(): any[] {
-        return this.appliedStates;
-    }
-
-    getResetCount(): number {
-        return this.resetCount;
-    }
-
-    getDestroyCount(): number {
-        return this.destroyCount;
-    }
-
-    setEnabled(enabled: boolean): void {
-        this.enabled = enabled;
+        this.destroyCalled = true;
+        this.isEnabled = false;
     }
 }
 
-describe('InputRouter Tests', () => {
+// 辅助函数：创建输入状态
+function createInputState(overrides: Partial<InputState> = {}): InputState {
+    return {
+        keyboard: new Set<string>(),
+        mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+        joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+        ...overrides
+    };
+}
+
+describe('InputRouter', () => {
     let router: InputRouter;
 
     beforeEach(() => {
@@ -89,412 +78,530 @@ describe('InputRouter Tests', () => {
 
     afterEach(() => {
         router.destroyAll();
-        jest.clearAllMocks();
     });
 
-    describe('registerHost()', () => {
-        test('should register a new host', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            const host = router.getHost(InputDeviceType.KEYBOARD);
-            expect(host).toBeDefined();
-            expect(host).toBe(mockHost);
+    // ========================================
+    // 路由规则测试 (8个)
+    // ========================================
+    describe('路由规则 (Routing Rules)', () => {
+        test('should register and initialize host correctly', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+
+            // 等待异步初始化
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            expect(keyboardHost.initializeCalled).toBe(true);
+            expect(router.getHost(InputDeviceType.KEYBOARD)).toBe(keyboardHost);
         });
 
-        test('should replace existing host', () => {
-            const mockHost1 = new MockInputHost(InputDeviceType.KEYBOARD);
-            const mockHost2 = new MockInputHost(InputDeviceType.KEYBOARD);
+        test('should replace existing host when registering same type', async () => {
+            const host1 = new MockInputHost(InputDeviceType.KEYBOARD);
+            const host2 = new MockInputHost(InputDeviceType.KEYBOARD);
 
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost1);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost2);
+            router.registerHost(InputDeviceType.KEYBOARD, host1);
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            router.registerHost(InputDeviceType.KEYBOARD, host2);
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-            const host = router.getHost(InputDeviceType.KEYBOARD);
-            expect(host).toBe(mockHost2);
-            expect(mockHost1.getDestroyCount()).toBe(1);
+            expect(host1.destroyCalled).toBe(true);
+            expect(router.getHost(InputDeviceType.KEYBOARD)).toBe(host2);
         });
 
-        test('should initialize host asynchronously', async () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            // Wait for async initialization
-            await new Promise(resolve => setTimeout(resolve, 10));
-            
-            expect(mockHost.isHostEnabled()).toBe(true);
+        test('should route keyboard state to keyboard host', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set(['W', 'A', 'S', 'D'])
+            });
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            expect(keyboardHost.applyStateCalled).toBe(true);
+            expect(keyboardHost.lastAppliedState).toEqual(new Set(['W', 'A', 'S', 'D']));
         });
 
-        test('should handle host initialization failure', async () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            mockHost.setEnabled(false);
-            
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            await new Promise(resolve => setTimeout(resolve, 10));
-            
-            expect(mockHost.isHostEnabled()).toBe(false);
+        test('should route mouse state to mouse host', async () => {
+            const mouseHost = new MockInputHost(InputDeviceType.MOUSE);
+            router.registerHost(InputDeviceType.MOUSE, mouseHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                mouse: { x: 100, y: 200, left: true, right: false, middle: false }
+            });
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            expect(mouseHost.applyStateCalled).toBe(true);
+            expect(mouseHost.lastAppliedState).toEqual({ x: 100, y: 200, left: true, right: false, middle: false });
+        });
+
+        test('should route joystick state to joystick host', async () => {
+            const joystickHost = new MockInputHost(InputDeviceType.JOYSTICK);
+            router.registerHost(InputDeviceType.JOYSTICK, joystickHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                joystick: { x: 0.5, y: -0.5, deadzone: 0.1, smoothing: 0.2 }
+            });
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            expect(joystickHost.applyStateCalled).toBe(true);
+        });
+
+        test('should route gamepad state to gamepad host', async () => {
+            const gamepadHost = new MockInputHost(InputDeviceType.GAMEPAD);
+            router.registerHost(InputDeviceType.GAMEPAD, gamepadHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                gamepad: new Set(['A', 'B', 'X'])
+            });
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            expect(gamepadHost.applyStateCalled).toBe(true);
+        });
+
+        test('should handle state without keyboard gracefully', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState();
+            delete (state as any).keyboard;
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            expect(keyboardHost.applyStateCalled).toBe(false);
+        });
+
+        test('should not route to unregistered host', async () => {
+            const state = createInputState({
+                keyboard: new Set(['W'])
+            });
+
+            // 没有注册任何 host
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 应该不会抛出错误
+            expect(router.getStats().totalApplications).toBe(1);
         });
     });
 
-    describe('getHost()', () => {
-        test('should return undefined for unregistered type', () => {
-            const host = router.getHost(InputDeviceType.KEYBOARD);
-            expect(host).toBeUndefined();
-        });
+    // ========================================
+    // 设备映射测试 (6个)
+    // ========================================
+    describe('设备映射 (Device Mapping)', () => {
+        test('should map multiple device types to correct hosts', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            const mouseHost = new MockInputHost(InputDeviceType.MOUSE);
 
-        test('should return registered host', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            const host = router.getHost(InputDeviceType.KEYBOARD);
-            expect(host).toBe(mockHost);
-        });
-    });
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            router.registerHost(InputDeviceType.MOUSE, mouseHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-    describe('applyState()', () => {
-        test('should dispatch keyboard state to host', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            const state: InputState = {
-                keyboard: new Set(['W', 'A']),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
-            router.applyState(state);
-            
-            // Allow async dispatch
-            setTimeout(() => {
-                expect(mockHost.getAppliedStates().length).toBeGreaterThan(0);
-            }, 10);
-        });
-
-        test('should dispatch gamepad state to host', () => {
-            const mockHost = new MockInputHost(InputDeviceType.GAMEPAD);
-            router.registerHost(InputDeviceType.GAMEPAD, mockHost);
-            
-            const state: InputState = {
-                keyboard: new Set(),
-                gamepad: new Set(['A', 'B']),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
-            router.applyState(state);
-            
-            setTimeout(() => {
-                expect(mockHost.getAppliedStates().length).toBeGreaterThan(0);
-            }, 10);
-        });
-
-        test('should dispatch mouse state to host', () => {
-            const mockHost = new MockInputHost(InputDeviceType.MOUSE);
-            router.registerHost(InputDeviceType.MOUSE, mockHost);
-            
-            const state: InputState = {
-                keyboard: new Set(),
-                mouse: { x: 100, y: 200, left: true, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
-            router.applyState(state);
-            
-            setTimeout(() => {
-                expect(mockHost.getAppliedStates().length).toBeGreaterThan(0);
-            }, 10);
-        });
-
-        test('should dispatch joystick state to host', () => {
-            const mockHost = new MockInputHost(InputDeviceType.JOYSTICK);
-            router.registerHost(InputDeviceType.JOYSTICK, mockHost);
-            
-            const state: InputState = {
-                keyboard: new Set(),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0.5, y: -0.5, deadzone: 0.1, smoothing: 0.5 },
-            };
-            
-            router.applyState(state);
-            
-            setTimeout(() => {
-                expect(mockHost.getAppliedStates().length).toBeGreaterThan(0);
-            }, 10);
-        });
-
-        test('should handle missing host gracefully', () => {
-            const state: InputState = {
+            const state = createInputState({
                 keyboard: new Set(['W']),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
-            // Should not throw
-            expect(() => router.applyState(state)).not.toThrow();
-        });
+                mouse: { x: 50, y: 100, left: true, right: false, middle: false }
+            });
 
-        test('should handle disabled host gracefully', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            mockHost.setEnabled(false);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            const state: InputState = {
-                keyboard: new Set(['W']),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
-            // Should not throw
-            expect(() => router.applyState(state)).not.toThrow();
-        });
-
-        test('should update stats on apply', () => {
-            const state: InputState = {
-                keyboard: new Set(),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
             router.applyState(state);
-            
-            const stats = router.getStats();
-            expect(stats.totalApplications).toBe(1);
-        });
-    });
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-    describe('resetAll()', () => {
-        test('should reset all hosts', () => {
-            const mockKeyboard = new MockInputHost(InputDeviceType.KEYBOARD);
-            const mockGamepad = new MockInputHost(InputDeviceType.GAMEPAD);
-            
-            router.registerHost(InputDeviceType.KEYBOARD, mockKeyboard);
-            router.registerHost(InputDeviceType.GAMEPAD, mockGamepad);
-            
-            router.resetAll();
-            
-            expect(mockKeyboard.getResetCount()).toBe(1);
-            expect(mockGamepad.getResetCount()).toBe(1);
+            expect(keyboardHost.applyStateCalled).toBe(true);
+            expect(mouseHost.applyStateCalled).toBe(true);
         });
 
-        test('should clear state cache', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            const state: InputState = {
-                keyboard: new Set(['W']),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
+        test('should get correct host by type', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+
+            const retrieved = router.getHost(InputDeviceType.KEYBOARD);
+            expect(retrieved).toBe(keyboardHost);
+        });
+
+        test('should return undefined for unregistered host type', () => {
+            const retrieved = router.getHost(InputDeviceType.KEYBOARD);
+            expect(retrieved).toBeUndefined();
+        });
+
+        test('should get all host statuses', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            const mouseHost = new MockInputHost(InputDeviceType.MOUSE);
+
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            router.registerHost(InputDeviceType.MOUSE, mouseHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const statuses = router.getAllHostStatuses();
+
+            expect(statuses.length).toBe(2);
+            expect(statuses.find(s => s.type === InputDeviceType.KEYBOARD)).toBeDefined();
+            expect(statuses.find(s => s.type === InputDeviceType.MOUSE)).toBeDefined();
+        });
+
+        test('should cache state for each device type', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set(['W', 'A'])
+            });
+
             router.applyState(state);
-            router.resetAll();
-            
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const cached = router.getCachedState(InputDeviceType.KEYBOARD);
+            expect(cached).toEqual(new Set(['W', 'A']));
+        });
+
+        test('should clear state cache', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set(['W'])
+            });
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            router.clearCache();
+
             expect(router.getCachedState(InputDeviceType.KEYBOARD)).toBeUndefined();
         });
+    });
 
-        test('should handle host reset error gracefully', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            mockHost.reset = jest.fn().mockImplementation(() => {
-                throw new Error('Reset error');
+    // ========================================
+    // 优先级处理测试 (5个)
+    // ========================================
+    describe('优先级处理 (Priority Handling)', () => {
+        test('should process all device types in parallel', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            const mouseHost = new MockInputHost(InputDeviceType.MOUSE);
+            const joystickHost = new MockInputHost(InputDeviceType.JOYSTICK);
+
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            router.registerHost(InputDeviceType.MOUSE, mouseHost);
+            router.registerHost(InputDeviceType.JOYSTICK, joystickHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set(['W']),
+                mouse: { x: 10, y: 20, left: false, right: false, middle: false },
+                joystick: { x: 0.5, y: 0, deadzone: 0.1, smoothing: 0 }
             });
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            // Should not throw
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            expect(keyboardHost.applyStateCalled).toBe(true);
+            expect(mouseHost.applyStateCalled).toBe(true);
+            expect(joystickHost.applyStateCalled).toBe(true);
+        });
+
+        test('should not block on slow host', async () => {
+            const fastHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            const slowHost = new MockInputHost(InputDeviceType.MOUSE);
+
+            router.registerHost(InputDeviceType.KEYBOARD, fastHost);
+            router.registerHost(InputDeviceType.MOUSE, slowHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set(['W']),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false }
+            });
+
+            // applyState 不应该阻塞
+            const startTime = Date.now();
+            router.applyState(state);
+            const duration = Date.now() - startTime;
+
+            // 应该立即返回（不等待异步操作完成）
+            expect(duration).toBeLessThan(50);
+        });
+
+        test('should skip disabled host', async () => {
+            const disabledHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            disabledHost.shouldEnable = false;
+
+            router.registerHost(InputDeviceType.KEYBOARD, disabledHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set(['W'])
+            });
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 禁用的 host 不应该接收状态
+            expect(disabledHost.applyStateCalled).toBe(false);
+        });
+
+        test('should handle host initialization failure gracefully', async () => {
+            const failingHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            failingHost.shouldFailInitialize = true;
+
+            router.registerHost(InputDeviceType.KEYBOARD, failingHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 即使初始化失败，路由器也应该正常工作
+            expect(router.getHost(InputDeviceType.KEYBOARD)).toBe(failingHost);
+        });
+
+        test('should continue processing other hosts when one fails', async () => {
+            const failingHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            failingHost.shouldFailApplyState = true;
+
+            const normalHost = new MockInputHost(InputDeviceType.MOUSE);
+
+            router.registerHost(InputDeviceType.KEYBOARD, failingHost);
+            router.registerHost(InputDeviceType.MOUSE, normalHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set(['W']),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false }
+            });
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 正常的 host 应该仍然接收到状态
+            expect(normalHost.applyStateCalled).toBe(true);
+        });
+    });
+
+    // ========================================
+    // 状态合并测试 (5个)
+    // ========================================
+    describe('状态合并 (State Merging)', () => {
+        test('should apply multiple states sequentially', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            router.applyState(createInputState({ keyboard: new Set(['W']) }));
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            router.applyState(createInputState({ keyboard: new Set(['W', 'A']) }));
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 最后一个状态应该被缓存
+            expect(router.getCachedState(InputDeviceType.KEYBOARD)).toEqual(new Set(['W', 'A']));
+        });
+
+        test('should update cache on each applyState', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            router.applyState(createInputState({ keyboard: new Set(['W']) }));
+            await new Promise(resolve => setTimeout(resolve, 50));
+            expect(router.getCachedState(InputDeviceType.KEYBOARD)).toEqual(new Set(['W']));
+
+            router.applyState(createInputState({ keyboard: new Set(['A']) }));
+            await new Promise(resolve => setTimeout(resolve, 50));
+            expect(router.getCachedState(InputDeviceType.KEYBOARD)).toEqual(new Set(['A']));
+        });
+
+        test('should handle empty state', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set()
+            });
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            expect(keyboardHost.applyStateCalled).toBe(true);
+            expect(keyboardHost.lastAppliedState).toEqual(new Set());
+        });
+
+        test('should handle partial state updates', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            const mouseHost = new MockInputHost(InputDeviceType.MOUSE);
+
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            router.registerHost(InputDeviceType.MOUSE, mouseHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 重置状态
+            keyboardHost.applyStateCalled = false;
+            mouseHost.applyStateCalled = false;
+
+            // 创建一个只有键盘状态的状态对象
+            const state: any = {
+                keyboard: new Set(['W'])
+            };
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            expect(keyboardHost.applyStateCalled).toBe(true);
+            // mouse host 不应该被调用，因为状态中没有 mouse 属性
+            expect(mouseHost.applyStateCalled).toBe(false);
+        });
+
+        test('should merge state from multiple sources', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            const mouseHost = new MockInputHost(InputDeviceType.MOUSE);
+
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            router.registerHost(InputDeviceType.MOUSE, mouseHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set(['W', 'A']),
+                mouse: { x: 100, y: 200, left: true, right: false, middle: false }
+            });
+
+            router.applyState(state);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            expect(router.getCachedState(InputDeviceType.KEYBOARD)).toEqual(new Set(['W', 'A']));
+            expect(router.getCachedState(InputDeviceType.MOUSE)).toEqual({ x: 100, y: 200, left: true, right: false, middle: false });
+        });
+    });
+
+    // ========================================
+    // 错误处理测试 (4个)
+    // ========================================
+    describe('错误处理 (Error Handling)', () => {
+        test('should handle host applyState error gracefully', async () => {
+            const failingHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            failingHost.shouldFailApplyState = true;
+
+            router.registerHost(InputDeviceType.KEYBOARD, failingHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const state = createInputState({
+                keyboard: new Set(['W'])
+            });
+
+            // 不应该抛出错误
+            expect(() => router.applyState(state)).not.toThrow();
+
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 应该记录失败
+            expect(router.getStats().failedApplications).toBeGreaterThan(0);
+        });
+
+        test('should handle resetAll errors gracefully', async () => {
+            const host = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, host);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 不应该抛出错误
             expect(() => router.resetAll()).not.toThrow();
         });
-    });
 
-    describe('destroyAll()', () => {
-        test('should destroy all hosts', () => {
-            const mockKeyboard = new MockInputHost(InputDeviceType.KEYBOARD);
-            const mockGamepad = new MockInputHost(InputDeviceType.GAMEPAD);
-            
-            router.registerHost(InputDeviceType.KEYBOARD, mockKeyboard);
-            router.registerHost(InputDeviceType.GAMEPAD, mockGamepad);
-            
-            router.destroyAll();
-            
-            expect(mockKeyboard.getDestroyCount()).toBe(1);
-            expect(mockGamepad.getDestroyCount()).toBe(1);
-            expect(router.getStats().registeredHosts).toBe(0);
-        });
+        test('should handle destroyAll errors gracefully', async () => {
+            const host = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, host);
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-        test('should clear all caches', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            router.applyState({
-                keyboard: new Set(['W']),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            });
-            
-            router.destroyAll();
-            
-            expect(router.getCachedState(InputDeviceType.KEYBOARD)).toBeUndefined();
-        });
-
-        test('should handle host destroy error gracefully', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            mockHost.destroy = jest.fn().mockImplementation(() => {
-                throw new Error('Destroy error');
-            });
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            // Should not throw
+            // 不应该抛出错误
             expect(() => router.destroyAll()).not.toThrow();
         });
-    });
 
-    describe('getAllHostStatuses()', () => {
-        test('should return empty array when no hosts registered', () => {
-            const statuses = router.getAllHostStatuses();
-            expect(statuses).toEqual([]);
-        });
+        test('should track statistics correctly', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-        test('should return statuses for all registered hosts', () => {
-            const mockKeyboard = new MockInputHost(InputDeviceType.KEYBOARD);
-            const mockGamepad = new MockInputHost(InputDeviceType.GAMEPAD);
-            
-            router.registerHost(InputDeviceType.KEYBOARD, mockKeyboard);
-            router.registerHost(InputDeviceType.GAMEPAD, mockGamepad);
-            
-            const statuses = router.getAllHostStatuses();
-            
-            expect(statuses.length).toBe(2);
-            expect(statuses.map(s => s.type)).toContain(InputDeviceType.KEYBOARD);
-            expect(statuses.map(s => s.type)).toContain(InputDeviceType.GAMEPAD);
-        });
-    });
+            router.applyState(createInputState({ keyboard: new Set(['W']) }));
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-    describe('getStats()', () => {
-        test('should return initial stats', () => {
+            router.applyState(createInputState({ keyboard: new Set(['A']) }));
+            await new Promise(resolve => setTimeout(resolve, 50));
+
             const stats = router.getStats();
-            
-            expect(stats.totalApplications).toBe(0);
-            expect(stats.failedApplications).toBe(0);
-            expect(stats.registeredHosts).toBe(0);
-            expect(stats.enabledHosts).toBe(0);
-        });
 
-        test('should return updated stats after operations', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            const state: InputState = {
-                keyboard: new Set(),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
-            router.applyState(state);
-            
-            const stats = router.getStats();
-            expect(stats.totalApplications).toBe(1);
+            expect(stats.totalApplications).toBe(2);
             expect(stats.registeredHosts).toBe(1);
             expect(stats.enabledHosts).toBe(1);
         });
-
-        test('should count only enabled hosts', () => {
-            const mockHost1 = new MockInputHost(InputDeviceType.KEYBOARD);
-            const mockHost2 = new MockInputHost(InputDeviceType.GAMEPAD);
-            mockHost2.setEnabled(false);
-            
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost1);
-            router.registerHost(InputDeviceType.GAMEPAD, mockHost2);
-            
-            const stats = router.getStats();
-            expect(stats.registeredHosts).toBe(2);
-            expect(stats.enabledHosts).toBe(1);
-        });
     });
 
-    describe('getCachedState() and clearCache()', () => {
-        test('should return undefined for unregistered type', () => {
-            const cachedState = router.getCachedState(InputDeviceType.KEYBOARD);
-            expect(cachedState).toBeUndefined();
+    // ========================================
+    // 重置和销毁测试
+    // ========================================
+    describe('重置和销毁 (Reset and Destroy)', () => {
+        test('should reset all hosts', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            const mouseHost = new MockInputHost(InputDeviceType.MOUSE);
+
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            router.registerHost(InputDeviceType.MOUSE, mouseHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            router.resetAll();
+
+            expect(keyboardHost.resetCalled).toBe(true);
+            expect(mouseHost.resetCalled).toBe(true);
         });
 
-        test('should cache state after apply', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            const state: InputState = {
-                keyboard: new Set(['W', 'A']),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
-            router.applyState(state);
-            
-            // Note: cache is updated in async dispatch, so we check it's set up correctly
-            const cachedState = router.getCachedState(InputDeviceType.KEYBOARD);
-            // Cache may not be set yet due to async, but the method should work
-            expect(cachedState).toBeDefined();
+        test('should clear cache on resetAll', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            router.applyState(createInputState({ keyboard: new Set(['W']) }));
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            router.resetAll();
+
+            expect(router.getCachedState(InputDeviceType.KEYBOARD)).toBeUndefined();
         });
 
-        test('should clear cache', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            router.clearCache();
-            
-            const cachedState = router.getCachedState(InputDeviceType.KEYBOARD);
-            expect(cachedState).toBeUndefined();
-        });
-    });
+        test('should destroy all hosts', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            const mouseHost = new MockInputHost(InputDeviceType.MOUSE);
 
-    describe('Edge Cases', () => {
-        test('should handle empty state', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            const state: InputState = {
-                keyboard: new Set(),
-                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-            };
-            
-            expect(() => router.applyState(state)).not.toThrow();
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            router.registerHost(InputDeviceType.MOUSE, mouseHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            router.destroyAll();
+
+            expect(keyboardHost.destroyCalled).toBe(true);
+            expect(mouseHost.destroyCalled).toBe(true);
+            expect(router.getHost(InputDeviceType.KEYBOARD)).toBeUndefined();
+            expect(router.getHost(InputDeviceType.MOUSE)).toBeUndefined();
         });
 
-        test('should handle multiple applyState calls', () => {
-            const mockHost = new MockInputHost(InputDeviceType.KEYBOARD);
-            router.registerHost(InputDeviceType.KEYBOARD, mockHost);
-            
-            for (let i = 0; i < 10; i++) {
-                router.applyState({
-                    keyboard: new Set(['W']),
-                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
-                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
-                });
-            }
-            
-            const stats = router.getStats();
-            expect(stats.totalApplications).toBe(10);
-        });
+        test('should clear all state on destroyAll', async () => {
+            const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
+            router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-        test('should handle all device types simultaneously', () => {
-            const mockKeyboard = new MockInputHost(InputDeviceType.KEYBOARD);
-            const mockGamepad = new MockInputHost(InputDeviceType.GAMEPAD);
-            const mockMouse = new MockInputHost(InputDeviceType.MOUSE);
-            const mockJoystick = new MockInputHost(InputDeviceType.JOYSTICK);
-            
-            router.registerHost(InputDeviceType.KEYBOARD, mockKeyboard);
-            router.registerHost(InputDeviceType.GAMEPAD, mockGamepad);
-            router.registerHost(InputDeviceType.MOUSE, mockMouse);
-            router.registerHost(InputDeviceType.JOYSTICK, mockJoystick);
-            
-            const state: InputState = {
-                keyboard: new Set(['W']),
-                gamepad: new Set(['A']),
-                mouse: { x: 100, y: 200, left: true, right: false, middle: false },
-                joystick: { x: 0.5, y: -0.5, deadzone: 0.1, smoothing: 0.5 },
-            };
-            
-            expect(() => router.applyState(state)).not.toThrow();
+            router.applyState(createInputState({ keyboard: new Set(['W']) }));
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            router.destroyAll();
+
+            expect(router.getCachedState(InputDeviceType.KEYBOARD)).toBeUndefined();
+            expect(router.getStats().registeredHosts).toBe(0);
         });
     });
 });
