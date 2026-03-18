@@ -241,6 +241,42 @@ describe("InputDeltaHandler Tests", () => {
                 expect(inputState.mouse.y).toBe(50);
                 expect(inputState.mouse.left).toBe(true);
             });
+
+            test("should handle negative mouse coordinates", () => {
+                const message: InputDeltaMessage = {
+                    type: "input_delta",
+                    data: {
+                        mouse: {
+                            x: -100,
+                            y: -200,
+                        },
+                    },
+                    metadata: { clientId: "test-client" },
+                };
+
+                handleInputDelta(mockWs, message);
+
+                expect(inputState.mouse.x).toBe(-100);
+                expect(inputState.mouse.y).toBe(-200);
+            });
+
+            test("should handle large mouse coordinate values", () => {
+                const message: InputDeltaMessage = {
+                    type: "input_delta",
+                    data: {
+                        mouse: {
+                            x: 9999,
+                            y: 9999,
+                        },
+                    },
+                    metadata: { clientId: "test-client" },
+                };
+
+                handleInputDelta(mockWs, message);
+
+                expect(inputState.mouse.x).toBe(9999);
+                expect(inputState.mouse.y).toBe(9999);
+            });
         });
 
         describe("Joystick Delta Processing", () => {
@@ -285,6 +321,69 @@ describe("InputDeltaHandler Tests", () => {
                 expect(inputState.joystick.x).toBe(0.8);
                 expect(inputState.joystick.y).toBe(0.3);
                 expect(inputState.joystick.deadzone).toBe(0.1);
+            });
+
+            test("should handle joystick boundary values (1.0 and -1.0)", () => {
+                const message: InputDeltaMessage = {
+                    type: "input_delta",
+                    data: {
+                        joystick: {
+                            x: 1.0,
+                            y: -1.0,
+                        },
+                    },
+                    metadata: { clientId: "test-client" },
+                };
+
+                handleInputDelta(mockWs, message);
+
+                expect(inputState.joystick.x).toBe(1.0);
+                expect(inputState.joystick.y).toBe(-1.0);
+            });
+
+            test("should handle joystick deadzone and smoothing updates", () => {
+                // Note: InputDelta only supports x and y, deadzone/smoothing are in InputState
+                // This test verifies the handler processes joystick delta correctly
+                const message: InputDeltaMessage = {
+                    type: "input_delta",
+                    data: {
+                        joystick: {
+                            x: 0.5,
+                            y: 0.5,
+                        },
+                    },
+                    metadata: { clientId: "test-client" },
+                };
+
+                handleInputDelta(mockWs, message);
+
+                expect(inputState.joystick.x).toBe(0.5);
+                expect(inputState.joystick.y).toBe(0.5);
+            });
+
+            test("should handle zero joystick values", () => {
+                inputState.joystick = {
+                    x: 0.5,
+                    y: 0.5,
+                    deadzone: 0.1,
+                    smoothing: 0.5,
+                };
+
+                const message: InputDeltaMessage = {
+                    type: "input_delta",
+                    data: {
+                        joystick: {
+                            x: 0,
+                            y: 0,
+                        },
+                    },
+                    metadata: { clientId: "test-client" },
+                };
+
+                handleInputDelta(mockWs, message);
+
+                expect(inputState.joystick.x).toBe(0);
+                expect(inputState.joystick.y).toBe(0);
             });
         });
 

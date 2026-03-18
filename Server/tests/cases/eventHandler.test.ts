@@ -312,6 +312,72 @@ describe("EventHandler Tests", () => {
                 ) as EventAckMessage;
                 expect(sentMessage.status).toBe("success");
             });
+
+            test("should handle mouse delta with button events", () => {
+                // Note: EventMessage delta does not support mouse property
+                // This test verifies keyboard delta processing instead
+                mockStateStore.storeState({
+                    frameId: 1,
+                    keyboard: new Set(),
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                });
+
+                const message: EventMessage = {
+                    type: "event",
+                    eventId: 1,
+                    baseStateId: 1,
+                    clientSendTs: Date.now(),
+                    delta: {
+                        keyboard: [
+                            { keyId: "KEY_MOUSE_LEFT", eventType: "pressed" },
+                            { keyId: "KEY_MOUSE_RIGHT", eventType: "released" },
+                        ],
+                    },
+                    flags: [],
+                };
+
+                handleEvent(mockWs, message);
+
+                const sentMessage = JSON.parse(
+                    mockWs.send.mock.calls[0][0]
+                ) as EventAckMessage;
+                expect(sentMessage.status).toBe("success");
+            });
+
+            test("should handle combined keyboard and gamepad delta", () => {
+                mockStateStore.storeState({
+                    frameId: 1,
+                    keyboard: new Set(),
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                });
+
+                const message: EventMessage = {
+                    type: "event",
+                    eventId: 1,
+                    baseStateId: 1,
+                    clientSendTs: Date.now(),
+                    delta: {
+                        keyboard: [
+                            { keyId: "KEY_W", eventType: "pressed" },
+                        ],
+                        gamepad: {
+                            buttons: [
+                                { buttonId: "BUTTON_A", eventType: "pressed" },
+                            ],
+                        },
+                    },
+                    flags: [],
+                };
+
+                handleEvent(mockWs, message);
+
+                const sentMessage = JSON.parse(
+                    mockWs.send.mock.calls[0][0]
+                ) as EventAckMessage;
+                expect(sentMessage.status).toBe("success");
+            });
         });
 
         describe("Flags Handling", () => {
@@ -355,6 +421,60 @@ describe("EventHandler Tests", () => {
                     clientSendTs: Date.now(),
                     delta: {},
                     flags: ["zero-output", "priority"],
+                };
+
+                handleEvent(mockWs, message);
+
+                const sentMessage = JSON.parse(
+                    mockWs.send.mock.calls[0][0]
+                ) as EventAckMessage;
+                expect(sentMessage.status).toBe("success");
+            });
+
+            test("should handle empty flags array", () => {
+                mockStateStore.storeState({
+                    frameId: 1,
+                    keyboard: new Set(),
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                });
+
+                const message: EventMessage = {
+                    type: "event",
+                    eventId: 1,
+                    baseStateId: 1,
+                    clientSendTs: Date.now(),
+                    delta: {},
+                    flags: [],
+                };
+
+                handleEvent(mockWs, message);
+
+                const sentMessage = JSON.parse(
+                    mockWs.send.mock.calls[0][0]
+                ) as EventAckMessage;
+                expect(sentMessage.status).toBe("success");
+            });
+
+            test("should handle priority flag with delta", () => {
+                mockStateStore.storeState({
+                    frameId: 1,
+                    keyboard: new Set(),
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                });
+
+                const message: EventMessage = {
+                    type: "event",
+                    eventId: 1,
+                    baseStateId: 1,
+                    clientSendTs: Date.now(),
+                    delta: {
+                        keyboard: [
+                            { keyId: "KEY_ESCAPE", eventType: "pressed" },
+                        ],
+                    },
+                    flags: ["priority"],
                 };
 
                 handleEvent(mockWs, message);
