@@ -478,4 +478,482 @@ describe("End-to-End Integration Tests", () => {
             expect(inputState.keyboard).toEqual(new Set(["W"]));
         });
     });
+
+    describe("Input Delta Flow", () => {
+        test("should process input_delta messages correctly", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // First, set initial state
+            await client.send({
+                type: "input",
+                data: {
+                    frameId: 1,
+                    keyboard: ["W"],
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                },
+            });
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            expect(inputState.keyboard.has("W")).toBe(true);
+
+            // Send delta: press A, release W
+            await client.send({
+                type: "input_delta",
+                data: {
+                    keyboard: {
+                        pressed: ["A"],
+                        released: ["W"],
+                    },
+                },
+                metadata: { clientId: "test-client" },
+            });
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            expect(inputState.keyboard.has("W")).toBe(false);
+            expect(inputState.keyboard.has("A")).toBe(true);
+        });
+
+        test("should handle mouse delta updates", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // Set initial mouse position
+            await client.send({
+                type: "input",
+                data: {
+                    frameId: 1,
+                    keyboard: [],
+                    mouse: { x: 100, y: 100, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                },
+            });
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // Send mouse delta
+            await client.send({
+                type: "input_delta",
+                data: {
+                    mouse: {
+                        x: 200,
+                        y: 300,
+                        left: true,
+                    },
+                },
+                metadata: { clientId: "test-client" },
+            });
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            expect(inputState.mouse.x).toBe(200);
+            expect(inputState.mouse.y).toBe(300);
+            expect(inputState.mouse.left).toBe(true);
+        });
+
+        test("should handle joystick delta updates", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // Send joystick delta
+            await client.send({
+                type: "input_delta",
+                data: {
+                    joystick: {
+                        x: 0.5,
+                        y: -0.5,
+                    },
+                },
+                metadata: { clientId: "test-client" },
+            });
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            expect(inputState.joystick.x).toBe(0.5);
+            expect(inputState.joystick.y).toBe(-0.5);
+        });
+    });
+
+    describe("Event Message Flow", () => {
+        test("should handle event messages with matching baseStateId", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // Store a state first
+            stateStore.storeState({
+                frameId: 100,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            });
+
+            // Send event with matching baseStateId
+            const ackPromise = client.waitForMessage("eventAck");
+            await client.send({
+                type: "event",
+                eventId: 1,
+                baseStateId: 100,
+                clientSendTs: Date.now(),
+                delta: {
+                    keyboard: [
+                        { keyId: "KEY_A", eventType: "pressed" },
+                    ],
+                },
+                flags: [],
+            });
+
+            const ack = await ackPromise;
+            expect(ack.status).toBe("success");
+            expect(ack.ackEventId).toBe(1);
+        });
+
+        test("should reject event with mismatched baseStateId", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // Store a state
+            stateStore.storeState({
+                frameId: 100,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            });
+
+            // Send event with wrong baseStateId
+            const ackPromise = client.waitForMessage("eventAck");
+            await client.send({
+                type: "event",
+                eventId: 1,
+                baseStateId: 50, // Wrong - should be 100
+                clientSendTs: Date.now(),
+                delta: {},
+                flags: [],
+            });
+
+            const ack = await ackPromise;
+            expect(ack.status).toBe("rejected");
+            expect(ack.reason).toBe("baseStateId mismatch");
+        });
+    });
+
+    describe("Config Operations", () => {
+        test("should handle config_get request", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            const configPromise = client.waitForMessage("config");
+            await client.send({ type: "config_get" });
+
+            const config = await configPromise;
+            expect(config.type).toBe("config");
+            expect(config.data).toBeDefined();
+            expect(config.data.inputUpdateInterval).toBeDefined();
+            expect(config.data.heartbeatInterval).toBeDefined();
+        });
+
+        test("should handle config_set request", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            const ackPromise = client.waitForMessage("config_ack");
+            await client.send({
+                type: "config_set",
+                data: {
+                    inputUpdateInterval: 16,
+                    enableLogging: false,
+                },
+            });
+
+            const ack = await ackPromise;
+            expect(ack.type).toBe("config_ack");
+            expect(ack.data.inputUpdateInterval).toBe(16);
+            expect(ack.data.enableLogging).toBe(false);
+        });
+
+        test("should reject invalid config values", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            const errorPromise = client.waitForMessage("config_error");
+            await client.send({
+                type: "config_set",
+                data: {
+                    inputUpdateInterval: -1, // Invalid
+                },
+            });
+
+            const error = await errorPromise;
+            expect(error.type).toBe("config_error");
+        });
+    });
+
+    describe("State Message Protocol", () => {
+        test("should handle state message with stateId", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            const ackPromise = client.waitForMessage("stateAck");
+            await client.send({
+                type: "state",
+                stateId: 1,
+                clientSendTs: Date.now(),
+                keyboardState: [
+                    { keyId: "KEY_W", eventType: "pressed" },
+                ],
+                gamepadState: {
+                    buttons: [],
+                    joysticks: {
+                        left: { x: 0, y: 0, deadzone: 0 },
+                        right: { x: 0, y: 0, deadzone: 0 },
+                    },
+                    triggers: { left: 0, right: 0 },
+                },
+                flags: [],
+            });
+
+            const ack = await ackPromise;
+            expect(ack.type).toBe("stateAck");
+            expect(ack.ackStateId).toBe(1);
+            expect(ack.status).toBe("success");
+        });
+
+        test("should handle multiple sequential state messages", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            for (let i = 1; i <= 5; i++) {
+                const ackPromise = client.waitForMessage("stateAck");
+                await client.send({
+                    type: "state",
+                    stateId: i,
+                    clientSendTs: Date.now(),
+                    keyboardState: [
+                        { keyId: `KEY_${i}`, eventType: "pressed" },
+                    ],
+                    gamepadState: {
+                        buttons: [],
+                        joysticks: {
+                            left: { x: 0, y: 0, deadzone: 0 },
+                            right: { x: 0, y: 0, deadzone: 0 },
+                        },
+                        triggers: { left: 0, right: 0 },
+                    },
+                    flags: [],
+                });
+
+                const ack = await ackPromise;
+                expect(ack.ackStateId).toBe(i);
+            }
+        });
+    });
+
+    describe("Debug and Monitoring", () => {
+        test("should handle latency_probe request", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            const clientTimestamp = Date.now();
+            const responsePromise = client.waitForMessage("latency_probe_response");
+
+            await client.send({
+                type: "latency_probe",
+                timestamp: clientTimestamp,
+            });
+
+            const response = await responsePromise;
+            expect(response.type).toBe("latency_probe_response");
+            expect(response.clientTimestamp).toBe(clientTimestamp);
+            expect(response.serverTimestamp).toBeDefined();
+        });
+
+        test("should calculate RTT from latency probe", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            const beforeTime = Date.now();
+            const responsePromise = client.waitForMessage("latency_probe_response");
+
+            await client.send({
+                type: "latency_probe",
+                timestamp: beforeTime,
+            });
+
+            const response = await responsePromise;
+            const afterTime = Date.now();
+
+            // RTT should be reasonable
+            const rtt = afterTime - beforeTime;
+            expect(rtt).toBeLessThan(1000); // Less than 1 second
+            expect(response.clientTimestamp).toBe(beforeTime);
+        });
+    });
+
+    describe("Error Recovery and Edge Cases", () => {
+        test("should handle malformed input gracefully", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // Send malformed input
+            await client.send({
+                type: "input",
+                data: "invalid", // Should be an object
+            });
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // Server should still be responsive
+            const pongPromise = client.waitForMessage("pong");
+            await client.send({ type: "ping" });
+            await expect(pongPromise).resolves.toBeDefined();
+        });
+
+        test("should handle unknown message type", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // Send unknown message type
+            await client.send({
+                type: "unknown_type",
+                data: {},
+            });
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // Server should still be responsive
+            const pongPromise = client.waitForMessage("pong");
+            await client.send({ type: "ping" });
+            await expect(pongPromise).resolves.toBeDefined();
+        });
+
+        test("should handle empty message", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // Send empty object
+            await client.send({});
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // Server should still be responsive
+            const pongPromise = client.waitForMessage("pong");
+            await client.send({ type: "ping" });
+            await expect(pongPromise).resolves.toBeDefined();
+        });
+
+        test("should handle very large keyboard state", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // Create large keyboard state
+            const manyKeys = Array.from({ length: 50 }, (_, i) => `KEY_${i}`);
+
+            await client.send({
+                type: "input",
+                data: {
+                    frameId: 1,
+                    keyboard: manyKeys,
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                },
+            });
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // All keys should be in state
+            manyKeys.forEach((key) => {
+                expect(inputState.keyboard.has(key)).toBe(true);
+            });
+        });
+
+        test("should handle extreme joystick values", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            await client.send({
+                type: "input",
+                data: {
+                    frameId: 1,
+                    keyboard: [],
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 1.0, y: -1.0, deadzone: 0.5, smoothing: 0.8 },
+                },
+            });
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            expect(inputState.joystick.x).toBe(1.0);
+            expect(inputState.joystick.y).toBe(-1.0);
+        });
+    });
+
+    describe("Gamepad Input Flow", () => {
+        test("should handle gamepad button input", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            await client.send({
+                type: "input",
+                data: {
+                    frameId: 1,
+                    keyboard: [],
+                    gamepad: ["A", "B", "X"],
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                },
+            });
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            expect(inputState.gamepad).toBeDefined();
+            expect(inputState.gamepad?.has("A")).toBe(true);
+            expect(inputState.gamepad?.has("B")).toBe(true);
+            expect(inputState.gamepad?.has("X")).toBe(true);
+        });
+
+        test("should handle gamepad state transitions", async () => {
+            client = new WsClient({ url: `ws://localhost:${serverPort}` });
+            await client.connect();
+
+            // Press A
+            await client.send({
+                type: "input",
+                data: {
+                    frameId: 1,
+                    keyboard: [],
+                    gamepad: ["A"],
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                },
+            });
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            expect(inputState.gamepad?.has("A")).toBe(true);
+
+            // Press A + B
+            await client.send({
+                type: "input",
+                data: {
+                    frameId: 2,
+                    keyboard: [],
+                    gamepad: ["A", "B"],
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                },
+            });
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            expect(inputState.gamepad?.has("A")).toBe(true);
+            expect(inputState.gamepad?.has("B")).toBe(true);
+
+            // Release all
+            await client.send({
+                type: "input",
+                data: {
+                    frameId: 3,
+                    keyboard: [],
+                    gamepad: [],
+                    mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                    joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                },
+            });
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            expect(inputState.gamepad?.size).toBe(0);
+        });
+    });
 });
