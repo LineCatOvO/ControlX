@@ -88,7 +88,7 @@ task-L1-P0-build-verification（依赖：所有前置任务）
 | 子任务 ID | 状态 | 开始时间 | 完成时间 | 备注 |
 |-----------|------|----------|----------|------|
 | task-L1-P0-nodejs-environment-verify | completed | 2025-01-17 08:30:00 | 2025-04-01 15:05:00 | Node.js v24.14.0、npm 11.9.0、pnpm 10.30.2，LTS Krypton |
-| task-L1-P0-typescript-config-verify | pending | - | - | - |
+| task-L1-P0-typescript-config-verify | completed | 2025-01-17 00:00:01 | 2025-01-17 15:10:00 | tsconfig.json 创建完成，配置验证通过 |
 | task-L1-P0-dependency-management | pending | - | - | - |
 | task-L1-P0-production-env-config | pending | - | - | - |
 | task-L1-P0-build-verification | pending | - | - | - |
