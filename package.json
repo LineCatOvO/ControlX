@@ -1,8 +1,35 @@
 {
+  "name": "controlx",
+  "version": "1.0.0",
+  "description": "ControlX Server Application",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "node appium-e2e/real-e2e-test.js"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest"
+  },
+  "keywords": ["controlx", "server", "typescript"],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "typescript": "^5.3.0"
   },
   "devDependencies": {
-    "ts-node": "^10.9.2"
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "vitest": "^1.1.0"
   }
 }
