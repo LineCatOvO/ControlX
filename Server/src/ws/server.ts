@@ -13,6 +13,11 @@ let actualPort: number = 0;
 const clients: Map<string, any> = new Map(); // 存储活跃的 WebSocket 连接
 let heartbeatInterval: NodeJS.Timeout | null = null;
 
+// 连接数限制配置
+const MAX_CONNECTIONS = process.env.MAX_WS_CONNECTIONS
+    ? parseInt(process.env.MAX_WS_CONNECTIONS, 10)
+    : 100; // 默认最大 100 个连接
+
 // 生成客户端 ID
 function generateClientId(): string {
     return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -119,6 +124,18 @@ export function startWsServer(): Promise<number> {
                 });
 
                 wss.on('connection', (ws: any, req: any) => {
+                    // 检查连接数限制
+                    if (clients.size >= MAX_CONNECTIONS) {
+                        console.warn(`Connection limit reached (${MAX_CONNECTIONS}), rejecting new connection`);
+                        ws.send(JSON.stringify({
+                            type: 'error',
+                            code: 'MAX_CONNECTIONS_REACHED',
+                            message: 'Server connection limit reached'
+                        }));
+                        ws.close(1013, 'Server connection limit reached');
+                        return;
+                    }
+
                     // 获取客户端 IP 地址
                     const clientIp = req.socket.remoteAddress || 'unknown';
 
