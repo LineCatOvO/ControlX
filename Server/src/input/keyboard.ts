@@ -198,6 +198,8 @@ export class KeyboardExecutor implements InputExecutor {
                 } catch (error) {
                     console.error("❌ KeyboardError: Error releasing keys:", error);
                     updateStats('error', 1);
+                    // 抛出错误，让调用者知道操作失败
+                    throw new Error(`Failed to release keys: ${Array.from(keysToRelease).join(', ')}`);
                 }
             }
 
@@ -234,6 +236,8 @@ export class KeyboardExecutor implements InputExecutor {
                 } catch (error) {
                     console.error("❌ KeyboardError: Error pressing keys:", error);
                     updateStats('error', 1);
+                    // 抛出错误，让调用者知道操作失败
+                    throw new Error(`Failed to press keys: ${Array.from(newKeysToPress).join(', ')}`);
                 }
             }
 
