@@ -4,6 +4,7 @@ import { handleConnection } from './connection';
 import { handleMessage } from './router';
 import { loadConfigFromFile, getConfigPathFromArgs } from '../config/loadConfig';
 import { getMetricsCollector } from '../utils/metrics';
+import { authManager } from '../auth/auth';
 
 let wss: any = null;
 let actualPort: number = 0;
@@ -117,19 +118,41 @@ export function startWsServer(): Promise<number> {
                     }
                 });
 
-                wss.on('connection', (ws: any) => {
+                wss.on('connection', (ws: any, req: any) => {
+                    // 获取客户端 IP 地址
+                    const clientIp = req.socket.remoteAddress || 'unknown';
+
+                    // 从 URL 参数或首条消息获取 Token（这里先从 URL 参数获取）
+                    const url = new URL(req.url, `http://${req.headers.host}`);
+                    const token = url.searchParams.get('token') || '';
+
+                    // 执行认证检查
+                    const authResult = authManager.authenticate(token, clientIp);
+
+                    if (!authResult.success) {
+                        // 认证失败，拒绝连接
+                        console.warn(`Authentication failed for IP ${clientIp}: ${authResult.error}`);
+                        ws.send(JSON.stringify({
+                            type: 'error',
+                            code: authResult.errorCode || 'AUTH_FAILED',
+                            message: authResult.error || 'Authentication failed'
+                        }));
+                        ws.close(1008, 'Authentication failed');
+                        return;
+                    }
                     // 初始化连接状态
-                    const clientId = generateClientId();
+                    const clientId = authResult.clientId || generateClientId();
                     ws.clientId = clientId;
                     ws.isAlive = true;
                     ws.connectedAt = Date.now(); // 记录连接时间
+                    ws.authToken = token; // 存储 Token 用于后续权限检查
                     
                     // 存储连接
                     clients.set(clientId, ws);
                     // 记录连接指标
                     metricsCollector.recordConnection(clientId);
                     
-                    console.log(`Client connected: ${clientId}, total: ${clients.size}`);
+                    console.log(`Client connected: ${clientId} (IP: ${clientIp}), total: ${clients.size}`);
                     
                     // 连接关闭时的处理
                     ws.on('close', () => {
