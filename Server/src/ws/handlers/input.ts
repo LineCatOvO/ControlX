@@ -2,6 +2,7 @@ import { InputMessage } from "../../types/ws";
 import { formatInputMessageLog } from "../../utils/logInputData";
 import { getExecutorManager } from "../../input/executor";
 import { inputState } from "../../input/state";
+import { rateLimiter } from "../../utils/rateLimiter";
 
 /**
  * 处理输入消息
@@ -9,6 +10,29 @@ import { inputState } from "../../input/state";
  * @param message 输入消息
  */
 export function handleInput(ws: any, message: InputMessage) {
+    // 速率限制检查
+    const clientId = ws.clientId || 'unknown';
+    const rateLimitResult = rateLimiter.checkLimit(clientId);
+
+    if (!rateLimitResult.allowed) {
+        // 超过速率限制，拒绝消息
+        const errorMsg = {
+            type: "error",
+            code: "RATE_LIMIT_EXCEEDED",
+            message: "Rate limit exceeded",
+            retryAfter: rateLimitResult.retryAfter
+        };
+
+        try {
+            ws.send(JSON.stringify(errorMsg));
+        } catch (error) {
+            console.error("InputHandlerError: Error sending rate limit error:", error);
+        }
+
+        console.warn(`Rate limit exceeded for client ${clientId}, retry after ${rateLimitResult.retryAfter}s`);
+        return;
+    }
+
     // 获取全局状态存储实例
     const stateStore = (global as any).stateStore;
 
