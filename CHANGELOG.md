@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-04-03] refactor: 优化历史记录内存管理 (task-P2-optimize-history-memory)
+
+### Changes
+- **Server/src/input/stateStore.ts**: 使用环形缓冲区优化历史记录内存管理
+  - 添加环形缓冲区索引字段：historyHead、historyTail、historyFull
+  - 预分配历史记录数组，避免动态扩容
+  - 实现 addToHistoryRingBuffer 方法，替代 push 和 shift 操作
+  - 修改 getStateHistory 方法，从环形缓冲区读取数据
+  - 修改 recordAppliedState 方法，在环形缓冲区中查找条目
+  - 修改 clear 方法，重置环形缓冲区索引
+
+### Impact
+- 高频输入场景下内存占用显著降低
+- 避免了 push 和 shift 操作带来的内存分配和释放开销
+- 减少 GC 压力，提升系统性能
+- 历史记录功能保持原有接口不变，向后兼容
+
 ## [2026-04-05] fix: 完善键盘执行器错误传播机制 (task-P1-improve-error-handling)
 
 ### Changes
