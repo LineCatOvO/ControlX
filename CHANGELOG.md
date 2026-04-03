@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-04-05] fix: 完善键盘执行器错误传播机制 (task-P1-improve-error-handling)
+
+### Changes
+- **Server/src/input/keyboard.ts**: 在 updateKeyboardState 方法中添加错误抛出
+  - 释放按键失败时抛出 `Failed to release keys` 错误
+  - 按下按键失败时抛出 `Failed to press keys` 错误
+  - 错误消息包含具体的按键列表信息
+
+### Impact
+- 键盘执行器错误现在能够传播到调用者
+- 调用者可以感知操作失败，避免状态不一致
+- 错误日志包含详细的按键信息，便于调试
+
 ## [2026-02-21] feat: 悬浮球添加连接状态指示器
 
 ### Changes
