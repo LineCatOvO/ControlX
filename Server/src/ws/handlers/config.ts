@@ -21,6 +21,40 @@ import { config } from "../../config/config";
 import { validateConfig } from "../../config/validate";
 import { authManager } from "../../auth/auth";
 
+/**
+ * 敏感配置项列表
+ * 这些配置项不应该暴露给客户端，防止敏感信息泄露
+ */
+const SENSITIVE_CONFIG_KEYS: string[] = [
+    'tokenSecret',          // Token 密钥
+    'tokenExpiry',          // Token 过期时间
+    'maxConnectionsPerToken', // 连接限制
+    'whitelist',            // IP 白名单
+    'blacklist',            // IP 黑名单
+    'defaultPort',          // 默认端口（可选）
+    'portRange',            // 端口范围（可选）
+];
+
+/**
+ * 过滤敏感配置项
+ * @param config 原始配置
+ * @returns 过滤后的安全配置（不包含敏感信息）
+ */
+function filterSensitiveConfig(config: Config): Partial<Config> {
+    const filtered: Partial<Config> = {};
+
+    for (const key of Object.keys(config) as (keyof Config)[]) {
+        // 只保留非敏感配置项
+        if (!SENSITIVE_CONFIG_KEYS.includes(key)) {
+            // 使用类型断言绕过 TypeScript 的严格类型检查
+            // 这是安全的，因为我们只是复制配置项，不改变其类型
+            (filtered as any)[key] = config[key];
+        }
+    }
+
+    return filtered;
+}
+
 // 配置变更回调类型
 type ConfigChangeCallback = (newConfig: Config, oldConfig: Config) => void;
 
@@ -82,14 +116,17 @@ function sendMessage(ws: any, message: ConfigMessage | ConfigAckMessage | Config
 export function handleConfigGet(ws: any, message: ConfigGetMessage): void {
     // 获取当前配置
     const currentConfig = configManager.getConfig();
-    
-    // 发送配置消息
+
+    // 过滤敏感配置项，防止敏感信息泄露
+    const safeConfig = filterSensitiveConfig(currentConfig);
+
+    // 发送安全配置消息（不包含敏感信息）
     const configMsg: ConfigMessage = {
         type: "config",
-        data: currentConfig
+        data: safeConfig as Config
     };
-    
-    console.log("Sending config to client");
+
+    console.log("Sending filtered config to client (sensitive data removed)");
     sendMessage(ws, configMsg);
 }
 
