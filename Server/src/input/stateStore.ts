@@ -60,13 +60,18 @@ export class StateStore {
     // 最新状态
     private latestState: InputState | null = null;
 
-    // 状态历史记录
+    // 状态历史记录（使用环形缓冲区优化内存）
     private stateHistory: Array<{
         state: InputState;
         receivedTime: number;
         appliedTime: number | null;
         sequenceNumber: number;
     }> = [];
+
+    // 环形缓冲区索引
+    private historyHead: number = 0;  // 写入位置
+    private historyTail: number = 0;  // 读取位置
+    private historyFull: boolean = false; // 缓冲区是否已满
 
     // 最后应用的序列号
     private lastAppliedSequenceNumber: number = 0;
@@ -83,6 +88,17 @@ export class StateStore {
             maxHistorySize: 100, // 默认保留100条历史记录
             ...config,
         };
+
+        // 预分配历史记录数组，避免动态扩容
+        this.stateHistory = new Array(this.config.maxHistorySize);
+        for (let i = 0; i < this.config.maxHistorySize; i++) {
+            this.stateHistory[i] = {
+                state: null as any,
+                receivedTime: 0,
+                appliedTime: null,
+                sequenceNumber: 0
+            };
+        }
     }
 
     /**
@@ -114,23 +130,44 @@ export class StateStore {
             this.lastAppliedSequenceNumber = sequenceNumber;
         }
 
-        // 添加到历史记录
-        this.stateHistory.push({
+        // 使用环形缓冲区添加历史记录
+        this.addToHistoryRingBuffer({
             state: normalizedState,
             receivedTime,
             appliedTime: null,
             sequenceNumber,
         });
 
-        // 限制历史记录大小
-        if (this.stateHistory.length > this.config.maxHistorySize) {
-            this.stateHistory.shift();
-        }
-
         // 只记录关键状态信息，不重复打印完整状态
         return true;
     }
-    
+
+    /**
+     * 使用环形缓冲区添加历史记录
+     * @param entry 历史记录条目
+     */
+    private addToHistoryRingBuffer(entry: {
+        state: InputState;
+        receivedTime: number;
+        appliedTime: number | null;
+        sequenceNumber: number;
+    }): void {
+        // 写入当前位置
+        this.stateHistory[this.historyHead] = entry;
+
+        // 移动写入位置
+        this.historyHead = (this.historyHead + 1) % this.config.maxHistorySize;
+
+        // 如果缓冲区已满，移动读取位置
+        if (this.historyFull) {
+            this.historyTail = (this.historyTail + 1) % this.config.maxHistorySize;
+        }
+
+        // 检查缓冲区是否已满
+        if (this.historyHead === this.historyTail) {
+            this.historyFull = true;
+        }
+    }
     /**
      * 标准化状态，将数组转换为Set，并为缺少的字段添加默认值
      * @param state 原始状态
@@ -204,14 +241,24 @@ export class StateStore {
         // 更新最后应用的序列号
         this.lastAppliedSequenceNumber = sequenceNumber;
 
-        // 更新历史记录中的应用时间
-        const historyEntry = this.stateHistory.find(
-            (entry) => entry.sequenceNumber === sequenceNumber
-        );
-        if (historyEntry) {
-            historyEntry.appliedTime = applyTime || Date.now();
-            // 移除重复的应用状态日志
+        // 在环形缓冲区中查找对应的历史记录
+        if (!this.historyFull && this.historyHead === this.historyTail) {
+            // 缓冲区为空，无需查找
+            return;
         }
+
+        // 从读取位置开始，遍历所有有效记录
+        let current = this.historyTail;
+        const end = this.historyFull ? this.historyTail : this.historyHead;
+
+        do {
+            const entry = this.stateHistory[current];
+            if (entry.state !== null && entry.sequenceNumber === sequenceNumber) {
+                entry.appliedTime = applyTime || Date.now();
+                return; // 找到后立即返回
+            }
+            current = (current + 1) % this.config.maxHistorySize;
+        } while (current !== end);
     }
 
     /**
@@ -282,7 +329,7 @@ export class StateStore {
     }
 
     /**
-     * 获取状态历史记录
+     * 获取状态历史记录（从环形缓冲区读取）
      * @returns 状态历史记录
      */
     getStateHistory(): Array<{
@@ -291,7 +338,31 @@ export class StateStore {
         appliedTime: number | null;
         sequenceNumber: number;
     }> {
-        return [...this.stateHistory];
+        const result: Array<{
+            state: InputState;
+            receivedTime: number;
+            appliedTime: number | null;
+            sequenceNumber: number;
+        }> = [];
+
+        if (!this.historyFull && this.historyHead === this.historyTail) {
+            // 缓冲区为空
+            return result;
+        }
+
+        // 从读取位置开始，按顺序读取所有有效记录
+        let current = this.historyTail;
+        const end = this.historyFull ? this.historyTail : this.historyHead;
+
+        do {
+            const entry = this.stateHistory[current];
+            if (entry.state !== null) {
+                result.push(entry);
+            }
+            current = (current + 1) % this.config.maxHistorySize;
+        } while (current !== end);
+
+        return result;
     }
 
     /**
@@ -315,7 +386,22 @@ export class StateStore {
      */
     clear(): void {
         this.latestState = null;
-        this.stateHistory = [];
+
+        // 重置环形缓冲区索引
+        this.historyHead = 0;
+        this.historyTail = 0;
+        this.historyFull = false;
+
+        // 重新初始化预分配数组
+        for (let i = 0; i < this.config.maxHistorySize; i++) {
+            this.stateHistory[i] = {
+                state: null as any,
+                receivedTime: 0,
+                appliedTime: null,
+                sequenceNumber: 0
+            };
+        }
+
         this.lastAppliedSequenceNumber = 0;
         console.log("StateStore: All states cleared");
     }
