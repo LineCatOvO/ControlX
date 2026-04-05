@@ -130,6 +130,42 @@ function getHealthStatus(): HealthStatus {
         };
     }
 
+    // 新增检查项：连接状态
+    const activeConnections = metricsCollector.getActiveConnections().length;
+    checks.connections = {
+        status: activeConnections >= 0 ? 'pass' : 'fail',
+        message: `Active connections: ${activeConnections}`,
+        value: {
+            active: activeConnections,
+            max: 100, // 最大连接数配置
+        },
+    };
+
+    // 新增检查项：输入事件流
+    const inputStats = metricsCollector.getInputStats();
+    const hasRecentEvents = Date.now() - inputStats.lastEventTime < 60000; // 1分钟内有事件
+    checks.inputFlow = {
+        status: hasRecentEvents || inputStats.totalEvents === 0 ? 'pass' : 'warn',
+        message: `Input events: ${inputStats.eventsPerSecond.toFixed(2)} per second`,
+        value: {
+            eventsPerSecond: inputStats.eventsPerSecond,
+            totalEvents: inputStats.totalEvents,
+            lastEventTime: inputStats.lastEventTime,
+        },
+    };
+
+    // 新增检查项：错误率
+    const totalErrors = metricsCollector.getMetric('errors_total') || 0;
+    const errorRate = totalErrors > 0 ? 'warn' : 'pass';
+    checks.errors = {
+        status: errorRate,
+        message: `Total errors: ${totalErrors}`,
+        value: {
+            total: totalErrors,
+            rate: metricsCollector.getMetric('errors_rate_current') || 0,
+        },
+    };
+
     // 确定整体状态
     const hasFail = Object.values(checks).some((c) => c.status === 'fail');
     const hasWarn = Object.values(checks).some((c) => c.status === 'warn');
@@ -147,6 +183,10 @@ function getHealthStatus(): HealthStatus {
  * 获取就绪状态
  */
 function getReadinessStatus(): ReadinessStatus {
+    const metricsCollector = getMetricsCollector();
+    const resourceMonitor = getResourceMonitor();
+    const resourceStats = resourceMonitor.getResourceStats();
+
     const checks: ReadinessStatus['checks'] = {};
 
     // 检查 WebSocket 服务器
@@ -162,6 +202,21 @@ function getReadinessStatus(): ReadinessStatus {
             message: isReady ? 'Server is ready' : 'Server is not ready',
         };
     }
+
+    // 新增检查项：资源充足
+    const memoryUsagePercent = (resourceStats.memoryUsage.heapUsed / resourceStats.memoryUsage.heapTotal) * 100;
+    const resourcesAvailable = memoryUsagePercent < 95 && resourceStats.cpuUsage < 95;
+    checks.resources = {
+        ready: resourcesAvailable,
+        message: resourcesAvailable ? 'Resources available' : 'Resources insufficient',
+    };
+
+    // 新增检查项：初始化完成
+    const metricsInitialized = metricsCollector.getMetric('connections_total') !== undefined;
+    checks.initialization = {
+        ready: metricsInitialized,
+        message: metricsInitialized ? 'Metrics system initialized' : 'Metrics system not initialized',
+    };
 
     // 确定整体就绪状态
     const ready = Object.values(checks).every((c) => c.ready);
@@ -206,6 +261,11 @@ function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): voi
 
         case '/metrics':
             handleMetrics(req, res);
+            break;
+
+        case '/metrics/prometheus':
+        case '/prometheus':
+            handlePrometheusMetrics(req, res);
             break;
 
         case '/stats':
@@ -271,6 +331,17 @@ function handleStats(req: http.IncomingMessage, res: http.ServerResponse): void 
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(stats, null, 2));
+}
+
+/**
+ * 处理 Prometheus 格式指标请求
+ */
+function handlePrometheusMetrics(req: http.IncomingMessage, res: http.ServerResponse): void {
+    const metricsCollector = getMetricsCollector();
+    const prometheusMetrics = metricsCollector.toPrometheus();
+
+    res.writeHead(200, { 'Content-Type': 'text/plain; version=0.0.4; charset=utf-8' });
+    res.end(prometheusMetrics);
 }
 
 /**

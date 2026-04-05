@@ -1,6 +1,7 @@
 // 延迟探测消息处理器
 
 import { LatencyProbeMessage, LatencyProbeResponseMessage } from '../../types/ws';
+import { getMetricsCollector } from '../../utils/metrics';
 
 // RTT 统计
 const rttStats = {
@@ -35,6 +36,15 @@ function updateRttStats(rtt: number) {
     const sorted = [...rttStats.measurements].sort((a, b) => a - b);
     const p95Index = Math.floor(sorted.length * 0.95);
     rttStats.p95 = sorted[p95Index] || 0;
+
+    // 更新 metrics.ts 的 RTT 统计指标
+    const metricsCollector = getMetricsCollector();
+    metricsCollector.updateRttStats({
+      average: rttStats.average,
+      min: rttStats.min,
+      max: rttStats.max,
+      p95: rttStats.p95,
+    });
   }
 }
 
@@ -82,6 +92,10 @@ export function handleLatencyProbe(ws: any, message: LatencyProbeMessage) {
     // 计算并记录 RTT
     const rtt = serverRecvTs - clientTimestamp;
     console.log(`Latency Probe: RTT = ${rtt}ms`);
+
+    // 记录到 metrics.ts
+    const metricsCollector = getMetricsCollector();
+    metricsCollector.recordRttLatency(rtt);
 
     // 更新 RTT 统计
     updateRttStats(rtt);

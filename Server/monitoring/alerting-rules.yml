@@ -1,0 +1,121 @@
+# Prometheus 告警规则配置
+# 用于 ControlX Server 监控告警
+
+groups:
+  - name: controlx_server_alerts
+    rules:
+      # 高延迟告警
+      - alert: HighLatency
+        expr: controlx_server_latency_rtt_p95_ms > 100
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ControlX Server 高延迟"
+          description: "P95 RTT 延迟超过 100ms (当前: {{ $value }}ms)"
+
+      # 极高延迟告警
+      - alert: VeryHighLatency
+        expr: controlx_server_latency_rtt_p95_ms > 250
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ControlX Server 极高延迟"
+          description: "P95 RTT 延迟超过 250ms (当前: {{ $value }}ms)"
+
+      # 高错误率告警
+      - alert: HighErrorRate
+        expr: rate(controlx_server_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ControlX Server 高错误率"
+          description: "错误率超过 0.1/s (当前: {{ $value }}/s)"
+
+      # 验证错误激增告警
+      - alert: ValidationErrorsSpike
+        expr: increase(controlx_server_errors_validation_total[5m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "验证错误激增"
+          description: "5分钟内验证错误增加超过 10 个 (当前: {{ $value }})"
+
+      # 高 CPU 使用率告警
+      - alert: HighCPUUsage
+        expr: controlx_server_cpu_usage_percent > 80
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ControlX Server 高 CPU 使用率"
+          description: "CPU 使用率超过 80% (当前: {{ $value }}%)"
+
+      # 极高 CPU 使用率告警
+      - alert: VeryHighCPUUsage
+        expr: controlx_server_cpu_usage_percent > 95
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ControlX Server 极高 CPU 使用率"
+          description: "CPU 使用率超过 95% (当前: {{ $value }}%)"
+
+      # 高内存使用率告警
+      - alert: HighMemoryUsage
+        expr: (controlx_server_memory_heap_used_bytes / controlx_server_memory_heap_total_bytes) * 100 > 80
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ControlX Server 高内存使用率"
+          description: "内存使用率超过 80% (当前: {{ $value }}%)"
+
+      # 极高内存使用率告警
+      - alert: VeryHighMemoryUsage
+        expr: (controlx_server_memory_heap_used_bytes / controlx_server_memory_heap_total_bytes) * 100 > 95
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ControlX Server 极高内存使用率"
+          description: "内存使用率超过 95% (当前: {{ $value }}%)"
+
+      # 连接数异常告警
+      - alert: TooManyConnections
+        expr: controlx_server_active_connections > 50
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ControlX Server 连接数过多"
+          description: "活跃连接数超过 50 (当前: {{ $value }})"
+
+      # 低吞吐量告警
+      - alert: LowThroughput
+        expr: controlx_server_input_events_per_second < 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ControlX Server 低吞吐量"
+          description: "输入事件吞吐量低于 1/s (当前: {{ $value }}/s)"
+
+      # 服务不可用告警
+      - alert: ServiceDown
+        expr: up{job="controlx-server"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ControlX Server 服务不可用"
+          description: "ControlX Server 无法访问或已停止"
+
+# 使用说明：
+# 1. 将此文件放在 Prometheus 配置目录
+# 2. 在 prometheus.yml 中添加 rule_files 配置
+# 3. 根据实际需求调整阈值和持续时间
+# 4. 配置 Alertmanager 来发送告警通知

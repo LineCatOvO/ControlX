@@ -665,6 +665,59 @@ export class MetricsCollector {
     }
 
     /**
+     * 导出为 Prometheus 格式
+     * 格式规范：https://prometheus.io/docs/instrumenting/exposition_formats/
+     */
+    public toPrometheus(): string {
+        const lines: string[] = [];
+        const prefix = 'controlx_server_';
+
+        this.metrics.forEach((metric, name) => {
+            const fullMetricName = prefix + name;
+            const description = metric.metadata.description || '';
+            const unit = metric.metadata.unit || '';
+
+            // HELP 声明
+            lines.push(`# HELP ${fullMetricName} ${description}${unit ? ` (${unit})` : ''}`);
+
+            if (metric.type === MetricType.COUNTER) {
+                // TYPE 声明
+                lines.push(`# TYPE ${fullMetricName} counter`);
+                // 指标值
+                lines.push(`${fullMetricName} ${metric.value}`);
+            } else if (metric.type === MetricType.GAUGE) {
+                // TYPE 声明
+                lines.push(`# TYPE ${fullMetricName} gauge`);
+                // 指标值
+                lines.push(`${fullMetricName} ${metric.value}`);
+            } else if (metric.type === MetricType.HISTOGRAM) {
+                // TYPE 声明
+                lines.push(`# TYPE ${fullMetricName} histogram`);
+
+                // 桶值（累积计数）
+                const bucketBoundaries = [0.1, 0.5, 1, 2.5, 5, 10, '+Inf'];
+                let cumulativeCount = 0;
+
+                bucketBoundaries.forEach((boundary) => {
+                    const bucketKey = `le_${boundary}`;
+                    const count = metric.buckets.get(bucketKey) || 0;
+                    cumulativeCount += count;
+                    const le = boundary === '+Inf' ? '+Inf' : boundary;
+                    lines.push(`${fullMetricName}_bucket{le="${le}"} ${cumulativeCount}`);
+                });
+
+                // sum 和 count
+                lines.push(`${fullMetricName}_sum ${metric.sum}`);
+                lines.push(`${fullMetricName}_count ${metric.count}`);
+            }
+
+            lines.push(''); // 空行分隔
+        });
+
+        return lines.join('\n');
+    }
+
+    /**
      * 重置所有指标
      */
     public reset(): void {
@@ -710,6 +763,107 @@ export class MetricsCollector {
             'Duration of connections in seconds',
             [1, 5, 10, 30, 60, 300, 600, 1800, 3600]
         );
+
+        // 延迟相关指标（新增）
+        this.registerHistogram(
+            'latency_rtt_seconds',
+            'Round-trip time latency in seconds',
+            [0.001, 0.005, 0.010, 0.025, 0.050, 0.100, 0.250, 0.500, 1],
+            'seconds'
+        );
+        this.registerGauge('latency_rtt_current_ms', 'Current RTT latency in milliseconds', 'milliseconds');
+        this.registerGauge('latency_rtt_average_ms', 'Average RTT latency in milliseconds', 'milliseconds');
+        this.registerGauge('latency_rtt_min_ms', 'Minimum RTT latency in milliseconds', 'milliseconds');
+        this.registerGauge('latency_rtt_max_ms', 'Maximum RTT latency in milliseconds', 'milliseconds');
+        this.registerGauge('latency_rtt_p95_ms', 'P95 RTT latency in milliseconds', 'milliseconds');
+
+        // 吞吐量相关指标（新增）
+        this.registerGauge('input_events_per_second', 'Current input events per second');
+        this.registerGauge('input_events_per_second_1m', '1-minute average input events per second');
+        this.registerGauge('input_events_per_second_5m', '5-minute average input events per second');
+
+        // 错误率相关指标（新增）
+        this.registerCounter('errors_validation_total', 'Total number of validation errors');
+        this.registerCounter('errors_network_total', 'Total number of network errors');
+        this.registerCounter('errors_system_total', 'Total number of system errors');
+        this.registerCounter('errors_timeout_total', 'Total number of timeout errors');
+        this.registerGauge('errors_rate_current', 'Current error rate (errors per second)');
+    }
+
+    /**
+     * 记录 RTT 延迟（集成 latencyProbe）
+     * @param rttMs RTT 延迟（毫秒）
+     */
+    public recordRttLatency(rttMs: number): void {
+        const rttSeconds = rttMs / 1000;
+
+        // 记录到延迟直方图
+        this.observeHistogram('latency_rtt_seconds', rttSeconds);
+
+        // 更新当前延迟
+        this.setGauge('latency_rtt_current_ms', rttMs);
+    }
+
+    /**
+     * 更新 RTT 统计指标
+     * @param stats RTT 统计对象
+     */
+    public updateRttStats(stats: { average: number; min: number; max: number; p95: number }): void {
+        this.setGauge('latency_rtt_average_ms', stats.average);
+        this.setGauge('latency_rtt_min_ms', stats.min);
+        this.setGauge('latency_rtt_max_ms', stats.max);
+        this.setGauge('latency_rtt_p95_ms', stats.p95);
+    }
+
+    /**
+     * 更新吞吐量指标
+     */
+    private throughputHistory: { timestamp: number; count: number }[] = [];
+
+    public updateThroughput(): void {
+        const now = Date.now();
+        const currentEPS = this.inputStats.eventsPerSecond;
+
+        // 更新当前吞吐量
+        this.setGauge('input_events_per_second', currentEPS);
+
+        // 记录到历史
+        this.throughputHistory.push({ timestamp: now, count: currentEPS });
+
+        // 清理过期历史（保留 5 分钟）
+        const cutoff5m = now - 300000;
+        this.throughputHistory = this.throughputHistory.filter(h => h.timestamp >= cutoff5m);
+
+        // 计算 1 分钟平均
+        const cutoff1m = now - 60000;
+        const history1m = this.throughputHistory.filter(h => h.timestamp >= cutoff1m);
+        const avg1m = history1m.length > 0
+            ? history1m.reduce((sum, h) => sum + h.count, 0) / history1m.length
+            : 0;
+        this.setGauge('input_events_per_second_1m', avg1m);
+
+        // 计算 5 分钟平均
+        const avg5m = this.throughputHistory.length > 0
+            ? this.throughputHistory.reduce((sum, h) => sum + h.count, 0) / this.throughputHistory.length
+            : 0;
+        this.setGauge('input_events_per_second_5m', avg5m);
+    }
+
+    /**
+     * 记录分类错误
+     * @param category 错误分类
+     */
+    public recordErrorByCategory(category: 'validation' | 'network' | 'system' | 'timeout'): void {
+        const metricName = `errors_${category}_total`;
+        this.incrementCounter(metricName);
+    }
+
+    /**
+     * 更新错误率
+     * @param errorsPerSecond 每秒错误数
+     */
+    public updateErrorRate(errorsPerSecond: number): void {
+        this.setGauge('errors_rate_current', errorsPerSecond);
     }
 }
 
