@@ -1,5 +1,35 @@
 # Changelog
 
+## [2026-04-05] test: 补充 WebSocket Handlers 测试 (task-P2-integration-tests)
+
+### Changes
+- **Server/tests/ws/handlers/config.test.ts**: 新建 Config Handler 单元测试（多个测试用例）
+  - handleConfigGet 测试：配置获取、敏感信息过滤
+  - handleConfigSet 测试：权限验证、配置修改
+  - handleConfigSave 测试：配置保存
+  - handleConfigReset 测试：配置重置
+  - handleConfigValidate 测试：配置验证
+  - ConfigChangeCallback 测试：回调注册和管理
+  - 集成测试：完整配置工作流
+
+- **Server/tests/ws/handlers/state.test.ts**: 新建 State Handler 单元测试（多个测试用例）
+  - handleState 基础功能测试：状态处理、ACK 响应
+  - StateStore 集成测试：状态存储、缺失处理
+  - 输入验证测试：键盘状态、游戏手柄状态、验证失败处理
+  - 键盘状态转换测试：按键状态转换、过滤释放键
+  - 游戏手柄状态转换测试：按钮转换、摇杆状态
+  - SafetyController 集成测试：安全清零触发
+  - 统计功能测试：ACK 统计、验证统计
+  - 错误处理测试：WebSocket 发送错误、内部错误、格式错误
+  - ACK 消息格式测试：正确结构、拒绝原因
+  - 性能测试：高频状态更新处理
+
+### Impact
+- WebSocket Handlers 测试覆盖率提升
+- 补充了 config 和 state 处理器的完整测试场景
+- 测试用例覆盖正常流程、边界条件、错误处理
+- 为 WebSocket 消息处理提供质量保障
+
 ## [2026-04-03] refactor: 优化历史记录内存管理 (task-P2-optimize-history-memory)
 
 ### Changes
