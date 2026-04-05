@@ -152,12 +152,28 @@ export interface InputDelta {
     };
 }
 
+// 游戏手柄摇杆轴状态
+export interface GamepadAxesState {
+    LX: number; // 左摇杆 X 轴 [-1.0, 1.0]
+    LY: number; // 左摇杆 Y 轴 [-1.0, 1.0]
+    RX: number; // 右摇杆 X 轴 [-1.0, 1.0]
+    RY: number; // 右摇杆 Y 轴 [-1.0, 1.0]
+}
+
+// 游戏手柄扳机状态
+export interface GamepadTriggersState {
+    LT: number; // 左扳机 [0.0, 1.0]
+    RT: number; // 右扳机 [0.0, 1.0]
+}
+
 // 输入状态接口
 export interface InputState {
     frameId?: number;
     runtimeStatus?: "ok" | "degraded" | "rollback";
     keyboard: Set<string>;
-    gamepad?: Set<string>; // 添加游戏手柄按钮支持
+    gamepad?: Set<string>; // 游戏手柄按钮集合
+    gamepadAxes?: GamepadAxesState; // 游戏手柄摇杆轴（新增）
+    gamepadTriggers?: GamepadTriggersState; // 游戏手柄扳机（新增）
     mouse: {
         x: number;
         y: number;
@@ -166,7 +182,7 @@ export interface InputState {
         middle: boolean;
     };
     joystick: {
-        x: number; // -1~1
+        x: number; // -1~1（独立摇杆设备，与游戏手柄摇杆分离）
         y: number; // -1~1
         deadzone: number;
         smoothing: number;

@@ -2,7 +2,7 @@
 
 import { InputAdapter } from './InputAdapter';
 import { GamepadXInputAdapter } from './GamepadXInputAdapter';
-import { InputState, InputDelta, InputEvent } from '../../types/ws';
+import { InputState, InputDelta, InputEvent, GamepadAxesState, GamepadTriggersState } from '../../types/ws';
 
 /**
  * 游戏手柄适配器
@@ -58,6 +58,12 @@ export class GamepadAdapter implements InputAdapter {
     /**
      * 应用完整输入状态（InputAdapter 接口方法）
      * @param state 输入状态
+     *
+     * 映射规则：
+     * - state.gamepad: 按钮集合 -> XInput 按钮掩码
+     * - state.gamepadAxes: 游戏手柄摇杆 -> LX, LY, RX, RY
+     * - state.gamepadTriggers: 游戏手柄扳机 -> LT, RT
+     * - state.joystick: 独立摇杆设备（不用于游戏手柄）
      */
     applyState(state: InputState): void {
         if (!this.isEnabled) {
@@ -65,19 +71,28 @@ export class GamepadAdapter implements InputAdapter {
         }
 
         if (state.gamepad) {
-            // 从 state 中提取 gamepad 按钮、joystick 轴值
+            // 从 state 中提取游戏手柄按钮
             const buttons = state.gamepad;
-            const axes = state.joystick || {};
 
-            // 将摇杆轴映射到 XInput 轴
+            // 从 gamepadAxes 提取摇杆轴值（完整映射左右摇杆）
+            const axes: GamepadAxesState | undefined = state.gamepadAxes;
             const xinputAxes: { [key: string]: number } = {};
-            if (axes.x !== undefined) xinputAxes.LX = axes.x;
-            if (axes.y !== undefined) xinputAxes.LY = axes.y;
+            if (axes) {
+                if (axes.LX !== undefined) xinputAxes.LX = axes.LX;
+                if (axes.LY !== undefined) xinputAxes.LY = axes.LY;
+                if (axes.RX !== undefined) xinputAxes.RX = axes.RX;
+                if (axes.RY !== undefined) xinputAxes.RY = axes.RY;
+            }
 
-            // 扳机值暂时为空（当前 InputState 没有专门的 triggers 属性）
-            const triggers: { [key: string]: number } = {};
+            // 从 gamepadTriggers 提取扳机值
+            const triggers: GamepadTriggersState | undefined = state.gamepadTriggers;
+            const xinputTriggers: { [key: string]: number } = {};
+            if (triggers) {
+                if (triggers.LT !== undefined) xinputTriggers.LT = triggers.LT;
+                if (triggers.RT !== undefined) xinputTriggers.RT = triggers.RT;
+            }
 
-            this.xinputAdapter.applyState(buttons, xinputAxes, triggers);
+            this.xinputAdapter.applyState(buttons, xinputAxes, xinputTriggers);
         }
     }
 

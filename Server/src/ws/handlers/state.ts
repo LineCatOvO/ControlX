@@ -150,6 +150,7 @@ export function handleState(ws: any, message: StateMessage) {
 
     try {
         // 将 StateMessage 转换为 InputState 格式
+        // 注意：joystick 属性用于独立摇杆设备，游戏手柄摇杆使用 gamepadAxes
         const inputState = {
             frameId: message.stateId,
             keyboard: new Set(message.keyboardState
@@ -160,6 +161,18 @@ export function handleState(ws: any, message: StateMessage) {
                 .filter(btnEvent => btnEvent.eventType === 'pressed' || btnEvent.eventType === 'held')
                 .map(btnEvent => btnEvent.buttonId)
             ),
+            // 游戏手柄摇杆轴映射（完整提取左右摇杆）
+            gamepadAxes: {
+                LX: message.gamepadState.joysticks.left.x,
+                LY: message.gamepadState.joysticks.left.y,
+                RX: message.gamepadState.joysticks.right.x,
+                RY: message.gamepadState.joysticks.right.y
+            },
+            // 游戏手柄扳机映射
+            gamepadTriggers: {
+                LT: message.gamepadState.triggers.left,
+                RT: message.gamepadState.triggers.right
+            },
             mouse: {
                 x: 0, // 暂时使用默认值，后续可扩展
                 y: 0,
@@ -167,11 +180,12 @@ export function handleState(ws: any, message: StateMessage) {
                 right: false,
                 middle: false
             },
+            // joystick 属性保留用于独立摇杆设备（与游戏手柄摇杆分离）
             joystick: {
-                x: message.gamepadState.joysticks.left.x,
-                y: message.gamepadState.joysticks.left.y,
-                deadzone: message.gamepadState.joysticks.left.deadzone,
-                smoothing: 0.5 // 暂时使用默认值，后续可扩展
+                x: 0, // 独立摇杆设备默认值
+                y: 0,
+                deadzone: 0.1,
+                smoothing: 0.5
             }
         };
 
