@@ -2,37 +2,38 @@
  * ============================================================================
  * 输入执行器模块 (Input Executor Module)
  * ============================================================================
- * 
+ *
  * 【模块职责】
  * 本模块是输入系统的执行层核心，负责管理所有输入执行器的生命周期和状态应用。
- * 
+ *
  * 【核心功能】
  * 1. 执行器管理：创建、配置和管理所有输入执行器（键盘、鼠标、摇杆、手柄）
  * 2. 状态应用：将输入状态应用到实际硬件或模拟设备
  * 3. 模式切换：支持生产模式、测试模式、DryRun模式
  * 4. 安全控制：集成SafetyController，确保异常情况下的安全清零
- * 
+ *
  * 【模块边界】
  * - ✅ 允许：管理执行器生命周期、应用输入状态、触发安全清零
  * - ❌ 禁止：状态验证（由Validator负责）、状态存储（由StateStore负责）、时间管理（由ApplyScheduler负责）
- * 
+ *
  * 【依赖关系】
  * - 依赖：SafetyController（安全清零）、ApplyScheduler（时间同步）
  * - 被依赖：app.ts（启动入口）、WebSocket处理器（状态接收）
- * 
+ *
  * 【关键设计】
- * - 执行器模式：通过InputExecutor接口实现多态，支持不同类型的输入设备
- * - 管理器模式：DefaultInputExecutorManager统一管理所有执行器
- * - 模式切换：通过环境变量控制执行器类型（生产/测试/DryRun）
- * 
+ * - 适配器模式：通过InputAdapter接口实现多态，封装具体执行器的调用逻辑
+ * - 管理器模式：DefaultInputExecutorManager统一管理所有适配器
+ * - 模式切换：通过环境变量控制适配器类型（生产/测试/DryRun）
+ * - 架构一致性：使用适配器接口而非直接调用执行器
+ *
  * 【注意事项】
  * - 执行器操作是同步的，不应阻塞主线程
  * - 异常情况下必须通过SafetyController清零，不能直接操作执行器
  * - 时间戳必须使用ApplyScheduler提供的tickTime，禁止调用Date.now()
- * 
+ *
  * @module input/executor
- * @version 2.0.0
- * @last-updated 2026-03-13
+ * @version 2.1.0
+ * @last-updated 2026-04-05
  */
 
 import { config } from "../config/config";
@@ -47,6 +48,13 @@ import { TestModeKeyboardExecutor } from "./test-keyboard";
 import { DryRunExecutor } from "./dryRunExecutor";
 import { ApplyScheduler } from "./applyScheduler";
 import { getMetricsCollector } from "../utils/metrics";
+
+// 导入适配器
+import { KeyboardAdapter } from "./adapters/KeyboardAdapter";
+import { MouseAdapter } from "./adapters/MouseAdapter";
+import { JoystickAdapter } from "./adapters/JoystickAdapter";
+import { GamepadAdapter } from "./adapters/GamepadAdapter";
+import { GamepadXInputAdapter } from "./adapters/GamepadXInputAdapter";
 
 // 检查运行模式
 const isTestMode = process.env.TEST_MODE === "true";
@@ -122,7 +130,7 @@ export class DefaultInputExecutorManager implements InputExecutorManager {
 // 创建输入执行器管理器实例
 const executorManager = new DefaultInputExecutorManager();
 
-// 根据模式添加适当的执行器
+// 根据模式添加适当的执行器（使用适配器架构）
 if (isDryRunMode) {
     console.log("🏃 Using DRY RUN mode executors (no actual input, full logging)");
     dryRunExecutor = new DryRunExecutor({ verbose: true, logToFile: false });
@@ -131,11 +139,28 @@ if (isDryRunMode) {
     console.log("🧪 Using test mode executors (no actual input)");
     executorManager.addExecutor(new TestModeKeyboardExecutor());
 } else {
-    console.log("🎮 Using production mode executors");
-    executorManager.addExecutor(new KeyboardExecutor());
-    executorManager.addExecutor(new MouseExecutor());
-    executorManager.addExecutor(new JoystickExecutor());
-    executorManager.addExecutor(new GamepadExecutor());
+    console.log("🎮 Using production mode executors (adapter architecture)");
+
+    // 创建执行器实例
+    const keyboardExecutor = new KeyboardExecutor();
+    const mouseExecutor = new MouseExecutor();
+    const joystickExecutor = new JoystickExecutor();
+
+    // 创建适配器实例（封装执行器）
+    const keyboardAdapter = new KeyboardAdapter(keyboardExecutor);
+    const mouseAdapter = new MouseAdapter(mouseExecutor);
+    const joystickAdapter = new JoystickAdapter(joystickExecutor);
+
+    // 创建游戏手柄适配器（使用 GamepadXInputAdapter）
+    const gamepadXInputAdapter = new GamepadXInputAdapter();
+    const gamepadAdapter = new GamepadAdapter(gamepadXInputAdapter);
+    gamepadAdapter.initialize();
+
+    // 管理器使用适配器（而非直接使用执行器）
+    executorManager.addExecutor(keyboardAdapter);
+    executorManager.addExecutor(mouseAdapter);
+    executorManager.addExecutor(joystickAdapter);
+    executorManager.addExecutor(gamepadAdapter);
 }
 
 // 创建安全控制器

@@ -1,17 +1,34 @@
 // 输入适配器接口定义
 
-import { InputState } from '../../types/ws';
+import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
  * 输入适配器基类接口
- * 定义所有输入适配器必须实现的方法
+ * 继承 InputExecutor 接口，确保与 executorManager 兼容
+ *
+ * 设计说明：
+ * - InputAdapter 接口扩展为继承 InputExecutor 接口
+ * - 所有适配器必须实现 applyState, applyDelta, applyEvent, reset 方法
+ * - 确保适配器可以被 executorManager 直接使用
  */
 export interface InputAdapter {
     /**
-     * 应用输入状态
+     * 应用完整输入状态
      * @param state 输入状态
      */
     applyState(state: InputState): void;
+
+    /**
+     * 应用输入增量
+     * @param delta 输入增量
+     */
+    applyDelta(delta: InputDelta): void;
+
+    /**
+     * 应用输入事件
+     * @param event 输入事件
+     */
+    applyEvent(event: InputEvent): void;
 
     /**
      * 重置输入状态

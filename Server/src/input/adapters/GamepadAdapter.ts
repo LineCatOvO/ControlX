@@ -2,11 +2,17 @@
 
 import { InputAdapter } from './InputAdapter';
 import { GamepadXInputAdapter } from './GamepadXInputAdapter';
-import { InputState } from '../../types/ws';
+import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
  * 游戏手柄适配器
  * 封装 GamepadXInputAdapter 的调用逻辑，实现 InputAdapter 接口
+ *
+ * 设计说明：
+ * - 实现 InputAdapter 接口的所有方法（applyState, applyDelta, applyEvent, reset）
+ * - 使用 GamepadXInputAdapter（底层 ViGEmBus）执行实际的手柄操作
+ * - 游戏手柄不支持增量模式和事件模式，仅支持完整状态应用
+ * - ViGEmBus 不可用时自动降级（功能禁用）
  */
 export class GamepadAdapter implements InputAdapter {
     private xinputAdapter: GamepadXInputAdapter;
@@ -50,7 +56,7 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * 应用输入状态
+     * 应用完整输入状态（InputAdapter 接口方法）
      * @param state 输入状态
      */
     applyState(state: InputState): void {
@@ -76,7 +82,31 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * 重置输入状态
+     * 应用输入增量（InputAdapter 接口方法）
+     * @param delta 输入增量
+     */
+    applyDelta(delta: InputDelta): void {
+        if (!this.isEnabled) {
+            return;
+        }
+        // 游戏手柄不支持增量模式，直接跳过
+        console.log('GamepadEvent: Delta not supported, use full state instead');
+    }
+
+    /**
+     * 应用输入事件（InputAdapter 接口方法）
+     * @param event 输入事件
+     */
+    applyEvent(event: InputEvent): void {
+        if (!this.isEnabled) {
+            return;
+        }
+        // 游戏手柄不支持事件模式，直接跳过
+        console.log('GamepadEvent: Event not supported, use full state instead');
+    }
+
+    /**
+     * 重置输入状态（InputAdapter 接口方法）
      */
     reset(): void {
         if (!this.isEnabled) {
