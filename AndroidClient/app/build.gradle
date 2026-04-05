@@ -16,15 +16,74 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
+    // 签名配置
+    signingConfigs {
+        // Debug 签名使用默认调试密钥
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        
+        // Release 签名配置（需要实际密钥文件）
+        // 生产构建时需要配置实际的签名密钥
+        // 可通过 signing-config.properties 文件配置
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 签名配置将从 signing-config.properties 文件读取
+            // 如果文件不存在，将使用 debug 签名（仅用于开发测试）
+            def signingConfigFile = file('signing-config.properties')
+            if (signingConfigFile.exists()) {
+                def props = new Properties()
+                props.load(new FileInputStream(signingConfigFile))
+                storeFile file(props['storeFile'])
+                storePassword props['storePassword']
+                keyAlias props['keyAlias']
+                keyPassword props['keyPassword']
+            } else {
+                // 开发测试时使用 debug 签名
+                println 'WARNING: Using debug signing for release build'
+                println 'Create signing-config.properties for production release'
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
         }
     }
+    
+    buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.debug
+            // Debug 构建标识
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+            // Debug 构建配置
+            buildConfigField 'boolean', 'DEBUG_MODE', 'true'
+        }
+        
+        release {
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            // Release 构建配置
+            buildConfigField 'boolean', 'DEBUG_MODE', 'false'
+        }
+    }
+    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
+    }
+    
+    // BuildConfig 功能启用
+    buildFeatures {
+        buildConfig true
     }
 }
 
