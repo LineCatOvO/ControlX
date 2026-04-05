@@ -1,12 +1,20 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "src/app.ts",
+  "main": "dist/app.js",
   "scripts": {
-    "start": "npm run build && node dist/app.js",
+    "start": "node dist/app.js",
+    "start:prod": "NODE_ENV=production node dist/app.js",
     "dev": "tsc-watch --onSuccess \"node dist/app.js\"",
     "build": "tsc && cp -r src/web/static dist/web/static",
-    "test": "jest"
+    "build:prod": "tsc && cp -r src/web/static dist/web/static",
+    "clean": "rm -rf dist",
+    "rebuild": "pnpm run clean && pnpm run build",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts --fix",
+    "script:build": "./scripts/build.sh build",
+    "script:dev": "./scripts/build.sh dev",
+    "script:all": "./scripts/build.sh all"
   },
   "keywords": [],
   "author": "",
