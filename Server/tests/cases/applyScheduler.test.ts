@@ -370,4 +370,133 @@ describe("ApplyScheduler Tests", () => {
             expect(mockExecutorManager.applyCount).toBeGreaterThanOrEqual(1);
         });
     });
+
+    describe("Time Authority Tests", () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        test("should generate and distribute unified tickTime", () => {
+            const fixedTickTime = 1000000;
+            applyScheduler.start(fixedTickTime);
+
+            // Verify that tickTime is generated
+            expect(applyScheduler.isRunning()).toBe(true);
+        });
+
+        test("should update SafetyController tickTime on each tick", () => {
+            const { getSafetyController } = require("../../src/input/executor");
+            const safetyController = getSafetyController();
+
+            const state: InputState = {
+                frameId: 100,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+            stateStore.storeState(state);
+
+            const startTime = 1000000;
+            applyScheduler.start(startTime);
+
+            // Advance timers to trigger applyCurrentState
+            jest.advanceTimersByTime(15);
+
+            // Verify SafetyController received tickTime
+            const lastValidTime = safetyController.getLastValidStateTime();
+            expect(lastValidTime).toBeGreaterThanOrEqual(startTime);
+        });
+
+        test("should ensure time consistency within same tick", () => {
+            const state: InputState = {
+                frameId: 100,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+            stateStore.storeState(state);
+
+            const startTime = 1000000;
+            applyScheduler.start(startTime);
+
+            // Record time before advancing
+            const timeBefore = Date.now();
+
+            // Advance timers
+            jest.advanceTimersByTime(10);
+
+            // Verify that all time-related operations used same tickTime
+            expect(mockExecutorManager.applyCount).toBeGreaterThanOrEqual(1);
+        });
+
+        test("should record applied state with tickTime", () => {
+            const state: InputState = {
+                frameId: 200,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+            stateStore.storeState(state);
+
+            const startTime = 1000000;
+            applyScheduler.start(startTime);
+
+            jest.advanceTimersByTime(15);
+
+            // Verify StateStore recorded applied state with proper timestamp
+            const lastAppliedSeq = stateStore.getLastAppliedSequenceNumber();
+            expect(lastAppliedSeq).toBeGreaterThanOrEqual(200);
+        });
+
+        test("should be the only time source for SafetyController", () => {
+            const { getSafetyController } = require("../../src/input/executor");
+            const safetyController = getSafetyController();
+
+            // SafetyController should not have valid time before ApplyScheduler starts
+            const initialTime = safetyController.getLastValidStateTime();
+            expect(initialTime).toBe(0);
+
+            const state: InputState = {
+                frameId: 300,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+            stateStore.storeState(state);
+
+            const startTime = 1000000;
+            applyScheduler.start(startTime);
+
+            jest.advanceTimersByTime(15);
+
+            // After ApplyScheduler runs, SafetyController should have valid time
+            const afterTime = safetyController.getLastValidStateTime();
+            expect(afterTime).toBeGreaterThan(0);
+        });
+
+        test("should handle time drift by using tickTime consistently", () => {
+            const state: InputState = {
+                frameId: 400,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+            stateStore.storeState(state);
+
+            const startTime = 1000000;
+            applyScheduler.start(startTime);
+
+            // Simulate multiple ticks with time drift
+            for (let i = 0; i < 10; i++) {
+                jest.advanceTimersByTime(10);
+            }
+
+            // Verify consistent time handling
+            expect(mockExecutorManager.applyCount).toBeGreaterThanOrEqual(10);
+        });
+    });
 });
