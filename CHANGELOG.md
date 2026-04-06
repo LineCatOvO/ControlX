@@ -1,5 +1,41 @@
 # Changelog
 
+## [2026-04-05] docs: 添加构建文档和多客户端架构设计 (task-P2-build-docs, task-P2-optimization-enhancement)
+
+### Changes
+- **BUILDING.md**: 新建项目构建指南文档
+  - 项目结构说明
+  - 服务端和客户端系统要求
+  - 构建命令和流程说明
+  - ARM64 环境配置指南
+
+- **Server/BUILD_CONFIG.md**: 新建服务端构建配置文档
+  - 构建环境要求
+  - TypeScript 配置说明
+  - 开发和生产构建命令
+  - 环境变量配置
+
+- **Server/docs/ci-cd-setup.md**: 新建 CI/CD 配置文档
+  - GitHub Actions 配置示例
+  - 服务端和客户端构建流程
+  - 发布和部署配置
+
+- **Server/docs/multi-client-architecture.md**: 新建多客户端支持架构设计文档
+  - 背景与问题分析
+  - 现状分析和架构目标
+  - 核心组件设计（会话管理器、状态同步管理器、输入仲裁器）
+  - 数据流设计和接口定义
+  - 实现方案和风险评估
+  - 实施计划和时间规划
+
+- **TASKS.md**: 更新任务文档，标记 P2 文档任务为已完成
+
+### Impact
+- 构建文档完善，降低新开发者上手难度
+- CI/CD 配置文档为自动化构建提供指导
+- 多客户端架构设计为后续功能开发提供技术蓝图
+- 文档质量高，结构完整，内容详细
+
 ## [2026-04-05] test: 补充 WebSocket Handlers 测试 (task-P2-integration-tests)
 
 ### Changes

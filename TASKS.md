@@ -815,11 +815,11 @@ export PATH=$PATH:$NDK_HOME/toolchains/llvm/prebuilt/linux-aarch64/bin
 
 ## 🟢 P2 - 文档与优化
 
-### 8. 构建文档完善
-- [ ] 8.1 创建 BUILDING.md 构建指南
-- [ ] 8.2 创建 ANDROID_SDK_ARM64_SETUP.md ARM64 配置指南
-- [ ] 8.3 更新 README.md 添加构建章节
-- [ ] 8.4 创建 CI/CD 配置文档
+### 8. 构建文档完善 ✅ 已完成（2026-04-05）
+- [x] 8.1 创建 BUILDING.md 构建指南（项目根目录）
+- [x] 8.2 创建 Server/BUILD_CONFIG.md 服务端构建配置
+- [x] 8.3 创建 Server/docs/ci-cd-setup.md CI/CD 配置文档
+- [x] 8.4 ARM64 配置已整合到 BUILDING.md
 
 ### 待制作任务（低优先级）
 
