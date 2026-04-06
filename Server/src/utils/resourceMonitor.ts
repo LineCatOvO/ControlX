@@ -3,10 +3,10 @@
  * System Resource Monitor Module (Resource Monitor Module)
  * ============================================================================
  *
- * 【模块职责】
+ * 【Module responsibility】
  * This module provides system resource monitoring functionality, including CPU usage, memory usage, etc.。
  *
- * 【核心功能】
+ * 【Core functionality】
  * 1. CPU usage monitoring: real-time CPU usage percentage calculation
  * 2. Memory usage monitoring: monitor heap memory, RSS, etc.
  * 3. Process running time: record service running duration

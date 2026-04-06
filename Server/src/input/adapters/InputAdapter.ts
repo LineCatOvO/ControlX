@@ -7,7 +7,7 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
  * Extends InputExecutor interface，Ensure compatibility with executorManager
  *
  * Design notes：
- * - InputAdapter 接口扩展为Extends InputExecutor interface
+ * - InputAdapter InterfaceExtendForExtends InputExecutor interface
  * - All adapters must implement applyState, applyDelta, applyEvent, reset methods
  * - Ensure adapters can be directly used by executorManager
  */
@@ -31,7 +31,7 @@ export interface InputAdapter {
     applyEvent(event: InputEvent): void;
 
     /**
-     * 重置Input state
+     * ResetInput state
      */
     reset(): void;
 }
@@ -48,7 +48,7 @@ export interface KeyboardAdapter extends InputAdapter {
 
     /**
      * Get current keyboard state
-     * @returns 当前Set of pressed keys
+     * @returns CurrentSet of pressed keys
      */
     getKeyboardState(): Set<string>;
 }

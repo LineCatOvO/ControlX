@@ -1,16 +1,16 @@
 /**
  * ============================================================================
- * 结构化日志模块 (Structured Logger Module)
+ * 结构化LogModule (Structured Logger Module)
  * ============================================================================
  *
- * 【模块职责】
- * 本模块提供统一的日志记录功能，支持结构化日志输出。
+ * 【Module responsibility】
+ * 本Module提供统一OfLog记录Function，Support结构化LogOutput。
  *
- * 【核心功能】
- * 1. 日志级别：支持 DEBUG、INFO、WARN、ERROR 四个级别
- * 2. 结构化格式：支持 JSON 格式输出，便于日志聚合和分析
- * 3. 日志上下文：支持 requestId、clientId 等上下文信息
- * 4. 格式化输出：支持 JSON 和人类可读两种格式
+ * 【Core functionality】
+ * 1. Log级别：Support DEBUG、INFO、WARN、ERROR 四个级别
+ * 2. 结构化格式：Support JSON 格式Output，便于Log聚合和分析
+ * 3. LogOnUnder文：Support requestId、clientId 等OnUnder文Info
+ * 4. 格式化Output：Support JSON 和人Class可读两种格式
  *
  * 【使用示例】
  * ```typescript
@@ -25,7 +25,7 @@
  */
 
 /**
- * 日志级别枚举
+ * Log级别枚举
  */
 export enum LogLevel {
     DEBUG = 0,
@@ -35,7 +35,7 @@ export enum LogLevel {
 }
 
 /**
- * 日志格式类型
+ * Log格式Type
  */
 export enum LogFormat {
     JSON = 'json',
@@ -43,7 +43,7 @@ export enum LogFormat {
 }
 
 /**
- * 日志配置接口
+ * LogConfigInterface
  */
 export interface LoggerConfig {
     level: LogLevel;
@@ -53,7 +53,7 @@ export interface LoggerConfig {
 }
 
 /**
- * 日志上下文接口
+ * LogOnUnder文Interface
  */
 export interface LogContext {
     requestId?: string;
@@ -64,7 +64,7 @@ export interface LogContext {
 }
 
 /**
- * 日志条目接口
+ * Log条目Interface
  */
 export interface LogEntry {
     timestamp: string;
@@ -75,7 +75,7 @@ export interface LogEntry {
 }
 
 /**
- * 默认日志配置
+ * DefaultLogConfig
  */
 const DEFAULT_CONFIG: LoggerConfig = {
     level: LogLevel.INFO,
@@ -85,7 +85,7 @@ const DEFAULT_CONFIG: LoggerConfig = {
 };
 
 /**
- * 从环境变量读取日志级别
+ * 从环境Variable读取Log级别
  */
 function getLogLevelFromEnv(): LogLevel {
     const envLevel = process.env.LOG_LEVEL?.toUpperCase();
@@ -104,7 +104,7 @@ function getLogLevelFromEnv(): LogLevel {
 }
 
 /**
- * 从环境变量读取日志格式
+ * 从环境Variable读取Log格式
  */
 function getLogFormatFromEnv(): LogFormat {
     const envFormat = process.env.LOG_FORMAT?.toLowerCase();
@@ -115,8 +115,8 @@ function getLogFormatFromEnv(): LogFormat {
 }
 
 /**
- * 日志类
- * 单例模式，提供全局日志管理
+ * LogClass
+ * 单例Mode，提供GlobalLogManage
  */
 export class Logger {
     private static instance: Logger | null = null;
@@ -132,7 +132,7 @@ export class Logger {
     }
 
     /**
-     * 获取单例实例
+     * Get单例实例
      */
     public static getInstance(): Logger {
         if (!Logger.instance) {
@@ -142,35 +142,35 @@ export class Logger {
     }
 
     /**
-     * 重置单例（仅用于测试）
+     * Reset单例（仅用于Test）
      */
     public static resetInstance(): void {
         Logger.instance = null;
     }
 
     /**
-     * 更新配置
+     * UpdateConfig
      */
     public setConfig(config: Partial<LoggerConfig>): void {
         this.config = { ...this.config, ...config };
     }
 
     /**
-     * 获取当前配置
+     * GetCurrentConfig
      */
     public getConfig(): LoggerConfig {
         return { ...this.config };
     }
 
     /**
-     * 创建带上下文的日志器
+     * Create带OnUnder文OfLogManager
      */
     public withContext(context: LogContext): ContextLogger {
         return new ContextLogger(this, context);
     }
 
     /**
-     * 格式化日志条目
+     * 格式化Log条目
      */
     private formatEntry(level: LogLevel, message: string, context?: LogContext, error?: Error): string {
         const levelName = LogLevel[level];
@@ -193,7 +193,7 @@ export class Logger {
         if (this.config.format === LogFormat.JSON) {
             return JSON.stringify(entry);
         } else {
-            // 人类可读格式
+            // 人Class可读格式
             const contextStr = context ? ` [${Object.entries(context).map(([k, v]) => `${k}=${v}`).join(', ')}]` : '';
             const stackStr = entry.stackTrace ? `\n  Stack: ${entry.stackTrace}` : '';
             return `${timestamp} [${levelName}]${contextStr} ${message}${stackStr}`;
@@ -201,7 +201,7 @@ export class Logger {
     }
 
     /**
-     * 输出日志
+     * OutputLog
      */
     private log(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
         if (level < this.config.level) {
@@ -227,35 +227,35 @@ export class Logger {
     }
 
     /**
-     * DEBUG 级别日志
+     * DEBUG 级别Log
      */
     public debug(message: string, context?: LogContext): void {
         this.log(LogLevel.DEBUG, message, context);
     }
 
     /**
-     * INFO 级别日志
+     * INFO 级别Log
      */
     public info(message: string, context?: LogContext): void {
         this.log(LogLevel.INFO, message, context);
     }
 
     /**
-     * WARN 级别日志
+     * WARN 级别Log
      */
     public warn(message: string, context?: LogContext): void {
         this.log(LogLevel.WARN, message, context);
     }
 
     /**
-     * ERROR 级别日志
+     * ERROR 级别Log
      */
     public error(message: string, context?: LogContext, error?: Error): void {
         this.log(LogLevel.ERROR, message, context, error);
     }
 
     /**
-     * 创建模块专用日志器
+     * CreateModule专用LogManager
      */
     public forModule(module: string): ModuleLogger {
         return new ModuleLogger(this, module);
@@ -263,7 +263,7 @@ export class Logger {
 }
 
 /**
- * 带上下文的日志器
+ * 带OnUnder文OfLogManager
  */
 export class ContextLogger {
     private logger: Logger;
@@ -292,7 +292,7 @@ export class ContextLogger {
 }
 
 /**
- * 模块专用日志器
+ * Module专用LogManager
  */
 export class ModuleLogger {
     private logger: Logger;
@@ -321,14 +321,14 @@ export class ModuleLogger {
 }
 
 /**
- * 获取日志器实例
+ * GetLogManager实例
  */
 export function getLogger(): Logger {
     return Logger.getInstance();
 }
 
 /**
- * 创建模块日志器（便捷函数）
+ * CreateModuleLogManager（便捷Function）
  */
 export function createModuleLogger(module: string): ModuleLogger {
     return getLogger().forModule(module);

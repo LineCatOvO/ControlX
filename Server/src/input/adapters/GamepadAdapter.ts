@@ -1,4 +1,4 @@
-// Gamepad adapter实现
+// Gamepad adapterImplementation
 
 import { InputAdapter } from './InputAdapter';
 import { GamepadXInputAdapter } from './GamepadXInputAdapter';
@@ -9,10 +9,10 @@ import { InputState, InputDelta, InputEvent, GamepadAxesState, GamepadTriggersSt
  * Encapsulates GamepadXInputAdapter calling logic，implements InputAdapter interface
  *
  * Design notes：
- * - implements InputAdapter interface的所有方法（applyState, applyDelta, applyEvent, reset）
- * - 使用 GamepadXInputAdapter（底层 ViGEmBus）执行实际的手柄操作
- * - 游戏手柄不支持增量模式和事件模式，仅支持完整状态应用
- * - ViGEmBus 不可用时自动降级（功能禁用）
+ * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
+ * - 使用 GamepadXInputAdapter（Underlying ViGEmBus）Execute实际OfGamepadOperation
+ * - 游戏Gamepad不Support增量Mode和EventMode，仅SupportCompleteStateApply
+ * - ViGEmBus 不Available时自动降级（FunctionDisable）
  */
 export class GamepadAdapter implements InputAdapter {
     private xinputAdapter: GamepadXInputAdapter;
@@ -23,11 +23,11 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * 初始化适配器（检测和连接）
-     * @returns 是否初始化成功
+     * InitializeAdapter（Detection和Connection）
+     * @returns 是否InitializeSuccess
      */
     public initialize(): boolean {
-        // 检测 ViGEmBus 是否可用
+        // Detection ViGEmBus 是否Available
         const detection = this.xinputAdapter.detect();
 
         if (!detection.available) {
@@ -42,7 +42,7 @@ export class GamepadAdapter implements InputAdapter {
             return false;
         }
 
-        // 尝试连接虚拟控制器
+        // 尝试Connection虚拟Controller
         const connected = this.xinputAdapter.connect();
         if (!connected) {
             console.error('❌ GamepadAdapter: Failed to connect virtual controller');
@@ -56,14 +56,14 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * Apply complete input state（InputAdapter 接口方法）
+     * Apply complete input state（InputAdapter InterfaceMethod）
      * @param state Input state
      *
      * 映射规则：
-     * - state.gamepad: 按钮集合 -> XInput 按钮掩码
-     * - state.gamepadAxes: 游戏手柄摇杆 -> LX, LY, RX, RY
-     * - state.gamepadTriggers: 游戏手柄扳机 -> LT, RT
-     * - state.joystick: 独立摇杆设备（不用于游戏手柄）
+     * - state.gamepad: ButtonSet -> XInput Button掩码
+     * - state.gamepadAxes: 游戏GamepadJoystick -> LX, LY, RX, RY
+     * - state.gamepadTriggers: 游戏Gamepad扳机 -> LT, RT
+     * - state.joystick: 独立Joystick设备（不用于游戏Gamepad）
      */
     applyState(state: InputState): void {
         if (!this.isEnabled) {
@@ -71,10 +71,10 @@ export class GamepadAdapter implements InputAdapter {
         }
 
         if (state.gamepad) {
-            // 从 state 中提取游戏手柄按钮
+            // 从 state In提取游戏GamepadButton
             const buttons = state.gamepad;
 
-            // 从 gamepadAxes 提取摇杆轴值（完整映射左右摇杆）
+            // 从 gamepadAxes 提取Joystick轴Value（Complete映射LeftRightJoystick）
             const axes: GamepadAxesState | undefined = state.gamepadAxes;
             const xinputAxes: { [key: string]: number } = {};
             if (axes) {
@@ -84,7 +84,7 @@ export class GamepadAdapter implements InputAdapter {
                 if (axes.RY !== undefined) xinputAxes.RY = axes.RY;
             }
 
-            // 从 gamepadTriggers 提取扳机值
+            // 从 gamepadTriggers 提取扳机Value
             const triggers: GamepadTriggersState | undefined = state.gamepadTriggers;
             const xinputTriggers: { [key: string]: number } = {};
             if (triggers) {
@@ -97,31 +97,31 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * Apply input delta（InputAdapter 接口方法）
+     * Apply input delta（InputAdapter InterfaceMethod）
      * @param delta Input delta
      */
     applyDelta(delta: InputDelta): void {
         if (!this.isEnabled) {
             return;
         }
-        // 游戏手柄不支持增量模式，直接跳过
+        // 游戏Gamepad不Support增量Mode，直接跳过
         console.log('GamepadEvent: Delta not supported, use full state instead');
     }
 
     /**
-     * Apply input event（InputAdapter 接口方法）
+     * Apply input event（InputAdapter InterfaceMethod）
      * @param event Input event
      */
     applyEvent(event: InputEvent): void {
         if (!this.isEnabled) {
             return;
         }
-        // 游戏手柄不支持事件模式，直接跳过
+        // 游戏Gamepad不SupportEventMode，直接跳过
         console.log('GamepadEvent: Event not supported, use full state instead');
     }
 
     /**
-     * 重置Input state（InputAdapter 接口方法）
+     * ResetInput state（InputAdapter InterfaceMethod）
      */
     reset(): void {
         if (!this.isEnabled) {
@@ -132,7 +132,7 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * 获取启用状态
+     * GetEnableState
      */
     getEnabled(): boolean {
         return this.isEnabled;

@@ -3,30 +3,30 @@
  * Input Executor Module (Input Executor Module)
  * ============================================================================
  *
- * 【模块职责】
+ * 【Module responsibility】
  * This module is the execution layer core of the input system，Responsible for managing lifecycle and state application of all input executors。
  *
- * 【核心功能】
- * 1. Executor management: create, configure and manage all input executors（键盘、鼠标、摇杆、手柄）
+ * 【Core functionality】
+ * 1. Executor management: create, configure and manage all input executors（Keyboard、Mouse、Joystick、Gamepad）
  * 2. State application: apply input state to actual hardware or simulated devices
  * 3. Mode switching: support production mode, test mode, DryRun mode
  * 4. Safety control: integrate SafetyController, ensure safe clearing in exceptional cases
  *
- * 【模块边界】
+ * 【Module boundary】
  * - ✅ Allowed: manage executor lifecycle, apply input state, trigger safe clearing
  * - ❌ Prohibited: state validation (by Validator)、state storage (by StateStore)、time management (by ApplyScheduler)
  *
- * 【依赖关系】
+ * 【Dependencies】
  * - Dependencies: SafetyController (safe clearing)、ApplyScheduler (time synchronization)
  * - Depended by: app.ts (startup entry)、WebSocket handlers (state reception)
  *
- * 【关键设计】
+ * 【Key design】
  * - Adapter pattern: polymorphism through InputAdapter interface，encapsulate calling logic of concrete executors
  * - Manager pattern: DefaultInputExecutorManager unified management of all adapters
- * - 模式切换：Control adapter type through environment variables（生产/测试/DryRun）
+ * - ModeSwitch：Control adapter type through environment variables（生产/Test/DryRun）
  * - Architecture consistency: use adapter interface instead of direct executor calls
  *
- * 【注意事项】
+ * 【Notes】
  * - Executor operations are synchronous, should not block main thread
  * - Must clear through SafetyController in exceptional cases，cannot directly operate executor
  * - Timestamp must use tickTime provided by ApplyScheduler，Prohibit calling Date.now()
@@ -72,7 +72,7 @@ export class DefaultInputExecutorManager implements InputExecutorManager {
 
     /**
      * Add input executor
-     * @param executor 输入执行器
+     * @param executor InputExecutor
      */
     addExecutor(executor: InputExecutor): void {
         this.executors.push(executor);
@@ -80,7 +80,7 @@ export class DefaultInputExecutorManager implements InputExecutorManager {
 
     /**
      * Remove input executor
-     * @param executor 输入执行器
+     * @param executor InputExecutor
      */
     removeExecutor(executor: InputExecutor): void {
         this.executors = this.executors.filter((e) => e !== executor);
@@ -151,7 +151,7 @@ if (isDryRunMode) {
     const mouseAdapter = new MouseAdapter(mouseExecutor);
     const joystickAdapter = new JoystickAdapter(joystickExecutor);
 
-    // 创建游戏手柄适配器（使用 GamepadXInputAdapter）
+    // Create游戏GamepadAdapter（使用 GamepadXInputAdapter）
     const gamepadXInputAdapter = new GamepadXInputAdapter();
     const gamepadAdapter = new GamepadAdapter(gamepadXInputAdapter);
     gamepadAdapter.initialize();
@@ -208,7 +208,7 @@ export function startInputExecutor() {
 }
 
 /**
- * 停止Input execution loop
+ * StopInput execution loop
  */
 export function stopInputExecutor() {
     if (inputExecutorInterval) {
@@ -217,7 +217,7 @@ export function stopInputExecutor() {
         console.log("Input executor stopped");
     }
 
-    // 停止安全控制器的超时检查并销毁
+    // StopSafeControllerOfTimeout检查并Destroy
     safetyController.destroy();
 }
 
@@ -262,7 +262,7 @@ function executeInput() {
         metricsCollector.recordInputEvent('joystick');
     }
     
-    // 应用当前input state到所有执行器
+    // ApplyCurrentinput state到AllExecutor
     executorManager.applyState(inputState);
 
     // Record valid state time（applyTimeprovided by ApplyScheduler）
@@ -339,7 +339,7 @@ export function getTestLogs(): any[] {
 }
 
 /**
- * 获取Dry Run executor instance
+ * GetDry Run executor instance
  * @returns Dry Run executor instance或null
  */
 export function getDryRunExecutor(): DryRunExecutor | null {

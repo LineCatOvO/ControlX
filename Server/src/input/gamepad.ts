@@ -4,36 +4,36 @@ import { GamepadAdapter } from "./adapters/GamepadAdapter";
 import { GamepadXInputAdapter } from "./adapters/GamepadXInputAdapter";
 
 /**
- * 游戏手柄输入执行器
- * 负责将游戏手柄输入状态转换为系统手柄输入
+ * 游戏GamepadInputExecutor
+ * 负责将游戏GamepadInputState转换For系统GamepadInput
  * 
  * 降级策略：
- * - ViGEmBus 可用：使用虚拟 Xbox 360 控制器
- * - ViGEmBus 不可用：记录警告，禁用游戏手柄功能，仅使用键盘映射
+ * - ViGEmBus Available：使用虚拟 Xbox 360 Controller
+ * - ViGEmBus 不Available：记录Warning，Disable游戏GamepadFunction，仅使用Keyboard映射
  */
 export class GamepadExecutor implements InputExecutor {
-    /** XInput 适配器 */
+    /** XInput Adapter */
     private xinputAdapter: GamepadXInputAdapter;
-    /** 游戏手柄适配器（封装 XInput） */
+    /** 游戏GamepadAdapter（封装 XInput） */
     private gamepadAdapter: GamepadAdapter;
-    /** 是否已初始化 */
+    /** 是否已Initialize */
     private isInitialized: boolean = false;
-    /** 记录当前游戏手柄状态（用于日志） */
+    /** 记录Current游戏GamepadState（用于Log） */
     private currentGamepadState: Set<string> = new Set();
 
     /**
-     * 构造函数
+     * 构造Function
      */
     constructor() {
         console.log('🎮 GamepadExecutor: Initializing...');
         
-        // 创建 XInput 适配器
+        // Create XInput Adapter
         this.xinputAdapter = new GamepadXInputAdapter();
         
-        // 创建游戏手柄适配器
+        // Create游戏GamepadAdapter
         this.gamepadAdapter = new GamepadAdapter(this.xinputAdapter);
         
-        // 尝试初始化
+        // 尝试Initialize
         this.isInitialized = this.gamepadAdapter.initialize();
         
         if (this.isInitialized) {
@@ -49,57 +49,57 @@ export class GamepadExecutor implements InputExecutor {
     }
 
     /**
-     * 应用完整输入状态
-     * @param state 输入状态
+     * ApplyCompleteInputState
+     * @param state InputState
      */
     async applyState(state: InputState): Promise<void> {
         if (!this.isInitialized) {
-            // ViGEmBus 不可用，跳过游戏手柄执行
+            // ViGEmBus 不Available，跳过游戏GamepadExecute
             return;
         }
 
         if (state.gamepad) {
-            // 更新游戏手柄状态（用于日志）
+            // Update游戏GamepadState（用于Log）
             this.updateGamepadState(state.gamepad);
             
-            // 应用状态到 XInput 适配器
+            // ApplyState到 XInput Adapter
             this.gamepadAdapter.applyState(state);
         }
     }
 
     /**
-     * 应用输入增量
-     * @param delta 输入增量
+     * ApplyInput增量
+     * @param delta Input增量
      */
     applyDelta(delta: InputDelta): void {
         if (!this.isInitialized) {
             return;
         }
-        // 游戏手柄不支持增量模式，直接跳过
+        // 游戏Gamepad不Support增量Mode，直接跳过
         console.log('GamepadEvent: Delta not supported, use full state instead');
     }
 
     /**
-     * 应用输入事件
-     * @param event 输入事件
+     * ApplyInputEvent
+     * @param event InputEvent
      */
     applyEvent(event: InputEvent): void {
         if (!this.isInitialized) {
             return;
         }
-        // 游戏手柄不支持事件模式，直接跳过
+        // 游戏Gamepad不SupportEventMode，直接跳过
         console.log('GamepadEvent: Event not supported, use full state instead');
     }
 
     /**
-     * 重置输入状态
+     * ResetInputState
      */
     async reset(): Promise<void> {
         if (!this.isInitialized) {
             return;
         }
         
-        // 重置游戏手柄状态
+        // Reset游戏GamepadState
         this.gamepadAdapter.reset();
         this.currentGamepadState.clear();
 
@@ -107,38 +107,38 @@ export class GamepadExecutor implements InputExecutor {
     }
 
     /**
-     * 获取启用状态
+     * GetEnableState
      */
     isEnabled(): boolean {
         return this.isInitialized;
     }
 
     /**
-     * 更新游戏手柄状态（用于日志）
-     * @param newState 新的游戏手柄状态
+     * Update游戏GamepadState（用于Log）
+     * @param newState 新Of游戏GamepadState
      */
     private updateGamepadState(newState: Set<string>): void {
-        // 找出新增的按钮（需要按下）
+        // 找出AddOfButton（需要按Under）
         const buttonsToPress = new Set(
             [...newState].filter(
                 (button) => !this.currentGamepadState.has(button)
             )
         );
 
-        // 找出移除的按钮（需要释放）
+        // 找出RemoveOfButton（需要释放）
         const buttonsToRelease = new Set(
             [...this.currentGamepadState].filter(
                 (button) => !newState.has(button)
             )
         );
 
-        // 只在状态有变化时记录日志
+        // 只在State有变化时记录Log
         if (buttonsToPress.size > 0 || buttonsToRelease.size > 0) {
             console.log(
                 `🎮 Gamepad: Pressing: [${Array.from(buttonsToPress).join(', ')}], Releasing: [${Array.from(buttonsToRelease).join(', ')}]`
             );
 
-            // 更新当前游戏手柄状态
+            // UpdateCurrent游戏GamepadState
             this.currentGamepadState = newState;
         }
     }

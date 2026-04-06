@@ -3,7 +3,7 @@ import { Config } from '../types/ws';
 /**
  * Validate configuration object validity
  * @param config Configuration object to validate
- * @returns 是否有效
+ * @returns Is valid
  */
 export function validateConfig(config: Partial<Config>): config is Config {
   // Handle null/undefined

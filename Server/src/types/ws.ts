@@ -32,15 +32,15 @@ export interface GamepadButtonEvent {
 
 // Joystick state structure
 export interface JoystickState {
-    x: number; // -1.0 到 1.0
-    y: number; // -1.0 到 1.0
-    deadzone: number; // 0.0 到 1.0
+    x: number; // -1.0 to 1.0
+    y: number; // -1.0 to 1.0
+    deadzone: number; // 0.0 to 1.0
 }
 
 // Trigger state structure
 export interface TriggerState {
-    left: number; // 0.0 到 1.0
-    right: number; // 0.0 到 1.0
+    left: number; // 0.0 to 1.0
+    right: number; // 0.0 to 1.0
 }
 
 // Gamepad state structure
@@ -65,13 +65,13 @@ export interface StateMessage extends WsMessage {
 
 // Event keyboard change structure
 export interface KeyboardEventDelta {
-    keyId: string; // 键位标识符
+    keyId: string; // Key identifier
     eventType: "pressed" | "released"; // Event type
 }
 
 // Event gamepad button change structure
 export interface GamepadButtonEventDelta {
-    buttonId: string; // 按键标识符
+    buttonId: string; // Button identifier
     eventType: "pressed" | "released"; // Event type
 }
 
@@ -112,7 +112,7 @@ export interface StateAckMessage extends WsMessage {
 export interface EventAckMessage extends WsMessage {
     type: "eventAck";
     ackEventId: number; // Confirmed eventId
-    serverRecvTs: number; // 执行端收到该事件的时间
+    serverRecvTs: number; // Time when executor received the event
     status: "success" | "rejected"; // Status
     reason?: string; // Reject reason (if any)
 }
@@ -152,7 +152,7 @@ export interface InputDelta {
     };
 }
 
-// 游戏手柄摇杆轴Status
+// Gamepad joystick axis status
 export interface GamepadAxesState {
     LX: number; // Left joystick X axis [-1.0, 1.0]
     LY: number; // Left joystick Y axis [-1.0, 1.0]
@@ -160,13 +160,13 @@ export interface GamepadAxesState {
     RY: number; // Right joystick Y axis [-1.0, 1.0]
 }
 
-// 游戏手柄扳机Status
+// Gamepad trigger status
 export interface GamepadTriggersState {
     LT: number; // Left trigger [0.0, 1.0]
     RT: number; // Right trigger [0.0, 1.0]
 }
 
-// 输入Status接口
+// Input status interface
 export interface InputState {
     frameId?: number;
     runtimeStatus?: "ok" | "degraded" | "rollback";
@@ -288,14 +288,14 @@ export interface ConfigMessage extends WsMessage {
     data: Config;
 }
 
-// 配置更新Acknowledge message
+// Config update acknowledgement message
 export interface ConfigAckMessage extends WsMessage {
     type: "config_ack";
     message: string;
     data: Config;
 }
 
-// 配置Error message
+// Config error message
 export interface ConfigErrorMessage extends WsMessage {
     type: "config_error";
     message: string;

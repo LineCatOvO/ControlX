@@ -3,10 +3,10 @@
  * Health Check Module (Health Check Module)
  * ============================================================================
  *
- * 【模块职责】
+ * 【Module responsibility】
  * This module provides HTTP health check endpoints for Kubernetes probes and load balancer health checks。
  *
- * 【核心功能】
+ * 【Core functionality】
  * 1. /health endpoint: Liveness Probe（Liveness Probe）
  * 2. /ready endpoint: Readiness Probe（Readiness Probe）
  * 3. /metrics endpoint: Metrics export

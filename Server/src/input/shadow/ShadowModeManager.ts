@@ -1,15 +1,15 @@
 /**
- * 影子模式管理器
+ * 影子ModeManageManager
  *
  * 职责：
- * 1. 双写调度：同时调用旧 Executor 和新 Router
- * 2. 日志记录：记录两边的执行结果
- * 3. 一致性比对：验证 Executor 和 Router 的输出一致性
- * 4. 降级保护：Router 失败时自动回退到 Executor
+ * 1. 双写Scheduler：同时调用旧 Executor 和新 Router
+ * 2. Log记录：记录两边OfExecuteResult
+ * 3. 一致性比对：Verify Executor 和 Router OfOutput一致性
+ * 4. 降级保护：Router Failure时自动回退到 Executor
  *
- * 设计模式：装饰器模式 + 策略模式
+ * 设计Mode：装饰ManagerMode + 策略Mode
  * - 装饰现有 InputExecutorManager
- * - 提供可切换的执行策略（Executor-only / Router-only / Shadow）
+ * - 提供可SwitchOfExecute策略（Executor-only / Router-only / Shadow）
  */
 
 import { InputExecutorManager } from '../interfaces';
@@ -18,103 +18,103 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
 import { InputDeviceType } from '../hosts/types';
 
 /**
- * 影子模式配置
+ * 影子ModeConfig
  */
 export interface ShadowModeConfig {
-    /** 是否启用影子模式 */
+    /** 是否Enable影子Mode */
     enabled: boolean;
-    /** 是否启用详细日志 */
+    /** 是否EnableDetailLog */
     verbose: boolean;
-    /** 是否启用一致性检查 */
+    /** 是否Enable一致性检查 */
     consistencyCheck: boolean;
-    /** 是否记录比对差异 */
+    /** 是否记录比对Difference */
     logDifferences: boolean;
-    /** 自动降级：Router 失败时自动切换到 Executor-only 模式 */
+    /** 自动降级：Router Failure时自动Switch到 Executor-only Mode */
     autoFallback: boolean;
-    /** 连续失败阈值，达到后触发自动降级 */
+    /** 连续FailureThreshold，达到After触发自动降级 */
     failureThreshold: number;
 }
 
 /**
- * 执行日志条目
+ * ExecuteLog条目
  */
 export interface ExecutionLogEntry {
-    /** 时间戳 */
+    /** Timestamp */
     timestamp: number;
-    /** 序列号 */
+    /** sequence number */
     sequence: number;
-    /** 执行器类型 */
+    /** ExecutorType */
     executorType: 'executor' | 'router' | 'both';
-    /** 执行结果 */
+    /** ExecuteResult */
     success: boolean;
-    /** 执行耗时（毫秒） */
+    /** Execute耗时（毫秒） */
     duration: number;
-    /** 错误信息（如果有） */
+    /** errorInfo（如果有） */
     error?: string;
-    /** 设备类型 */
+    /** 设备Type */
     deviceType?: InputDeviceType;
 }
 
 /**
- * 一致性比对结果
+ * 一致性比对Result
  */
 export interface ConsistencyResult {
     /** 是否一致 */
     isConsistent: boolean;
-    /** 差异描述 */
+    /** Difference描述 */
     differences: string[];
-    /** 比对时间戳 */
+    /** 比对Timestamp */
     timestamp: number;
 }
 
 /**
- * 影子模式统计信息
+ * 影子Mode统计Info
  */
 export interface ShadowModeStats {
-    /** 总执行次数 */
+    /** 总Execute次数 */
     totalExecutions: number;
-    /** Executor 成功次数 */
+    /** Executor Success次数 */
     executorSuccesses: number;
-    /** Router 成功次数 */
+    /** Router Success次数 */
     routerSuccesses: number;
-    /** Executor 失败次数 */
+    /** Executor Failure次数 */
     executorFailures: number;
-    /** Router 失败次数 */
+    /** Router Failure次数 */
     routerFailures: number;
     /** 一致性检查次数 */
     consistencyChecks: number;
     /** 一致性通过次数 */
     consistencyPassed: number;
-    /** 一致性失败次数 */
+    /** 一致性Failure次数 */
     consistencyFailed: number;
-    /** 连续失败次数 */
+    /** 连续Failure次数 */
     consecutiveFailures: number;
-    /** 最后执行时间 */
+    /** 最AfterExecute时间 */
     lastExecutionTime: number;
-    /** 平均执行耗时（毫秒） */
+    /** 平均Execute耗时（毫秒） */
     avgExecutionDuration: number;
 }
 
 /**
- * 影子模式管理器
+ * 影子ModeManageManager
  */
 export class ShadowModeManager {
-    /** 配置 */
+    /** Config */
     private readonly config: ShadowModeConfig;
 
-    /** 执行器管理器引用 */
+    /** ExecutorManageManager引用 */
     private readonly executorManager: InputExecutorManager;
 
-    /** 路由器引用 */
+    /** RouterManager引用 */
     private readonly router: InputRouter;
 
-    /** 执行日志（循环缓冲区） */
+    /** ExecuteLog（循环缓冲区） */
     private executionLogs: ExecutionLogEntry[] = [];
 
-    /** 日志最大长度 */
+    /** LogMaximum长度 */
     private readonly maxLogLength = 1000;
 
-    /** 统计信息 */
+    /** 统计Info */
     private stats: ShadowModeStats = {
         totalExecutions: 0,
         executorSuccesses: 0,
@@ -129,20 +129,20 @@ export class ShadowModeManager {
         avgExecutionDuration: 0
     };
 
-    /** 当前模式 */
+    /** CurrentMode */
     private _currentMode: 'executor' | 'router' | 'shadow' = 'shadow';
 
-    /** 序列号计数器 */
+    /** sequence number计数Manager */
     private sequenceCounter = 0;
 
-    /** 总执行耗时 */
+    /** 总Execute耗时 */
     private totalDuration = 0;
 
     /**
-     * 构造函数
-     * @param executorManager 执行器管理器
-     * @param router 路由器
-     * @param config 配置
+     * 构造Function
+     * @param executorManager ExecutorManageManager
+     * @param router RouterManager
+     * @param config Config
      */
     constructor(
         executorManager: InputExecutorManager,
@@ -171,9 +171,9 @@ export class ShadowModeManager {
     }
 
     /**
-     * 应用完整输入状态（影子模式双写）
-     * @param state 完整输入状态
-     * @param sequenceNumber 序列号（可选）
+     * ApplyCompleteInputState（影子Mode双写）
+     * @param state CompleteInputState
+     * @param sequenceNumber sequence number（optional）
      */
     applyState(state: InputState, sequenceNumber?: number): void {
         const seq = sequenceNumber ?? ++this.sequenceCounter;
@@ -197,16 +197,16 @@ export class ShadowModeManager {
             this.checkAutoFallback();
         }
 
-        // 详细日志
+        // DetailLog
         if (this.config.verbose && this.stats.totalExecutions % 100 === 0) {
             this.logStats();
         }
     }
 
     /**
-     * 执行器执行
-     * @param state 输入状态
-     * @returns 执行结果
+     * ExecutorExecute
+     * @param state InputState
+     * @returns ExecuteResult
      */
     private executeExecutor(state: InputState): ExecutionLogEntry {
         const startTime = Date.now();
@@ -236,9 +236,9 @@ export class ShadowModeManager {
     }
 
     /**
-     * 路由器执行
-     * @param state 输入状态
-     * @returns 执行结果
+     * RouterManagerExecute
+     * @param state InputState
+     * @returns ExecuteResult
      */
     private executeRouter(state: InputState): ExecutionLogEntry {
         const startTime = Date.now();
@@ -269,9 +269,9 @@ export class ShadowModeManager {
 
     /**
      * 一致性检查
-     * @param executorResult 执行器结果
-     * @param routerResult 路由器结果
-     * @param sequence 序列号
+     * @param executorResult ExecutorResult
+     * @param routerResult RouterManagerResult
+     * @param sequence sequence number
      */
     private checkConsistency(
         executorResult: ExecutionLogEntry,
@@ -282,14 +282,14 @@ export class ShadowModeManager {
 
         const differences: string[] = [];
 
-        // 检查执行成功/失败一致性
+        // 检查ExecuteSuccess/Failure一致性
         if (executorResult.success !== routerResult.success) {
             differences.push(
                 `Execution status mismatch: executor=${executorResult.success}, router=${routerResult.success}`
             );
         }
 
-        // 检查执行耗时差异（超过 50ms 认为有差异）
+        // 检查Execute耗时Difference（超过 50ms 认For有Difference）
         const durationDiff = Math.abs(executorResult.duration - routerResult.duration);
         if (durationDiff > 50) {
             differences.push(
@@ -297,7 +297,7 @@ export class ShadowModeManager {
             );
         }
 
-        // 检查错误信息
+        // 检查errorInfo
         if (executorResult.error || routerResult.error) {
             if (executorResult.error !== routerResult.error) {
                 differences.push(
@@ -323,7 +323,7 @@ export class ShadowModeManager {
      * 自动降级检查
      */
     private checkAutoFallback(): void {
-        // 检查连续失败
+        // 检查连续Failure
         if (this.stats.routerFailures > 0) {
             this.stats.consecutiveFailures++;
         } else {
@@ -341,9 +341,9 @@ export class ShadowModeManager {
     }
 
     /**
-     * 更新统计信息
-     * @param executorResult 执行器结果
-     * @param routerResult 路由器结果
+     * Update统计Info
+     * @param executorResult ExecutorResult
+     * @param routerResult RouterManagerResult
      * @param duration 总耗时
      */
     private updateStats(
@@ -355,7 +355,7 @@ export class ShadowModeManager {
         this.totalDuration += duration;
         this.stats.avgExecutionDuration = this.totalDuration / this.stats.totalExecutions;
 
-        // 记录日志
+        // 记录Log
         this.logExecution({
             timestamp: Date.now(),
             sequence: this.sequenceCounter,
@@ -366,8 +366,8 @@ export class ShadowModeManager {
     }
 
     /**
-     * 记录执行日志
-     * @param entry 日志条目
+     * 记录ExecuteLog
+     * @param entry Log条目
      */
     private logExecution(entry: ExecutionLogEntry): void {
         this.executionLogs.push(entry);
@@ -379,7 +379,7 @@ export class ShadowModeManager {
     }
 
     /**
-     * 打印统计信息
+     * 打印统计Info
      */
     private logStats(): void {
         console.log('[ShadowMode] Statistics:', {
@@ -394,16 +394,16 @@ export class ShadowModeManager {
     }
 
     /**
-     * 获取当前模式
-     * @returns 当前模式
+     * GetCurrentMode
+     * @returns CurrentMode
      */
     getCurrentMode(): 'executor' | 'router' | 'shadow' {
         return this._currentMode;
     }
 
     /**
-     * 切换模式
-     * @param mode 目标模式
+     * SwitchMode
+     * @param mode 目标Mode
      */
     switchMode(mode: 'executor' | 'router' | 'shadow'): void {
         if (this._currentMode === mode) {
@@ -414,24 +414,24 @@ export class ShadowModeManager {
         console.log(`[ShadowMode] Switching from ${this._currentMode} to ${mode} mode`);
         this._currentMode = mode;
 
-        // 重置连续失败计数
+        // Reset连续Failure计数
         if (mode === 'shadow' || mode === 'router') {
             this.stats.consecutiveFailures = 0;
         }
     }
 
     /**
-     * 获取统计信息
-     * @returns 统计信息
+     * Get统计Info
+     * @returns 统计Info
      */
     getStats(): ShadowModeStats {
         return { ...this.stats };
     }
 
     /**
-     * 获取执行日志
+     * GetExecuteLog
      * @param limit 限制数量
-     * @returns 日志数组
+     * @returns LogArray
      */
     getExecutionLogs(limit?: number): ExecutionLogEntry[] {
         if (limit) {
@@ -441,7 +441,7 @@ export class ShadowModeManager {
     }
 
     /**
-     * 清除统计信息
+     * 清除统计Info
      */
     clearStats(): void {
         this.stats = {
@@ -461,14 +461,14 @@ export class ShadowModeManager {
     }
 
     /**
-     * 清除日志
+     * 清除Log
      */
     clearLogs(): void {
         this.executionLogs = [];
     }
 
     /**
-     * 获取一致性报告
+     * Get一致性报告
      * @returns 一致性报告
      */
     getConsistencyReport(): {
@@ -490,7 +490,7 @@ export class ShadowModeManager {
     }
 
     /**
-     * 销毁影子模式管理器
+     * Destroy影子ModeManageManager
      */
     destroy(): void {
         console.log('[ShadowMode] Destroying ShadowModeManager');

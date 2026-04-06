@@ -9,7 +9,7 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
  * Encapsulates KeyboardExecutor calling logic，implements InputAdapter interface
  *
  * Design notes：
- * - implements InputAdapter interface的所有方法（applyState, applyDelta, applyEvent, reset）
+ * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
  * - Internally delegates to KeyboardExecutor for actual keyboard operations
  * - Provides keyboard-specific methods（applyKeyboardState, getKeyboardState）
  */
@@ -45,7 +45,7 @@ export class KeyboardAdapter implements InputAdapter {
     }
 
     /**
-     * 重置Input state（InputAdapter interface method）
+     * ResetInput state（InputAdapter interface method）
      */
     reset(): void {
         this.executor.reset();
@@ -66,7 +66,7 @@ export class KeyboardAdapter implements InputAdapter {
 
     /**
      * Get current keyboard state
-     * @returns 当前Set of pressed keys
+     * @returns CurrentSet of pressed keys
      */
     getKeyboardState(): Set<string> {
         // KeyboardExecutor does not expose internal state，Return empty set

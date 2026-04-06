@@ -1,5 +1,5 @@
 /**
- * 输入路由器模块统一导出
+ * InputRouterManagerModule统一Export
  */
 
 export { InputRouter } from './InputRouter';

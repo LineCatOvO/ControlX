@@ -1,9 +1,9 @@
-// 延迟探测Message handling器
+// Latency Probe Message Handler
 
 import { LatencyProbeMessage, LatencyProbeResponseMessage } from '../../types/ws';
 import { getMetricsCollector } from '../../utils/metrics';
 
-// RTT 统计
+// RTT Statistics
 const rttStats = {
   measurements: [] as number[],
   average: 0,
@@ -13,18 +13,18 @@ const rttStats = {
 };
 
 /**
- * 更新 RTT 统计
- * @param rtt 往返时间（毫秒）
+ * Update RTT statistics
+ * @param rtt Round trip time (milliseconds)
  */
 function updateRttStats(rtt: number) {
   rttStats.measurements.push(rtt);
 
-  // 只保留最近 1000 个测量值
+  // Only keep the latest 1000 measurements
   if (rttStats.measurements.length > 1000) {
     rttStats.measurements.shift();
   }
 
-  // 计算统计值
+  // Calculate statistics
   if (rttStats.measurements.length > 0) {
     const sum = rttStats.measurements.reduce((a, b) => a + b, 0);
     rttStats.average = sum / rttStats.measurements.length;
@@ -32,12 +32,12 @@ function updateRttStats(rtt: number) {
     rttStats.min = Math.min(...rttStats.measurements);
     rttStats.max = Math.max(...rttStats.measurements);
 
-    // 计算 P95
+    // Calculate P95
     const sorted = [...rttStats.measurements].sort((a, b) => a - b);
     const p95Index = Math.floor(sorted.length * 0.95);
     rttStats.p95 = sorted[p95Index] || 0;
 
-    // 更新 metrics.ts 的 RTT 统计指标
+    // Update metrics.ts RTT statistics
     const metricsCollector = getMetricsCollector();
     metricsCollector.updateRttStats({
       average: rttStats.average,
@@ -49,14 +49,14 @@ function updateRttStats(rtt: number) {
 }
 
 /**
- * 获取 RTT 统计
+ * Get RTT statistics
  */
 export function getRttStats() {
   return { ...rttStats };
 }
 
 /**
- * 重置 RTT 统计
+ * Reset RTT statistics
  */
 export function resetRttStats() {
   rttStats.measurements = [];
@@ -67,45 +67,45 @@ export function resetRttStats() {
 }
 
 /**
- * Handle latency probe消息
- * @param ws WebSocket连接
+ * Handle latency probe message
+ * @param ws WebSocket connection
  * @param message Latency probe message
  */
 export function handleLatencyProbe(ws: any, message: LatencyProbeMessage) {
   try {
-    // 记录客户端时间戳
+    // Record client timestamp
     const clientTimestamp = message.timestamp ?? Date.now();
 
-    // 记录服务端接收时间
+    // Record server receive timestamp
     const serverRecvTs = Date.now();
 
-    // 返回服务端时间戳
+    // Return server timestamp
     const response: LatencyProbeResponseMessage = {
       type: 'latency_probe_response',
       clientTimestamp,
       serverTimestamp: serverRecvTs,
     };
 
-    // 发送响应
+    // Send response
     ws.send(JSON.stringify(response));
 
-    // 计算并记录 RTT
+    // Calculate and record RTT
     const rtt = serverRecvTs - clientTimestamp;
     console.log(`Latency Probe: RTT = ${rtt}ms`);
 
-    // 记录到 metrics.ts
+    // Record to metrics.ts
     const metricsCollector = getMetricsCollector();
     metricsCollector.recordRttLatency(rtt);
 
-    // 更新 RTT 统计
+    // Update RTT statistics
     updateRttStats(rtt);
 
-    // 添加延迟告警（如果超过阈值）
+    // Add latency warning (if exceeds threshold)
     const LATENCY_THRESHOLD = 100; // 100ms
     if (rtt > LATENCY_THRESHOLD) {
       console.warn(`⚠️ High latency detected: ${rtt}ms (threshold: ${LATENCY_THRESHOLD}ms)`);
 
-      // 每 10 次高延迟告警输出一次统计
+      // Output statistics every 10 high latency warnings
       if (rttStats.measurements.length % 10 === 0) {
         console.log('RTT Stats:', getRttStats());
       }
@@ -116,7 +116,7 @@ export function handleLatencyProbe(ws: any, message: LatencyProbeMessage) {
 }
 
 /**
- * 获取 RTT 监控 API
+ * Get RTT monitoring API
  */
 export function getLatencyMonitor() {
   return {

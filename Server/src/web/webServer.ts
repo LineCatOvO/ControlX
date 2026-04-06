@@ -38,7 +38,7 @@ let statusInterval: ReturnType<typeof setInterval> | null = null;
  * Start web monitoring server
  */
 export function startWebMonitor(): void {
-    // 创建HTTP server
+    // CreateHTTP server
     httpServer = createServer((req, res) => {
         handleHttpRequest(req, res);
     });

@@ -36,7 +36,7 @@ export function handleConnection(ws: any, event?: string) {
     // Set heartbeat detection
     setupHeartbeat(ws);
 
-    // Update terminal monitor status（客户端已连接）
+    // Update terminal monitor status（Client已Connection）
     if (process.env.NODE_ENV !== "test" && global && (global as any).terminalMonitor) {
         (global as any).terminalMonitor.setClientConnected(true);
     }

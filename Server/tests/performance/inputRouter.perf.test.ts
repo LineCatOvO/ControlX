@@ -1,12 +1,12 @@
 /**
- * InputRouter 性能测试
+ * InputRouter Performance test
  *
- * 测试目标：
- * 1. 高频状态应用场景性能（模拟 125Hz 状态应用频率）
- * 2. 多设备并行处理性能（同时处理键盘、鼠标、摇杆、手柄状态）
- * 3. 性能基准测试（记录执行时间、吞吐量等）
+ * Test objectives：
+ * 1. High-frequency state application performance（Simulate 125Hz state application frequency）
+ * 2. Multi-device parallel processing performance（Process keyboard, mouse, joystick, gamepad states simultaneously）
+ * 3. Performance benchmark test（Record execution time, throughput, etc）
  *
- * 测试数量：10 个性能测试
+ * Number of tests: 10 performance tests
  */
 
 import { InputRouter } from '../../src/input/router/InputRouter';
@@ -15,8 +15,8 @@ import { InputState } from '../../src/types/ws';
 import { InputHost } from '../../src/input/hosts/InputHost';
 
 /**
- * Mock Host 实现（用于性能测试）
- * 最小化实现，避免外部依赖影响性能测试
+ * Mock Host implementation (for performance testing)
+ * Minimal implementation to avoid external dependency impact
  */
 class MockHost implements InputHost {
     private enabled: boolean = true;
@@ -63,11 +63,11 @@ class MockHost implements InputHost {
 }
 
 /**
- * 性能测试辅助函数
+ * Performance test helper functions
  */
 
 /**
- * 创建标准输入状态
+ * Create standard input state
  */
 function createStandardState(): InputState {
     return {
@@ -90,7 +90,7 @@ function createStandardState(): InputState {
 }
 
 /**
- * 创建高频状态（模拟快速变化）
+ * Create high-frequency state (simulate rapid changes)
  */
 function createHighFrequencyState(iteration: number): InputState {
     return {
@@ -113,7 +113,7 @@ function createHighFrequencyState(iteration: number): InputState {
 }
 
 /**
- * 测量执行时间
+ * Measure execution time
  */
 function measureTime(func: () => void): number {
     const start = performance.now();
@@ -123,7 +123,7 @@ function measureTime(func: () => void): number {
 }
 
 /**
- * 测量多次执行平均时间
+ * Measure average execution time over multiple runs
  */
 function measureAverageTime(func: () => void, iterations: number): number {
     const times: number[] = [];
@@ -134,7 +134,7 @@ function measureAverageTime(func: () => void, iterations: number): number {
 }
 
 // ============================================
-// 性能测试组一：高频状态应用场景（5个测试）
+// Performance test group 1: High-frequency state application scenarios (5 tests)
 // ============================================
 
 describe('InputRouter Performance - High Frequency State Application', () => {
@@ -162,8 +162,8 @@ describe('InputRouter Performance - High Frequency State Application', () => {
     });
 
     /**
-     * 测试 1：单次状态应用性能基准
-     * 验证单次 applyState 的执行时间
+     * Test 1: Single state application performance benchmark
+     * Verify single applyState execution time
      */
     test('Test-01: Single state application performance baseline', () => {
         const state = createStandardState();
@@ -171,10 +171,10 @@ describe('InputRouter Performance - High Frequency State Application', () => {
 
         console.log(`[Performance] Single state application time: ${executionTime.toFixed(3)}ms`);
 
-        // 性能基准：单次应用时间应该小于 1ms
+        // Performance benchmark: single application time should be less than 1ms
         expect(executionTime).toBeLessThan(1);
 
-        // 验证状态正确应用
+        // Verify state correctly applied
         expect(keyboardHost.getApplyCount()).toBe(1);
         expect(mouseHost.getApplyCount()).toBe(1);
         expect(joystickHost.getApplyCount()).toBe(1);
@@ -182,8 +182,8 @@ describe('InputRouter Performance - High Frequency State Application', () => {
     });
 
     /**
-     * 测试 2：100 次连续状态应用性能
-     * 模拟中等频率的状态应用场景
+     * Test 2: 100 consecutive state application performance
+     * Simulate medium-frequency state application scenario
      */
     test('Test-02: 100 consecutive state applications performance', () => {
         const iterations = 100;
@@ -202,10 +202,10 @@ describe('InputRouter Performance - High Frequency State Application', () => {
         console.log(`[Performance] Average time per application: ${averageTime.toFixed(3)}ms`);
         console.log(`[Performance] Throughput: ${throughput.toFixed(1)} applications/ms`);
 
-        // 性能基准：100 次应用总时间应该小于 100ms（平均每次 < 1ms）
+        // Performance benchmark: 100 applications total time should be less than 100ms（average per application < 1ms）
         expect(totalTime).toBeLessThan(100);
 
-        // 验证状态正确应用
+        // Verify state correctly applied
         expect(keyboardHost.getApplyCount()).toBe(iterations);
         expect(mouseHost.getApplyCount()).toBe(iterations);
         expect(joystickHost.getApplyCount()).toBe(iterations);
@@ -213,15 +213,15 @@ describe('InputRouter Performance - High Frequency State Application', () => {
     });
 
     /**
-     * 测试 3：125Hz 模拟性能测试（模拟 125 次/秒的状态应用频率）
-     * 验证系统在高频率下的性能表现
+     * Test 3: 125Hz simulation performance test (simulate 125 applications per second)
+     * Verify system performance at high frequency
      */
     test('Test-03: 125Hz simulation performance test', () => {
-        // 模拟 125Hz 频率（8ms 间隔），测试 125 次（1秒）
+        // Simulate 125Hz frequency (8ms interval)，Test 125 times (1 second)
         const iterations = 125;
         const states: InputState[] = [];
 
-        // 准备 125 个不同状态（模拟快速变化）
+        // Prepare 125 different states (simulate rapid changes)
         for (let i = 0; i < iterations; i++) {
             states.push(createHighFrequencyState(i));
         }
@@ -233,17 +233,17 @@ describe('InputRouter Performance - High Frequency State Application', () => {
         });
 
         const averageTime = totalTime / iterations;
-        const theoreticalMaxTime = iterations * 8; // 125Hz = 8ms 间隔
+        const theoreticalMaxTime = iterations * 8; // 125Hz = 8ms interval
 
         console.log(`[Performance] 125Hz simulation total time: ${totalTime.toFixed(3)}ms`);
         console.log(`[Performance] Average time per application: ${averageTime.toFixed(3)}ms`);
         console.log(`[Performance] Theoretical max time (125Hz): ${theoreticalMaxTime}ms`);
 
-        // 性能基准：总时间应该远小于理论最大时间（125 * 8ms = 1000ms）
-        // 实际应用应该更快，因为我们不等待 Promise 完成
-        expect(totalTime).toBeLessThan(theoreticalMaxTime * 0.1); // 应该快于理论值的 10%
+        // Performance benchmark: total time should be far less than theoretical maximum time（125 * 8ms = 1000ms）
+        // Actual application should be faster because we do not wait for Promise completion
+        expect(totalTime).toBeLessThan(theoreticalMaxTime * 0.1); // Should be faster than 10% of theoretical value
 
-        // 验证状态正确应用
+        // Verify state correctly applied
         expect(keyboardHost.getApplyCount()).toBe(iterations);
         expect(mouseHost.getApplyCount()).toBe(iterations);
         expect(joystickHost.getApplyCount()).toBe(iterations);
@@ -251,8 +251,8 @@ describe('InputRouter Performance - High Frequency State Application', () => {
     });
 
     /**
-     * 测试 4：高频变化状态性能测试
-     * 验证系统处理快速变化状态的能力
+     * Test 4: High-frequency state change performance test
+     * Verify system ability to handle rapidly changing states
      */
     test('Test-04: High frequency state changes performance', () => {
         const iterations = 1000;
@@ -263,10 +263,10 @@ describe('InputRouter Performance - High Frequency State Application', () => {
 
         console.log(`[Performance] 1000 high-frequency changes average time: ${averageTime.toFixed(3)}ms`);
 
-        // 性能基准：平均时间应该小于 1ms
+        // Performance benchmark: average time should be less than 1ms
         expect(averageTime).toBeLessThan(1);
 
-        // 验证状态正确应用
+        // Verify state correctly applied
         expect(keyboardHost.getApplyCount()).toBe(iterations);
         expect(mouseHost.getApplyCount()).toBe(iterations);
         expect(joystickHost.getApplyCount()).toBe(iterations);
@@ -274,11 +274,11 @@ describe('InputRouter Performance - High Frequency State Application', () => {
     });
 
     /**
-     * 测试 5：极限频率性能测试（1000Hz 模拟）
-     * 验证系统在极限频率下的性能表现
+     * Test 5: Extreme frequency performance test (1000Hz simulation)
+     * Verify system performance at extreme frequency
      */
     test('Test-05: Extreme frequency performance test (1000Hz simulation)', () => {
-        // 模拟 1000Hz 频率（1ms 间隔），测试 1000 次（1秒）
+        // Simulate 1000Hz frequency (1ms interval)，Test 1000 times (1 second)
         const iterations = 1000;
         const state = createStandardState();
 
@@ -295,10 +295,10 @@ describe('InputRouter Performance - High Frequency State Application', () => {
         console.log(`[Performance] Average time per application: ${averageTime.toFixed(3)}ms`);
         console.log(`[Performance] Throughput: ${throughput.toFixed(1)} applications/ms`);
 
-        // 性能基准：总时间应该小于 1000ms（平均每次 < 1ms）
+        // Performance benchmark: total time should be less than 1000ms（average per application < 1ms）
         expect(totalTime).toBeLessThan(1000);
 
-        // 验证状态正确应用
+        // Verify state correctly applied
         expect(keyboardHost.getApplyCount()).toBe(iterations);
         expect(mouseHost.getApplyCount()).toBe(iterations);
         expect(joystickHost.getApplyCount()).toBe(iterations);
@@ -307,7 +307,7 @@ describe('InputRouter Performance - High Frequency State Application', () => {
 });
 
 // ============================================
-// 性能测试组二：多设备并行处理性能（5个测试）
+// Performance test group 2: Multi-device parallel processing performance (5 tests)
 // ============================================
 
 describe('InputRouter Performance - Multi-Device Parallel Processing', () => {
@@ -322,8 +322,8 @@ describe('InputRouter Performance - Multi-Device Parallel Processing', () => {
     });
 
     /**
-     * 测试 6：单设备状态应用性能
-     * 验证单个设备的状态应用性能
+     * Test 6: Single device state application performance
+     * Verify single device state application performance
      */
     test('Test-06: Single device state application performance', () => {
         const host = new MockHost();
@@ -342,16 +342,16 @@ describe('InputRouter Performance - Multi-Device Parallel Processing', () => {
 
         console.log(`[Performance] Single device 1000 applications average time: ${averageTime.toFixed(3)}ms`);
 
-        // 性能基准：单设备应用应该更快
+        // Performance benchmark: single device application should be faster
         expect(averageTime).toBeLessThan(0.5);
 
-        // 验证状态正确应用
+        // Verify state correctly applied
         expect(host.getApplyCount()).toBe(iterations);
     });
 
     /**
-     * 测试 7：双设备并行处理性能
-     * 验证两个设备同时处理时的性能
+     * Test 7: Dual-device parallel processing performance
+     * Verify performance when two devices are processed simultaneously
      */
     test('Test-07: Dual device parallel processing performance', () => {
         const keyboardHost = new MockHost();
@@ -375,17 +375,17 @@ describe('InputRouter Performance - Multi-Device Parallel Processing', () => {
 
         console.log(`[Performance] Dual device 1000 applications average time: ${averageTime.toFixed(3)}ms`);
 
-        // 性能基准：双设备应用时间应该接近单设备（并行处理）
+        // Performance benchmark: dual-device application time should be close to single-device(parallel processing)
         expect(averageTime).toBeLessThan(1);
 
-        // 验证状态正确应用
+        // Verify state correctly applied
         expect(keyboardHost.getApplyCount()).toBe(iterations);
         expect(mouseHost.getApplyCount()).toBe(iterations);
     });
 
     /**
-     * 测试 8：三设备并行处理性能
-     * 验证三个设备同时处理时的性能
+     * Test 8: Three-device parallel processing performance
+     * Verify performance when three devices are processed simultaneously
      */
     test('Test-08: Triple device parallel processing performance', () => {
         const keyboardHost = new MockHost();
@@ -412,18 +412,18 @@ describe('InputRouter Performance - Multi-Device Parallel Processing', () => {
 
         console.log(`[Performance] Triple device 1000 applications average time: ${averageTime.toFixed(3)}ms`);
 
-        // 性能基准：三设备应用时间应该接近单设备（并行处理）
+        // Performance benchmark: three-device application time should be close to single-device(parallel processing)
         expect(averageTime).toBeLessThan(1);
 
-        // 验证状态正确应用
+        // Verify state correctly applied
         expect(keyboardHost.getApplyCount()).toBe(iterations);
         expect(mouseHost.getApplyCount()).toBe(iterations);
         expect(joystickHost.getApplyCount()).toBe(iterations);
     });
 
     /**
-     * 测试 9：四设备并行处理性能
-     * 验证四个设备同时处理时的性能（最全面测试）
+     * Test 9: Four-device parallel processing performance
+     * Verify performance when four devices are processed simultaneously (most comprehensive test)
      */
     test('Test-09: Quad device parallel processing performance', () => {
         const keyboardHost = new MockHost();
@@ -448,10 +448,10 @@ describe('InputRouter Performance - Multi-Device Parallel Processing', () => {
 
         console.log(`[Performance] Quad device 1000 applications average time: ${averageTime.toFixed(3)}ms`);
 
-        // 性能基准：四设备应用时间应该接近单设备（并行处理）
+        // Performance benchmark: four-device application time should be close to single-device(parallel processing)
         expect(averageTime).toBeLessThan(1);
 
-        // 验证状态正确应用
+        // Verify state correctly applied
         expect(keyboardHost.getApplyCount()).toBe(iterations);
         expect(mouseHost.getApplyCount()).toBe(iterations);
         expect(joystickHost.getApplyCount()).toBe(iterations);
@@ -459,27 +459,27 @@ describe('InputRouter Performance - Multi-Device Parallel Processing', () => {
     });
 
     /**
-     * 测试 10：设备数量对性能的影响测试
-     * 验证设备数量增加对性能的影响程度
+     * Test 10: Impact of device count on performance
+     * Verify impact level of device count increase on performance
      */
     test('Test-10: Device count impact on performance', () => {
         const iterations = 1000;
         const state = createStandardState();
 
-        // 单设备性能
+        // Single device performance
         const singleHost = new MockHost();
         router.registerHost(InputDeviceType.KEYBOARD, singleHost);
         const singleTime = measureAverageTime(() => router.applyState({ keyboard: state.keyboard }), iterations);
         router.destroyAll();
 
-        // 双设备性能
+        // Dual-device performance
         const dualHosts = [new MockHost(), new MockHost()];
         router.registerHost(InputDeviceType.KEYBOARD, dualHosts[0]);
         router.registerHost(InputDeviceType.MOUSE, dualHosts[1]);
         const dualTime = measureAverageTime(() => router.applyState({ keyboard: state.keyboard, mouse: state.mouse }), iterations);
         router.destroyAll();
 
-        // 四设备性能
+        // Four-device performance
         const quadHosts = [new MockHost(), new MockHost(), new MockHost(), new MockHost()];
         router.registerHost(InputDeviceType.KEYBOARD, quadHosts[0]);
         router.registerHost(InputDeviceType.MOUSE, quadHosts[1]);
@@ -492,48 +492,48 @@ describe('InputRouter Performance - Multi-Device Parallel Processing', () => {
         console.log(`[Performance] Dual device average time: ${dualTime.toFixed(3)}ms`);
         console.log(`[Performance] Quad device average time: ${quadTime.toFixed(3)}ms`);
 
-        // 性能基准：设备数量增加对性能的影响应该很小（并行处理）
-        // 四设备的时间应该不超过单设备的 2 倍
+        // Performance benchmark: impact of device count increase should be minimal(parallel processing)
+        // Four-device time should not exceed 2x single-device time
         expect(quadTime).toBeLessThan(singleTime * 2);
 
-        // 验证并行处理效率：双设备应该接近单设备
+        // Verify parallel processing efficiency: dual-device should be close to single-device
         expect(dualTime).toBeLessThan(singleTime * 1.5);
     });
 });
 
 // ============================================
-// 性能测试总结
+// Performance test summary
 // ============================================
 
 /**
- * 性能测试总结：
+ * Performance test summary：
  *
- * 测试组一：高频状态应用场景（5个测试）
- * - Test-01: 单次状态应用性能基准
- * - Test-02: 100 次连续状态应用性能
- * - Test-03: 125Hz 模拟性能测试
- * - Test-04: 高频变化状态性能测试
- * - Test-05: 极限频率性能测试（1000Hz 模拟）
+ * Test group 1: High-frequency state application scenarios (5 tests)
+ * - Test-01: Single state application performance benchmark
+ * - Test-02: 100 consecutive state application performance
+ * - Test-03: 125Hz simulation performance test
+ * - Test-04: High-frequency state change performance test
+ * - Test-05: Extreme frequency performance test (1000Hz simulation)
  *
- * 测试组二：多设备并行处理性能（5个测试）
- * - Test-06: 单设备状态应用性能
- * - Test-07: 双设备并行处理性能
- * - Test-08: 三设备并行处理性能
- * - Test-09: 四设备并行处理性能
- * - Test-10: 设备数量对性能的影响测试
+ * Test group 2: Multi-device parallel processing performance (5 tests)
+ * - Test-06: Single device state application performance
+ * - Test-07: Dual-device parallel processing performance
+ * - Test-08: Three-device parallel processing performance
+ * - Test-09: Four-device parallel processing performance
+ * - Test-10: Impact of device count on performance test
  *
- * 总计：10 个性能测试
+ * Total: 10 performance tests
  *
- * 性能基准标准：
- * - 单次应用时间 < 1ms
- * - 100 次应用总时间 < 100ms
- * - 125Hz 模拟总时间 < 100ms（理论值 1000ms 的 10%）
- * - 1000Hz 模拟总时间 < 1000ms
- * - 四设备应用时间不超过单设备的 2 倍（并行处理效率）
+ * Performance benchmark standards：
+ * - Single application time < 1ms
+ * - 100 applications total time < 100ms
+ * - 125Hz simulation total time < 100ms（10% of theoretical value 1000ms）
+ * - 1000Hz simulation total time < 1000ms
+ * - Four-device application time not exceeding 2x single-device（parallel processing efficiency）
  *
- * 测试目的：
- * - 验证 InputRouter 当前设计的性能表现
- * - 验证并行处理的有效性
- * - 验证系统在高频率下的稳定性
- * - 为未来优化提供性能基准数据
+ * Test purpose：
+ * - Verify InputRouter current design performance
+ * - Verify parallel processing effectiveness
+ * - Verify system stability at high frequency
+ * - Provide performance benchmark data for future optimization
  */

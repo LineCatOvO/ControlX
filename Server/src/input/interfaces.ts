@@ -1,73 +1,73 @@
-// 输入执行接口定义
+// InputExecuteInterface定义
 
 import { InputState, InputDelta, InputEvent } from '../types/ws';
 
 /**
- * 输入执行器接口
- * 用于抽象不同输入设备的执行逻辑
+ * InputExecutorInterface
+ * 用于抽象DifferentInput设备OfExecute逻辑
  */
 export interface InputExecutor {
   /**
-   * 应用完整输入状态
-   * @param state 输入状态
+   * ApplyCompleteInputState
+   * @param state InputState
    */
   applyState(state: InputState): void;
   
   /**
-   * 应用输入增量
-   * @param delta 输入增量
+   * ApplyInput增量
+   * @param delta Input增量
    */
   applyDelta(delta: InputDelta): void;
   
   /**
-   * 应用输入事件
-   * @param event 输入事件
+   * ApplyInputEvent
+   * @param event InputEvent
    */
   applyEvent(event: InputEvent): void;
   
   /**
-   * 重置输入状态
+   * ResetInputState
    */
   reset(): void;
 }
 
 /**
- * 输入执行器管理器接口
- * 用于管理多个输入执行器
+ * InputExecutorManageManagerInterface
+ * 用于Manage多个InputExecutor
  */
 export interface InputExecutorManager {
   /**
-   * 添加输入执行器
-   * @param executor 输入执行器
+   * 添加InputExecutor
+   * @param executor InputExecutor
    */
   addExecutor(executor: InputExecutor): void;
   
   /**
-   * 移除输入执行器
-   * @param executor 输入执行器
+   * RemoveInputExecutor
+   * @param executor InputExecutor
    */
   removeExecutor(executor: InputExecutor): void;
   
   /**
-   * 应用完整输入状态到所有执行器
-   * @param state 输入状态
+   * ApplyCompleteInputState到AllExecutor
+   * @param state InputState
    */
   applyState(state: InputState): void;
   
   /**
-   * 应用输入增量到所有执行器
-   * @param delta 输入增量
+   * ApplyInput增量到AllExecutor
+   * @param delta Input增量
    */
   applyDelta(delta: InputDelta): void;
   
   /**
-   * 应用输入事件到所有执行器
-   * @param event 输入事件
+   * ApplyInputEvent到AllExecutor
+   * @param event InputEvent
    */
   applyEvent(event: InputEvent): void;
   
   /**
-   * 重置所有执行器
+   * ResetAllExecutor
    */
   reset(): void;
 }

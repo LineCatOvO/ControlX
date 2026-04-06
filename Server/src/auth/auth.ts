@@ -106,7 +106,7 @@ export class AuthManager {
             };
         }
 
-        // Check IP whitelist（如果配置了白名单）
+        // Check IP whitelist (if whitelist is configured)
         if (this.config.whitelist.length > 0 && !this.config.whitelist.includes(clientIp)) {
             return {
                 success: false,

@@ -1,11 +1,11 @@
 /**
- * hosts/types.ts 单元测试
+ * hosts/types.ts Unit test
  *
- * 测试覆盖：
+ * Test coverage：
  * - InputDeviceType枚举: 5个
- * - HostStatus接口: 4个
- * - PlatformType类型: 3个
- * - detectPlatform函数: 5个
+ * - HostStatusInterface: 4个
+ * - PlatformTypeType: 3个
+ * - detectPlatformFunction: 5个
  * - 总计: 17个
  */
 
@@ -18,7 +18,7 @@ import {
 
 describe('hosts/types', () => {
     // ========================================
-    // InputDeviceType枚举测试 (5个)
+    // InputDeviceType枚举Test (5个)
     // ========================================
     describe('InputDeviceType枚举', () => {
         test('should have KEYBOARD type', () => {
@@ -49,9 +49,9 @@ describe('hosts/types', () => {
     });
 
     // ========================================
-    // HostStatus接口测试 (4个)
+    // HostStatusInterfaceTest (4个)
     // ========================================
-    describe('HostStatus接口', () => {
+    describe('HostStatusInterface', () => {
         test('should create valid HostStatus object', () => {
             const status: HostStatus = {
                 deviceType: InputDeviceType.KEYBOARD,
@@ -134,9 +134,9 @@ describe('hosts/types', () => {
     });
 
     // ========================================
-    // PlatformType类型测试 (3个)
+    // PlatformTypeTypeTest (3个)
     // ========================================
-    describe('PlatformType类型', () => {
+    describe('PlatformTypeType', () => {
         test('should accept windows platform', () => {
             const platform: PlatformType = 'windows';
 
@@ -157,9 +157,9 @@ describe('hosts/types', () => {
     });
 
     // ========================================
-    // detectPlatform函数测试 (5个)
+    // detectPlatformFunctionTest (5个)
     // ========================================
-    describe('detectPlatform函数', () => {
+    describe('detectPlatformFunction', () => {
         test('should detect windows from win32', () => {
             const result = detectPlatform('win32');
 
@@ -192,7 +192,7 @@ describe('hosts/types', () => {
     });
 
     // ========================================
-    // 边界条件和特殊情况测试
+    // 边界条件和Special情况Test
     // ========================================
     describe('边界条件 (Edge Cases)', () => {
         test('should handle empty string platform', () => {
@@ -202,12 +202,12 @@ describe('hosts/types', () => {
         });
 
         test('should handle undefined platform (type safety)', () => {
-            // TypeScript 编译时检查，运行时测试传入 undefined
+            // TypeScript 编译时检查，Run时Test传入 undefined
             expect(() => detectPlatform(undefined as unknown as NodeJS.Platform)).toThrow();
         });
 
         test('should handle case sensitivity', () => {
-            // Node.js 平台标识是小写的
+            // Node.js 平台Identifier是小写Of
             expect(() => detectPlatform('WINDOWS' as NodeJS.Platform)).toThrow();
         });
 
@@ -228,9 +228,9 @@ describe('hosts/types', () => {
     });
 
     // ========================================
-    // 类型兼容性测试
+    // TypeCompatible性Test
     // ========================================
-    describe('类型兼容性 (Type Compatibility)', () => {
+    describe('TypeCompatible性 (Type Compatibility)', () => {
         test('InputDeviceType should be string', () => {
             const type: InputDeviceType = InputDeviceType.KEYBOARD;
 

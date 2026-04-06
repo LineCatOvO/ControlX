@@ -38,7 +38,7 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
     /** Input router */
     private readonly router: InputRouter;
 
-    /** 配置 */
+    /** Config */
     private readonly config: RouterOnlyConfig;
 
     /** Consecutive failure count */
@@ -58,7 +58,7 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
     /**
      * Constructor
      * @param router Input router
-     * @param config 配置
+     * @param config Config
      */
     constructor(router: InputRouter, config?: Partial<RouterOnlyConfig>) {
         this.router = router;
@@ -76,7 +76,7 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
      * Add input executor（Router mode does not need）
      */
     addExecutor(executor: any): void {
-        // Router 模式不使用 Executor
+        // Router ModeNot use Executor
         console.debug('[RouterOnly] addExecutor called but ignored (Router mode)');
     }
 
@@ -84,13 +84,13 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
      * Remove input executor（Router mode does not need）
      */
     removeExecutor(executor: any): void {
-        // Router 模式不使用 Executor
+        // Router ModeNot use Executor
         console.debug('[RouterOnly] removeExecutor called but ignored (Router mode)');
     }
 
     /**
      * Apply complete input state
-     * @param state 输入状态
+     * @param state InputState
      */
     applyState(state: InputState): void {
         this.stats.totalExecutions++;
@@ -162,7 +162,7 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 获取Statistics
+     * GetStatistics
      */
     getStats() {
         return { ...this.stats };
@@ -183,10 +183,10 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
 }
 
 /**
- * 创建 Router-only executor manager
+ * Create Router-only executor manager
  *
  * @param router Input router
- * @param enabled 是否启用
+ * @param enabled 是否Enable
  * @returns Router-only executor manager
  */
 export function createRouterOnlyExecutorManager(
@@ -214,7 +214,7 @@ let routerOnlyManager: RouterOnlyExecutorManager | null = null;
 let inputRouter: InputRouter | null = null;
 
 /**
- * 初始化 Router-only 模式
+ * Initialize Router-only Mode
  */
 export function initRouterOnlyMode(): void {
     if (!isRouterOnlyMode) {
@@ -224,7 +224,7 @@ export function initRouterOnlyMode(): void {
 
     console.log('🎯 Initializing router-only mode...');
 
-    // 创建路由器
+    // CreateRouterManager
     inputRouter = new InputRouter();
 
     // 注册 Host
@@ -237,14 +237,14 @@ export function initRouterOnlyMode(): void {
     inputRouter.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
     inputRouter.registerHost(InputDeviceType.GAMEPAD, gamepadHost);
 
-    // 创建 Router-only executor manager
+    // Create Router-only executor manager
     routerOnlyManager = createRouterOnlyExecutorManager(inputRouter, true);
 
     console.log('🎯 Router-only mode: INITIALIZED');
 }
 
 /**
- * Router-only 模式执行输入
+ * Router-only ModeExecuteInput
  */
 export function executeInputRouterOnly(): void {
     if (routerOnlyManager && isRouterOnlyMode) {
@@ -254,27 +254,27 @@ export function executeInputRouterOnly(): void {
         getExecutorManager().applyState(inputState);
     }
 
-    // 记录有效状态时间
+    // 记录ValidState时间
     const applyTime = Date.now();
     getSafetyController().recordValidState(inputState, applyTime);
 }
 
 /**
- * 获取 Router-only 管理器
+ * Get Router-only ManageManager
  */
 export function getRouterOnlyManager(): RouterOnlyExecutorManager | null {
     return routerOnlyManager;
 }
 
 /**
- * 获取Input router
+ * GetInput router
  */
 export function getInputRouter(): InputRouter | null {
     return inputRouter;
 }
 
 /**
- * 检查是否为 Router-only 模式
+ * 检查是否For Router-only Mode
  */
 export function isRouterOnlyModeEnabled(): boolean {
     return isRouterOnlyMode && routerOnlyManager !== null;

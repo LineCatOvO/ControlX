@@ -1,48 +1,48 @@
 /**
- * 输入设备类型枚举
- * 定义系统支持的所有输入设备类型
+ * Input设备Type枚举
+ * 定义系统SupportOfAllInput设备Type
  */
 export enum InputDeviceType {
-    /** 键盘设备 */
+    /** Keyboard设备 */
     KEYBOARD = 'keyboard',
     
-    /** 游戏手柄设备 */
+    /** 游戏Gamepad设备 */
     GAMEPAD = 'gamepad',
     
-    /** 鼠标设备 */
+    /** Mouse设备 */
     MOUSE = 'mouse',
     
-    /** 摇杆设备 */
+    /** Joystick设备 */
     JOYSTICK = 'joystick'
 }
 
 /**
- * 宿主状态接口
- * 用于报告 InputHost 的当前状态
+ * 宿主StateInterface
+ * 用于报告 InputHost OfCurrentState
  */
 export interface HostStatus {
-    /** 设备类型 */
+    /** 设备Type */
     deviceType: InputDeviceType;
     
-    /** 运行平台 */
+    /** Run平台 */
     platform: 'windows' | 'linux' | 'macos';
     
-    /** 是否已启用 */
+    /** 是否已Enable */
     isEnabled: boolean;
     
-    /** 最后错误信息（如果有） */
+    /** 最AftererrorInfo（如果有） */
     lastError?: string;
 }
 
 /**
- * 平台类型工具函数
+ * 平台Type工具Function
  */
 export type PlatformType = 'windows' | 'linux' | 'macos';
 
 /**
- * 检测当前运行平台
- * @param nodePlatform Node.js 平台标识
- * @returns 平台类型
+ * DetectionCurrentRun平台
+ * @param nodePlatform Node.js 平台Identifier
+ * @returns 平台Type
  */
 export function detectPlatform(nodePlatform: NodeJS.Platform): PlatformType {
     const platformMap: Record<string, PlatformType> = {

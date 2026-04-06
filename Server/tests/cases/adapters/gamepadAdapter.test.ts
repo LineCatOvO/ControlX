@@ -1,15 +1,15 @@
 /**
- * GamepadAdapter 单元测试
+ * GamepadAdapter Unit test
  *
- * 测试覆盖：
- * - 构造函数
- * - initialize() 初始化
- * - applyState() 应用输入状态
- * - reset() 重置状态
- * - getEnabled() 获取启用状态
+ * Test coverage：
+ * - 构造Function
+ * - initialize() Initialize
+ * - applyState() ApplyInputState
+ * - reset() ResetState
+ * - getEnabled() GetEnableState
  * - cleanup() 清理资源
- * - gamepadAxes 映射（左右摇杆）
- * - gamepadTriggers 映射（扳机值）
+ * - gamepadAxes 映射（LeftRightJoystick）
+ * - gamepadTriggers 映射（扳机Value）
  * - 边界条件
  */
 

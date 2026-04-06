@@ -23,7 +23,7 @@ describe("WebSocket Connection Tests", () => {
         if (client) {
             client.close();
         }
-        // 重置输入状态，确保测试间的隔离
+        // ResetInputState，确保Test间Of隔离
         inputState.keyboard = new Set(safeState.keyboard);
         inputState.mouse = { ...safeState.mouse };
         inputState.joystick = { ...safeState.joystick };
@@ -99,27 +99,27 @@ describe("WebSocket Connection Tests", () => {
     }, 15000);
 
     test("should reset input state to safe state when client disconnects", async () => {
-        // 修改输入状态到非安全状态
+        // ModifyInputState到非SafeState
         inputState.keyboard = new Set(["W", "A", "S", "D"]);
         inputState.mouse = { ...inputState.mouse, left: true, right: true };
         inputState.joystick = { ...inputState.joystick, x: 0.5, y: -0.5 };
 
-        // 验证输入状态已修改
+        // VerifyInputState已Modify
         expect(inputState.keyboard.size).toBeGreaterThan(0);
         expect(inputState.mouse.left).toBe(true);
         expect(inputState.joystick.x).toBe(0.5);
 
-        // 创建并连接客户端
+        // Create并ConnectionClient
         client = new WsClient({ url: `ws://localhost:${serverPort}` });
         await client.connect();
 
-        // 断开客户端连接
+        // 断开ClientConnection
         client.close();
 
-        // 等待一段时间，确保断开连接事件被处理
+        // 等待一段时间，确保断开ConnectionEvent被处理
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // 验证输入状态已重置为安全状态
+        // VerifyInputState已ResetForSafeState
         expect(inputState.keyboard).toEqual(new Set(safeState.keyboard));
         expect(inputState.mouse).toEqual(safeState.mouse);
         expect(inputState.joystick).toEqual(safeState.joystick);

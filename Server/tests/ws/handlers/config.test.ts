@@ -1,15 +1,15 @@
 /**
- * Config Handler 单元测试
+ * Config Handler Unit Test
  *
- * 测试覆盖：
- * - handleConfigGet: 配置获取
- * - handleConfigSet: 配置设置
- * - handleConfigSave: 配置保存
- * - handleConfigReset: 配置重置
- * - handleConfigValidate: 配置验证
- * - 敏感信息过滤
- * - 权限验证
- * - 错误处理
+ * Test Coverage:
+ * - handleConfigGet: Config retrieval
+ * - handleConfigSet: Config setting
+ * - handleConfigSave: Config saving
+ * - handleConfigReset: Config reset
+ * - handleConfigValidate: Config validation
+ * - Sensitive info filtering
+ * - Permission validation
+ * - Error handling
  */
 
 import {

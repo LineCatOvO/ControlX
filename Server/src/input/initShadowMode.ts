@@ -1,7 +1,7 @@
 /**
- * 影子模式初始化辅助函数
+ * 影子ModeInitialize辅助Function
  *
- * 提供简化的影子模式初始化和配置 API
+ * 提供简化Of影子ModeInitialize和Config API
  */
 
 import { InputExecutorManager } from './interfaces';
@@ -12,25 +12,25 @@ import { WindowsGamepadHost } from './hosts/WindowsGamepadHost';
 import { InputDeviceType } from './hosts/types';
 
 /**
- * 影子模式初始化配置
+ * 影子ModeInitializeConfig
  */
 export interface ShadowModeInitConfig {
-    /** 是否启用影子模式 */
+    /** 是否Enable影子Mode */
     enabled: boolean;
-    /** 是否启用详细日志 */
+    /** 是否EnableDetailLog */
     verbose?: boolean;
-    /** 是否启用一致性检查 */
+    /** 是否Enable一致性检查 */
     consistencyCheck?: boolean;
-    /** 自动降级阈值 */
+    /** 自动降级Threshold */
     failureThreshold?: number;
 }
 
 /**
- * 初始化影子模式
+ * Initialize影子Mode
  *
- * @param executorManager 现有执行器管理器
- * @param config 配置
- * @returns 影子模式执行器管理器
+ * @param executorManager 现有ExecutorManageManager
+ * @param config Config
+ * @returns 影子ModeExecutorManageManager
  */
 export function initShadowMode(
     executorManager: InputExecutorManager,
@@ -38,13 +38,13 @@ export function initShadowMode(
 ): ShadowModeInputExecutorManager {
     console.log('[ShadowMode] Initializing shadow mode...');
 
-    // 创建输入路由器
+    // CreateInputRouterManager
     const router = new InputRouter();
 
-    // 注册 Host（异步初始化）
+    // 注册 Host（异步Initialize）
     registerDefaultHosts(router);
 
-    // 创建影子模式执行器管理器
+    // Create影子ModeExecutorManageManager
     const shadowExecutor = createShadowModeExecutorManager(
         executorManager,
         router,
@@ -58,16 +58,16 @@ export function initShadowMode(
 }
 
 /**
- * 注册默认 Host 实现
+ * 注册Default Host Implementation
  *
- * @param router 输入路由器
+ * @param router InputRouterManager
  */
 function registerDefaultHosts(router: InputRouter): void {
-    // Windows 键盘 Host
+    // Windows Keyboard Host
     const keyboardHost = new WindowsKeyboardHost();
     router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
 
-    // Windows 游戏手柄 Host
+    // Windows 游戏Gamepad Host
     const gamepadHost = new WindowsGamepadHost();
     router.registerHost(InputDeviceType.GAMEPAD, gamepadHost);
 
@@ -75,10 +75,10 @@ function registerDefaultHosts(router: InputRouter): void {
 }
 
 /**
- * 获取影子模式状态
+ * Get影子ModeState
  *
- * @param shadowExecutor 影子模式执行器
- * @returns 影子模式状态
+ * @param shadowExecutor 影子ModeExecutor
+ * @returns 影子ModeState
  */
 export function getShadowModeStatus(
     shadowExecutor: ShadowModeInputExecutorManager
@@ -106,9 +106,9 @@ export function getShadowModeStatus(
 }
 
 /**
- * 打印影子模式摘要
+ * 打印影子Mode摘要
  *
- * @param shadowExecutor 影子模式执行器
+ * @param shadowExecutor 影子ModeExecutor
  */
 export function printShadowModeSummary(
     shadowExecutor: ShadowModeInputExecutorManager

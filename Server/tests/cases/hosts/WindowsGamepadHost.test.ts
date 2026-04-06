@@ -1,12 +1,12 @@
 /**
- * WindowsGamepadHost 单元测试
+ * WindowsGamepadHost Unit test
  *
- * 测试覆盖：
- * - 初始化: 5个
- * - 状态应用: 8个
+ * Test coverage：
+ * - Initialize: 5个
+ * - StateApply: 8个
  * - XInput映射: 6个
- * - 重置和销毁: 4个
- * - 错误处理: 4个
+ * - Reset和Destroy: 4个
+ * - Error处理: 4个
  * - 边界条件: 4个
  * - 总计: 31个
  */
@@ -35,9 +35,9 @@ describe('WindowsGamepadHost', () => {
     });
 
     // ========================================
-    // 初始化测试 (5个)
+    // InitializeTest (5个)
     // ========================================
-    describe('初始化 (Initialization)', () => {
+    describe('Initialize (Initialization)', () => {
         test('should initialize successfully when ViGEmBus is available', async () => {
             const result = await host.initialize();
 
@@ -81,9 +81,9 @@ describe('WindowsGamepadHost', () => {
     });
 
     // ========================================
-    // 状态应用测试 (8个)
+    // StateApplyTest (8个)
     // ========================================
-    describe('状态应用 (State Application)', () => {
+    describe('StateApply (State Application)', () => {
         beforeEach(async () => {
             await host.initialize();
         });
@@ -120,7 +120,7 @@ describe('WindowsGamepadHost', () => {
 
             host.applyState(state);
 
-            // 验证状态已应用（通过查询方法）
+            // VerifyState已Apply（通过查询Method）
             expect(host.getActiveButtonCount()).toBe(0);
         });
 
@@ -183,7 +183,7 @@ describe('WindowsGamepadHost', () => {
     });
 
     // ========================================
-    // XInput映射测试 (6个)
+    // XInput映射Test (6个)
     // ========================================
     describe('XInput映射 (XInput Mapping)', () => {
         beforeEach(async () => {
@@ -244,12 +244,12 @@ describe('WindowsGamepadHost', () => {
             const state: GamepadState = {
                 buttons: new Set(),
                 axes: {
-                    leftX: 2.0,  // 超出范围
-                    leftY: -2.0  // 超出范围
+                    leftX: 2.0,  // 超出Range
+                    leftY: -2.0  // 超出Range
                 }
             };
 
-            // 不应该抛出错误
+            // 不应该抛出Error
             host.applyState(state);
 
             expect(host.getActiveButtonCount()).toBe(0);
@@ -257,9 +257,9 @@ describe('WindowsGamepadHost', () => {
     });
 
     // ========================================
-    // 重置和销毁测试 (4个)
+    // Reset和DestroyTest (4个)
     // ========================================
-    describe('重置和销毁 (Reset and Destroy)', () => {
+    describe('Reset和Destroy (Reset and Destroy)', () => {
         beforeEach(async () => {
             await host.initialize();
         });
@@ -294,9 +294,9 @@ describe('WindowsGamepadHost', () => {
     });
 
     // ========================================
-    // 错误处理测试 (4个)
+    // Error处理Test (4个)
     // ========================================
-    describe('错误处理 (Error Handling)', () => {
+    describe('Error处理 (Error Handling)', () => {
         test('should handle applyState error when disabled', () => {
             host.applyState({ buttons: new Set(['A']) });
 
@@ -331,7 +331,7 @@ describe('WindowsGamepadHost', () => {
     });
 
     // ========================================
-    // 边界条件测试 (4个)
+    // 边界条件Test (4个)
     // ========================================
     describe('边界条件 (Edge Cases)', () => {
         beforeEach(async () => {
@@ -393,9 +393,9 @@ describe('WindowsGamepadHost', () => {
     });
 
     // ========================================
-    // 状态查询测试
+    // State查询Test
     // ========================================
-    describe('状态查询 (State Query)', () => {
+    describe('State查询 (State Query)', () => {
         beforeEach(async () => {
             await host.initialize();
         });
@@ -423,7 +423,7 @@ describe('WindowsGamepadHost', () => {
     });
 
     // ========================================
-    // 幂等性测试
+    // 幂等性Test
     // ========================================
     describe('幂等性 (Idempotency)', () => {
         beforeEach(async () => {

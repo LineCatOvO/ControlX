@@ -41,7 +41,7 @@ export class ConfigManager {
     /**
      * Parse configuration file path
      * @param configPath Configuration file path
-     * @returns 绝对路径
+     * @returns Absolute path
      */
     private resolvePath(configPath: string): string {
         return path.isAbsolute(configPath) 
@@ -51,8 +51,8 @@ export class ConfigManager {
 
     /**
      * Load configuration from file
-     * @param configPath Configuration file path（可选，使用构造函数中的路径）
-     * @returns 是否加载成功
+     * @param configPath Configuration file path（Optional, use path from constructor）
+     * @returns Whether load succeeded
      */
     loadFromFile(configPath?: string): boolean {
         const filePath = configPath 
@@ -95,8 +95,8 @@ export class ConfigManager {
 
     /**
      * Save configuration to file
-     * @param configPath Configuration file path（可选，使用当前路径）
-     * @returns 是否保存成功
+     * @param configPath Configuration file path（Optional, use current path）
+     * @returns Whether save succeeded
      */
     saveToFile(configPath?: string): boolean {
         const filePath = configPath 
@@ -129,7 +129,7 @@ export class ConfigManager {
 
     /**
      * Get current configuration
-     * @returns 当前配置对象的副本
+     * @returns Current config object copy
      */
     getConfig(): Config {
         return { ...this.config };
@@ -138,7 +138,7 @@ export class ConfigManager {
     /**
      * Get configuration item
      * @param key Configuration item key name
-     * @returns 配置项值
+     * @returns Config value
      */
     get<K extends keyof Config>(key: K): Config[K] {
         return this.config[key];
@@ -148,7 +148,7 @@ export class ConfigManager {
      * Update configuration
      * @param updates Partial configuration update
      * @param persist Whether persist to file
-     * @returns 是否更新成功
+     * @returns Whether update succeeded
      */
     update(updates: Partial<Config>, persist: boolean = false): boolean {
         // Validate new configuration
@@ -177,7 +177,7 @@ export class ConfigManager {
     /**
      * Hot update configuration (runtime update, no service restart)
      * @param updates Partial configuration update
-     * @returns 更新结果
+     * @returns Update result
      */
     hotUpdate(updates: Partial<Config>): {
         success: boolean;
@@ -278,16 +278,16 @@ export class ConfigManager {
     /**
      * Validate whether configuration is valid
      * @param config Configuration to validate
-     * @returns 是否有效
+     * @returns Is valid
      */
     isValid(config: Partial<Config>): boolean {
         return validateConfig(config);
     }
 
     /**
-     * Create Configuration Manager instance并从文件加载
+     * Create Configuration Manager instance and load from file
      * @param configPath Configuration file path
-     * @returns Configuration Manager实例
+     * @returns Configuration Manager instance
      */
     static fromFile(configPath: string): ConfigManager {
         const manager = new ConfigManager();

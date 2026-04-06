@@ -96,7 +96,7 @@ function updateValidationStats(valid: boolean, errors: ValidationError[]) {
       }
 
       // Detect sequence number error
-      if (error.message.includes('sequence') || error.message.includes('序列号')) {
+      if (error.message.includes('sequence') || error.message.includes('sequence number')) {
         validationStats.sequenceErrors++;
       }
     });
@@ -212,7 +212,7 @@ export function handleState(ws: any, message: StateMessage) {
 
             // Check if it is a sequence number error
             const isSequenceError = validationResult.errors.some(
-                err => err.message.includes('sequence') || err.message.includes('序列号')
+                err => err.message.includes('sequence') || err.message.includes('sequence number')
             );
 
             if (isSequenceError) {

@@ -1,13 +1,13 @@
 /**
- * State Handler 单元测试
+ * State Handler Unit Test
  *
- * 测试覆盖：
- * - handleState 处理器
- * - 输入验证
- * - 序列号检查
- * - ACK 消息格式
- * - 统计信息
- * - 错误处理
+ * Test Coverage:
+ * - handleState handler
+ * - Input validation
+ * - Sequence number check
+ * - ACK message format
+ * - Statistics info
+ * - Error handling
  */
 
 import { handleState, getAckStats, getValidationStats } from '../../src/ws/handlers/state';

@@ -5,7 +5,7 @@ export const config: Config = {
   inputUpdateInterval: 8, // 8ms = 125Hz
   heartbeatInterval: 30000, // 30s
   pingInterval: 10000, // 10s
-  safeStateTimeout: 5000, // 5s无输入后回退到安全状态
+  safeStateTimeout: 5000, // Return to safe state after 5s without input
   enableLogging: true, // Whether enable logging
   defaultPort: 3000, // Default port
   portRange: 5, // Port attempt range

@@ -1,12 +1,12 @@
 /**
- * WindowsKeyboardHost 单元测试
+ * WindowsKeyboardHost Unit test
  *
- * 测试覆盖：
- * - 初始化: 6个
- * - 状态应用: 8个
- * - 重置和销毁: 4个
+ * Test coverage：
+ * - Initialize: 6个
+ * - StateApply: 8个
+ * - Reset和Destroy: 4个
  * - 差集算法: 5个
- * - 错误处理: 4个
+ * - Error处理: 4个
  * - 边界条件: 4个
  * - 总计: 31个
  */
@@ -34,9 +34,9 @@ describe('WindowsKeyboardHost', () => {
     });
 
     // ========================================
-    // 初始化测试 (6个)
+    // InitializeTest (6个)
     // ========================================
-    describe('初始化 (Initialization)', () => {
+    describe('Initialize (Initialization)', () => {
         test('should initialize successfully when driver is available', async () => {
             const result = await host.initialize();
 
@@ -55,7 +55,7 @@ describe('WindowsKeyboardHost', () => {
         });
 
         test('should handle driver load failure gracefully', async () => {
-            // 重新模拟加载失败
+            // 重新Mock加载Failure
             jest.doMock('node-key-sender', () => {
                 throw new Error('Module not found');
             });
@@ -88,9 +88,9 @@ describe('WindowsKeyboardHost', () => {
     });
 
     // ========================================
-    // 状态应用测试 (8个)
+    // StateApplyTest (8个)
     // ========================================
-    describe('状态应用 (State Application)', () => {
+    describe('StateApply (State Application)', () => {
         beforeEach(async () => {
             await host.initialize();
         });
@@ -163,9 +163,9 @@ describe('WindowsKeyboardHost', () => {
     });
 
     // ========================================
-    // 重置和销毁测试 (4个)
+    // Reset和DestroyTest (4个)
     // ========================================
-    describe('重置和销毁 (Reset and Destroy)', () => {
+    describe('Reset和Destroy (Reset and Destroy)', () => {
         beforeEach(async () => {
             await host.initialize();
         });
@@ -200,7 +200,7 @@ describe('WindowsKeyboardHost', () => {
     });
 
     // ========================================
-    // 差集算法测试 (5个)
+    // 差集算法Test (5个)
     // ========================================
     describe('差集算法 (Difference Algorithm)', () => {
         beforeEach(async () => {
@@ -226,7 +226,7 @@ describe('WindowsKeyboardHost', () => {
             host.applyState(new Set(['W', 'A']));
             host.applyState(new Set(['W', 'A']));
 
-            // 状态应该保持不变
+            // State应该保持不变
             expect(host.getActiveKeyCount()).toBe(2);
         });
 
@@ -250,11 +250,11 @@ describe('WindowsKeyboardHost', () => {
     });
 
     // ========================================
-    // 错误处理测试 (4个)
+    // Error处理Test (4个)
     // ========================================
-    describe('错误处理 (Error Handling)', () => {
+    describe('Error处理 (Error Handling)', () => {
         test('should handle applyState error when disabled', () => {
-            // 不初始化，保持禁用状态
+            // 不Initialize，保持DisableState
             host.applyState(new Set(['W']));
 
             expect(host.getActiveKeyCount()).toBe(0);
@@ -263,7 +263,7 @@ describe('WindowsKeyboardHost', () => {
         test('should not throw on invalid key', async () => {
             await host.initialize();
 
-            // 使用有效的键名
+            // 使用ValidOf键名
             host.applyState(new Set(['INVALID_KEY']));
 
             expect(host.getActiveKeyCount()).toBe(1);
@@ -281,16 +281,16 @@ describe('WindowsKeyboardHost', () => {
         test('should preserve lastError on error', async () => {
             await host.initialize();
 
-            // 模拟错误情况
+            // MockError情况
             host.applyState(new Set(['W']));
 
-            // 正常操作不应该产生错误
+            // NormalOperation不应该产生Error
             expect(host.getLastError()).toBeUndefined();
         });
     });
 
     // ========================================
-    // 边界条件测试 (4个)
+    // 边界条件Test (4个)
     // ========================================
     describe('边界条件 (Edge Cases)', () => {
         beforeEach(async () => {
@@ -329,9 +329,9 @@ describe('WindowsKeyboardHost', () => {
     });
 
     // ========================================
-    // 状态查询测试
+    // State查询Test
     // ========================================
-    describe('状态查询 (State Query)', () => {
+    describe('State查询 (State Query)', () => {
         beforeEach(async () => {
             await host.initialize();
         });
@@ -359,7 +359,7 @@ describe('WindowsKeyboardHost', () => {
     });
 
     // ========================================
-    // 幂等性测试
+    // 幂等性Test
     // ========================================
     describe('幂等性 (Idempotency)', () => {
         beforeEach(async () => {

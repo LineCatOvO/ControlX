@@ -1,12 +1,12 @@
 /**
- * Debug Handler 单元测试
+ * Debug Handler Unit test
  *
- * 测试覆盖：
- * - DebugManager 配置管理
- * - 日志级别过滤
+ * Test coverage：
+ * - DebugManager ConfigManage
+ * - Log级别过滤
  * - 来源过滤
- * - 消息广播
- * - 便捷日志方法
+ * - Message广播
+ * - 便捷LogMethod
  */
 
 import { 

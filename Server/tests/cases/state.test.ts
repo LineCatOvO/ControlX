@@ -48,7 +48,7 @@ describe("State Update and Coverage Tests", () => {
         expect(retrieved1).not.toBeNull();
         expect(retrieved1?.frameId).toBe(1);
         expect(retrieved1?.keyboard).toEqual(new Set(["W"]));
-        // StateStore 会自动添加 gamepad 字段
+        // StateStore 会自动添加 gamepad Field
         expect(retrieved1?.gamepad).toEqual(new Set());
 
         // Store second state
@@ -119,12 +119,12 @@ describe("State Update and Coverage Tests", () => {
 
     test("should handle invalid states gracefully", () => {
         // Invalid state (missing required fields)
-        // 注意：由于 normalizeState 会为缺失字段添加默认值，这个状态会被接受
+        // 注意：由于 normalizeState 会For缺失Field添加DefaultValue，这个State会被接受
         const invalidState = {
             keyboard: new Set(["W"]),
             // Missing mouse and joystick fields - they will be normalized
         } as any; // Cast to any to bypass TypeScript type checking for test
-        // StateStore 会接受这个状态并添加默认值
+        // StateStore 会接受这个State并添加DefaultValue
         expect(stateStore.storeState(invalidState)).toBe(true);
         expect(stateStore.getLatestState()).not.toBeNull();
 
@@ -132,13 +132,13 @@ describe("State Update and Coverage Tests", () => {
         const invalidFrameState = TestUtils.createCompleteInputState(NaN, {
             keyboard: new Set(["W"]),
         });
-        // frameId 不是必需的，非数字 frameId 会被忽略
+        // frameId 不是必需Of，非Number frameId 会被忽略
         expect(stateStore.storeState(invalidFrameState)).toBe(true);
         expect(stateStore.getLatestState()).not.toBeNull();
 
         // Invalid state (undefined frameId) - frameId is optional
         const noFrameIdState = TestUtils.createMinimalInputState();
-        // 缺少frameId应该被允许（它是可选的）
+        // 缺少frameId应该被Allow（它是optionalOf）
         expect(stateStore.storeState(noFrameIdState)).toBe(true);
         expect(stateStore.getLatestState()).not.toBeNull();
     });

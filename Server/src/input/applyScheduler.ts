@@ -3,16 +3,16 @@
  * Apply Scheduler Module (Apply Scheduler Module)
  * ============================================================================
  * 
- * 【模块职责】
- * This module is the【unique time authority】，Responsible for fixed frequency（125Hz）的state application scheduling。
+ * 【Module responsibility】
+ * This module is the【unique time authority】，Responsible for fixed frequency（125Hz）Ofstate application scheduling。
  * 
- * 【核心功能】
+ * 【Core functionality】
  * 1. Time authority: generate and distribute unified tickTime，ensure system-wide time consistency
  * 2. State scheduling: at fixed frequency（8ms/125Hz）apply latest state to executors
  * 3. Time sync: sync tickTime to SafetyController and StateStore
  * 4. Mode support: support normal mode、shadow mode、Router-only mode
  * 
- * 【模块边界】
+ * 【Module boundary】
  * - ✅ Allowed: generate tickTime, schedule state application, sync time to other modules
  * - ❌ Prohibited: state validation（by Validator）、directly operate executors（through ExecutorManager）、safe clearing（by SafetyController）
  * 
@@ -27,7 +27,7 @@
  *                        → StateStore.recordAppliedState(tickTime)
  *                        → SafetyController.recordValidState(tickTime)
  * 
- * 【依赖关系】
+ * 【Dependencies】
  * - Dependencies: StateStore (state retrieval)、ExecutorManager (state application)、SafetyController (time sync)
  * - Depended by: app.ts (startup entry)
  * 
@@ -62,13 +62,13 @@ interface ApplySchedulerConfig {
 
 /**
  * ApplyScheduler
- * Responsible for fixed frequency（125Hz）状态应用，implement decoupling of reception and application
+ * Responsible for fixed frequency（125Hz）StateApply，implement decoupling of reception and application
  * 
  * ============================================================================
- * time authority说明
+ * time authorityDescription
  * ============================================================================
- * ApplyScheduler is the【unique time authority】，所有时间相关操作都必须使用
- * ApplyScheduler 提供的 tickTime，禁止其他模块自行调用 Date.now() 获取时间。
+ * ApplyScheduler is the【unique time authority】，All时间RelatedOperation都必须使用
+ * ApplyScheduler 提供Of tickTime，Prohibit其他Module自行调用 Date.now() Get时间。
  * 
  * Design principles：
  * 1. Single time source: all timestamps generated and distributed by ApplyScheduler
@@ -251,7 +251,7 @@ export class ApplyScheduler {
     } catch (error) {
       console.error('ApplyScheduler: Error applying state:', error);
 
-      // 发生异常时触发safe clearing
+      // 发生Exception时触发safe clearing
       const safetyController = getSafetyController();
       safetyController.triggerExceptionClear('ApplyScheduler error');
     }
@@ -259,25 +259,25 @@ export class ApplyScheduler {
 
   /**
    * Extract sequence number
-   * @param state 状态对象
-   * @returns 序列号
+   * @param state StateObject
+   * @returns sequence number
    */
   private extractSequenceNumber(state: any): number {
-    // 这里假设 state 中有 frameId 字段作为序列号
-    // 如果没有，则使用时间戳作为序列号
+    // 这里假设 state In有 frameId Field作Forsequence number
+    // 如果没有，则使用Timestamp作Forsequence number
     return state.frameId || Date.now();
   }
 
   /**
-   * 获取Running status
-   * @returns 是否运行中
+   * GetRunning status
+   * @returns 是否RunIn
    */
   isRunning(): boolean {
     return this._isRunning;
   }
 
   /**
-   * 获取Apply count
+   * GetApply count
    * @returns Apply count
    */
   getApplyCount(): number {

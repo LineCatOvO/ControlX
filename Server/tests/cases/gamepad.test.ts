@@ -1,15 +1,15 @@
 /**
- * Gamepad ViGEmBus 集成测试
+ * Gamepad ViGEmBus Integration test
  * 
- * 测试 GamepadXInputAdapter 和 GamepadAdapter 的 ViGEmBus 集成功能
+ * Test GamepadXInputAdapter 和 GamepadAdapter Of ViGEmBus 集Success能
  * 
  * @remarks
- * 这些测试需要：
- * 1. Windows 操作系统
- * 2. 已安装的 ViGEmBus 驱动
- * 3. 已安装的 vigemclient npm 包
+ * 这些Test需要：
+ * 1. Windows Operation系统
+ * 2. 已安装Of ViGEmBus Driver
+ * 3. 已安装Of vigemclient npm 包
  * 
- * 在非 Windows 环境下，测试会自动跳过并显示原因
+ * 在非 Windows 环境Under，Test会自动跳过并显示原因
  */
 
 import { GamepadXInputAdapter } from '../../src/input/adapters/GamepadXInputAdapter';
@@ -22,7 +22,7 @@ import {
 } from '../common/vigemDetector';
 
 describe('Gamepad ViGEmBus Integration Tests', () => {
-    // 检测日志
+    // DetectionLog
     beforeAll(() => {
         console.log('🎮 Gamepad Test Environment Check:');
         console.log(`   Platform: ${process.platform}`);

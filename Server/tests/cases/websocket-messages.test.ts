@@ -1,12 +1,12 @@
 /**
- * WebSocket 消息处理集成测试
+ * WebSocket Message处理Integration test
  *
- * 测试覆盖：
- * - input 消息处理（更新 inputState）
- * - input_event 消息处理（调用执行器）
- * - ping/pong 消息处理
- * - latency_probe 消息处理
- * - 错误消息处理
+ * Test coverage：
+ * - input Message处理（Update inputState）
+ * - input_event Message处理（调用Executor）
+ * - ping/pong Message处理
+ * - latency_probe Message处理
+ * - ErrorMessage处理
  */
 
 import { WsClient } from "../common/wsClient";
@@ -24,16 +24,16 @@ describe("WebSocket Message Handling Integration Tests", () => {
     let serverPort: number;
 
     beforeAll(async () => {
-        // 初始化全局 stateStore（必须在服务器启动之前）
+        // InitializeGlobal stateStore（必须在服务Manager启动之Before）
         const stateStore = new StateStore();
         (global as any).stateStore = stateStore;
-        // 启动服务器
+        // 启动服务Manager
         serverPort = await startWsServer();
     });
 
     afterAll(async () => {
         await stopWsServer();
-        // 清理全局 stateStore
+        // 清理Global stateStore
         delete (global as any).stateStore;
     });
 

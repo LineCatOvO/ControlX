@@ -1,12 +1,12 @@
 /**
- * InputRouter 单元测试
+ * InputRouter Unit test
  * 
- * 测试覆盖：
- * - 路由规则: 8个
+ * Test coverage：
+ * - Router规则: 8个
  * - 设备映射: 6个
  * - 优先级处理: 5个
- * - 状态合并: 5个
- * - 错误处理: 4个
+ * - State合并: 5个
+ * - Error处理: 4个
  * - 总计: 28个
  */
 
@@ -15,7 +15,7 @@ import { InputHost } from '../../src/input/hosts/InputHost';
 import { InputDeviceType, HostStatus } from '../../src/input/hosts/types';
 import { InputState } from '../../src/types/ws';
 
-// Mock InputHost 实现类
+// Mock InputHost ImplementationClass
 class MockInputHost extends InputHost {
     public initializeCalled = false;
     public applyStateCalled = false;
@@ -58,7 +58,7 @@ class MockInputHost extends InputHost {
     }
 }
 
-// 辅助函数：创建输入状态
+// 辅助Function：CreateInputState
 function createInputState(overrides: Partial<InputState> = {}): InputState {
     return {
         keyboard: new Set<string>(),
@@ -81,14 +81,14 @@ describe('InputRouter', () => {
     });
 
     // ========================================
-    // 路由规则测试 (8个)
+    // Router规则Test (8个)
     // ========================================
-    describe('路由规则 (Routing Rules)', () => {
+    describe('Router规则 (Routing Rules)', () => {
         test('should register and initialize host correctly', async () => {
             const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
             router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
 
-            // 等待异步初始化
+            // 等待异步Initialize
             await new Promise(resolve => setTimeout(resolve, 100));
 
             expect(keyboardHost.initializeCalled).toBe(true);
@@ -194,13 +194,13 @@ describe('InputRouter', () => {
             router.applyState(state);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 应该不会抛出错误
+            // 应该不会抛出Error
             expect(router.getStats().totalApplications).toBe(1);
         });
     });
 
     // ========================================
-    // 设备映射测试 (6个)
+    // 设备映射Test (6个)
     // ========================================
     describe('设备映射 (Device Mapping)', () => {
         test('should map multiple device types to correct hosts', async () => {
@@ -286,7 +286,7 @@ describe('InputRouter', () => {
     });
 
     // ========================================
-    // 优先级处理测试 (5个)
+    // 优先级处理Test (5个)
     // ========================================
     describe('优先级处理 (Priority Handling)', () => {
         test('should process all device types in parallel', async () => {
@@ -331,7 +331,7 @@ describe('InputRouter', () => {
             router.applyState(state);
             const duration = Date.now() - startTime;
 
-            // 应该立即返回（不等待异步操作完成）
+            // 应该立即Return（不等待异步Operation完成）
             expect(duration).toBeLessThan(50);
         });
 
@@ -349,7 +349,7 @@ describe('InputRouter', () => {
             router.applyState(state);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 禁用的 host 不应该接收状态
+            // DisableOf host 不应该ReceiveState
             expect(disabledHost.applyStateCalled).toBe(false);
         });
 
@@ -360,7 +360,7 @@ describe('InputRouter', () => {
             router.registerHost(InputDeviceType.KEYBOARD, failingHost);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 即使初始化失败，路由器也应该正常工作
+            // 即使InitializeFailure，RouterManager也应该Normal工作
             expect(router.getHost(InputDeviceType.KEYBOARD)).toBe(failingHost);
         });
 
@@ -382,15 +382,15 @@ describe('InputRouter', () => {
             router.applyState(state);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 正常的 host 应该仍然接收到状态
+            // NormalOf host 应该仍然Receive到State
             expect(normalHost.applyStateCalled).toBe(true);
         });
     });
 
     // ========================================
-    // 状态合并测试 (5个)
+    // State合并Test (5个)
     // ========================================
-    describe('状态合并 (State Merging)', () => {
+    describe('State合并 (State Merging)', () => {
         test('should apply multiple states sequentially', async () => {
             const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
             router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
@@ -402,7 +402,7 @@ describe('InputRouter', () => {
             router.applyState(createInputState({ keyboard: new Set(['W', 'A']) }));
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 最后一个状态应该被缓存
+            // 最After一个State应该被缓存
             expect(router.getCachedState(InputDeviceType.KEYBOARD)).toEqual(new Set(['W', 'A']));
         });
 
@@ -444,11 +444,11 @@ describe('InputRouter', () => {
             router.registerHost(InputDeviceType.MOUSE, mouseHost);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 重置状态
+            // ResetState
             keyboardHost.applyStateCalled = false;
             mouseHost.applyStateCalled = false;
 
-            // 创建一个只有键盘状态的状态对象
+            // Create一个只有KeyboardStateOfStateObject
             const state: any = {
                 keyboard: new Set(['W'])
             };
@@ -457,7 +457,7 @@ describe('InputRouter', () => {
             await new Promise(resolve => setTimeout(resolve, 50));
 
             expect(keyboardHost.applyStateCalled).toBe(true);
-            // mouse host 不应该被调用，因为状态中没有 mouse 属性
+            // mouse host 不应该被调用，因ForStateIn没有 mouse Property
             expect(mouseHost.applyStateCalled).toBe(false);
         });
 
@@ -483,9 +483,9 @@ describe('InputRouter', () => {
     });
 
     // ========================================
-    // 错误处理测试 (4个)
+    // Error处理Test (4个)
     // ========================================
-    describe('错误处理 (Error Handling)', () => {
+    describe('Error处理 (Error Handling)', () => {
         test('should handle host applyState error gracefully', async () => {
             const failingHost = new MockInputHost(InputDeviceType.KEYBOARD);
             failingHost.shouldFailApplyState = true;
@@ -497,12 +497,12 @@ describe('InputRouter', () => {
                 keyboard: new Set(['W'])
             });
 
-            // 不应该抛出错误
+            // 不应该抛出Error
             expect(() => router.applyState(state)).not.toThrow();
 
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 应该记录失败
+            // 应该记录Failure
             expect(router.getStats().failedApplications).toBeGreaterThan(0);
         });
 
@@ -511,7 +511,7 @@ describe('InputRouter', () => {
             router.registerHost(InputDeviceType.KEYBOARD, host);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 不应该抛出错误
+            // 不应该抛出Error
             expect(() => router.resetAll()).not.toThrow();
         });
 
@@ -520,7 +520,7 @@ describe('InputRouter', () => {
             router.registerHost(InputDeviceType.KEYBOARD, host);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 不应该抛出错误
+            // 不应该抛出Error
             expect(() => router.destroyAll()).not.toThrow();
         });
 
@@ -544,9 +544,9 @@ describe('InputRouter', () => {
     });
 
     // ========================================
-    // 重置和销毁测试
+    // Reset和DestroyTest
     // ========================================
-    describe('重置和销毁 (Reset and Destroy)', () => {
+    describe('Reset和Destroy (Reset and Destroy)', () => {
         test('should reset all hosts', async () => {
             const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
             const mouseHost = new MockInputHost(InputDeviceType.MOUSE);
@@ -606,7 +606,7 @@ describe('InputRouter', () => {
     });
 
     // ========================================
-    // 边界条件测试 (补充 6个)
+    // 边界条件Test (补充 6个)
     // ========================================
     describe('边界条件 (Boundary Conditions)', () => {
         test('should handle null state gracefully', async () => {
@@ -614,7 +614,7 @@ describe('InputRouter', () => {
             router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 不应该抛出错误
+            // 不应该抛出Error
             expect(() => router.applyState(null as any)).not.toThrow();
         });
 
@@ -623,7 +623,7 @@ describe('InputRouter', () => {
             router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 不应该抛出错误
+            // 不应该抛出Error
             expect(() => router.applyState(undefined as any)).not.toThrow();
         });
 
@@ -705,9 +705,9 @@ describe('InputRouter', () => {
     });
 
     // ========================================
-    // 性能测试 (补充 4个)
+    // 性能Test (补充 4个)
     // ========================================
-    describe('性能测试 (Performance Tests)', () => {
+    describe('性能Test (Performance Tests)', () => {
         test('should handle high-frequency state applications', async () => {
             const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
             router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
@@ -721,7 +721,7 @@ describe('InputRouter', () => {
 
             const duration = Date.now() - startTime;
 
-            // 100 次调用应该在合理时间内完成
+            // 100 次调用应该在合理时间Inside完成
             expect(duration).toBeLessThan(1000);
         });
 
@@ -748,7 +748,7 @@ describe('InputRouter', () => {
             router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 并发执行多个状态更新
+            // 并发Execute多个StateUpdate
             const promises = [];
             for (let i = 0; i < 10; i++) {
                 promises.push(
@@ -774,15 +774,15 @@ describe('InputRouter', () => {
             router.applyState(createInputState({ keyboard: new Set(['W']) }));
             const latency = Date.now() - startTime;
 
-            // 单次调用延迟应该很低
+            // 单次调用Latency应该很低
             expect(latency).toBeLessThan(10);
         });
     });
 
     // ========================================
-    // 状态一致性测试 (补充 4个)
+    // State一致性Test (补充 4个)
     // ========================================
-    describe('状态一致性 (State Consistency)', () => {
+    describe('State一致性 (State Consistency)', () => {
         test('should maintain cache consistency after multiple updates', async () => {
             const keyboardHost = new MockInputHost(InputDeviceType.KEYBOARD);
             router.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
@@ -808,7 +808,7 @@ describe('InputRouter', () => {
             router.applyState(createInputState({ keyboard: new Set(['W', 'A', 'S']) }));
             await new Promise(resolve => setTimeout(resolve, 20));
 
-            // 回滚到之前的状态
+            // 回滚到之BeforeOfState
             router.applyState(createInputState({ keyboard: new Set(['W']) }));
             await new Promise(resolve => setTimeout(resolve, 20));
 
@@ -823,7 +823,7 @@ describe('InputRouter', () => {
             router.applyState(createInputState({ keyboard: new Set(['W']) }));
             await new Promise(resolve => setTimeout(resolve, 20));
 
-            // 应用零状态
+            // Apply零State
             router.applyState(createInputState({ keyboard: new Set() }));
             await new Promise(resolve => setTimeout(resolve, 20));
 

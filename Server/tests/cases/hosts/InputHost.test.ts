@@ -1,18 +1,18 @@
 /**
- * InputHost 抽象基类单元测试
+ * InputHost 抽象基ClassUnit test
  *
- * 测试覆盖：
- * - 构造函数: 4个
- * - 状态管理: 6个
- * - 生命周期: 4个
- * - 错误处理: 4个
+ * Test coverage：
+ * - 构造Function: 4个
+ * - StateManage: 6个
+ * - Lifecycle: 4个
+ * - Error处理: 4个
  * - 总计: 18个
  */
 
 import { InputHost } from '../../../src/input/hosts/InputHost';
 import { InputDeviceType, HostStatus, PlatformType, detectPlatform } from '../../../src/input/hosts/types';
 
-// Mock InputHost 实现类用于测试抽象基类的具体功能
+// Mock InputHost ImplementationClass用于Test抽象基ClassOf具体Function
 class TestableInputHost extends InputHost {
     public initializeCalled = false;
     public applyStateCalled = false;
@@ -53,9 +53,9 @@ class TestableInputHost extends InputHost {
 
 describe('InputHost', () => {
     // ========================================
-    // 构造函数测试 (4个)
+    // 构造FunctionTest (4个)
     // ========================================
-    describe('构造函数 (Constructor)', () => {
+    describe('构造Function (Constructor)', () => {
         test('should create host with correct device type', () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
 
@@ -82,9 +82,9 @@ describe('InputHost', () => {
     });
 
     // ========================================
-    // 状态管理测试 (6个)
+    // StateManageTest (6个)
     // ========================================
-    describe('状态管理 (Status Management)', () => {
+    describe('StateManage (Status Management)', () => {
         test('should return correct HostStatus', async () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
             await host.initialize();
@@ -126,13 +126,13 @@ describe('InputHost', () => {
         test('should clear last error on successful initialization', async () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
 
-            // 先设置一个错误
+            // 先Set一个Error
             host.shouldFailInitialize = true;
             await host.initialize();
 
             expect(host.getLastError()).toBe('Initialize failed');
 
-            // 重新初始化成功
+            // 重新InitializeSuccess
             host.shouldFailInitialize = false;
             const success = await host.initialize();
 
@@ -151,9 +151,9 @@ describe('InputHost', () => {
     });
 
     // ========================================
-    // 生命周期测试 (4个)
+    // LifecycleTest (4个)
     // ========================================
-    describe('生命周期 (Lifecycle)', () => {
+    describe('Lifecycle (Lifecycle)', () => {
         test('should call initialize method', async () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
 
@@ -193,9 +193,9 @@ describe('InputHost', () => {
     });
 
     // ========================================
-    // 错误处理测试 (4个)
+    // Error处理Test (4个)
     // ========================================
-    describe('错误处理 (Error Handling)', () => {
+    describe('Error处理 (Error Handling)', () => {
         test('should handle initialization failure gracefully', async () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
             host.shouldFailInitialize = true;
@@ -221,12 +221,12 @@ describe('InputHost', () => {
         test('should allow re-initialization after failure', async () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
 
-            // 第一次初始化失败
+            // FirstInitializeFailure
             host.shouldFailInitialize = true;
             await host.initialize();
             expect(host.isHostEnabled()).toBe(false);
 
-            // 第二次初始化成功
+            // 第二次InitializeSuccess
             host.shouldFailInitialize = false;
             await host.initialize();
             expect(host.isHostEnabled()).toBe(true);
@@ -251,9 +251,9 @@ describe('InputHost', () => {
     });
 
     // ========================================
-    // 平台检测测试
+    // 平台DetectionTest
     // ========================================
-    describe('平台检测 (Platform Detection)', () => {
+    describe('平台Detection (Platform Detection)', () => {
         test('should detect windows platform', () => {
             const platform = detectPlatform('win32');
 
@@ -278,34 +278,34 @@ describe('InputHost', () => {
     });
 
     // ========================================
-    // 抽象方法验证测试
+    // 抽象MethodVerifyTest
     // ========================================
-    describe('抽象方法 (Abstract Methods)', () => {
+    describe('抽象Method (Abstract Methods)', () => {
         test('should require initialize implementation', () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
 
-            // TestableInputHost 实现了 initialize
+            // TestableInputHost Implementation了 initialize
             expect(typeof host.initialize).toBe('function');
         });
 
         test('should require applyState implementation', () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
 
-            // TestableInputHost 实现了 applyState
+            // TestableInputHost Implementation了 applyState
             expect(typeof host.applyState).toBe('function');
         });
 
         test('should require reset implementation', () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
 
-            // TestableInputHost 实现了 reset
+            // TestableInputHost Implementation了 reset
             expect(typeof host.reset).toBe('function');
         });
 
         test('should require destroy implementation', () => {
             const host = new TestableInputHost(InputDeviceType.KEYBOARD);
 
-            // TestableInputHost 实现了 destroy
+            // TestableInputHost Implementation了 destroy
             expect(typeof host.destroy).toBe('function');
         });
     });

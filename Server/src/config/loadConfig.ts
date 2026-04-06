@@ -7,7 +7,7 @@ import { validateConfig } from './validate';
 /**
  * Load configuration from file
  * @param configPath Configuration file path
- * @returns 合并后的配置对象
+ * @returns Merged config object
  */
 export function loadConfigFromFile(configPath?: string): Config {
   let loadedConfig: Partial<Config> = {};
@@ -46,7 +46,7 @@ export function loadConfigFromFile(configPath?: string): Config {
 
 /**
  * Parse command line arguments, get configuration file path
- * @returns Configuration file path，如果没有指定则返回undefined
+ * @returns Configuration file path，Returns undefined if not specified
  */
 export function getConfigPathFromArgs(): string | undefined {
   // Simple command line argument parsing, find --config or -c parameter

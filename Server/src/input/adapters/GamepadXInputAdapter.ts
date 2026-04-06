@@ -1,7 +1,7 @@
-// GamepadXInputAdapter - ViGEmBus XInput 适配器
+// GamepadXInputAdapter - ViGEmBus XInput Adapter
 
 /**
- * ViGEmBus 驱动检测结果
+ * ViGEmBus DriverDetectionResult
  */
 export interface ViGEmDetectionResult {
     /** Whether available */
@@ -78,8 +78,8 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 检测 ViGEmBus Whether available
-     * @returns 检测结果
+     * Detection ViGEmBus Whether available
+     * @returns DetectionResult
      */
     public detect(): ViGEmDetectionResult {
         if (!this.vigemClient) {
@@ -90,7 +90,7 @@ export class GamepadXInputAdapter {
         }
 
         try {
-            // 尝试创建虚拟控制器来验证驱动Whether available
+            // 尝试Create虚拟Controller来VerifyDriverWhether available
             const testController = this.vigemClient.createX360Controller();
             if (!testController) {
                 return {
@@ -112,7 +112,7 @@ export class GamepadXInputAdapter {
 
     /**
      * Connect virtual controller
-     * @returns 是否连接成功
+     * @returns 是否ConnectionSuccess
      */
     public connect(): boolean {
         if (!this.vigemClient) {
@@ -172,7 +172,7 @@ export class GamepadXInputAdapter {
         }
 
         try {
-            // 更新Current state
+            // UpdateCurrent state
             this.currentState.buttons = new Set(Array.from(buttons));
             this.currentState.lx = this.clampAxis(axes.LX || 0);
             this.currentState.ly = this.clampAxis(axes.LY || 0);
@@ -235,14 +235,14 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 限制Joystick axis values范围 [-1.0, 1.0]
+     * 限制Joystick axis valuesRange [-1.0, 1.0]
      */
     private clampAxis(value: number): number {
         return Math.max(-1.0, Math.min(1.0, value));
     }
 
     /**
-     * 限制Trigger values范围 [0.0, 1.0]
+     * 限制Trigger valuesRange [0.0, 1.0]
      */
     private clampTrigger(value: number): number {
         return Math.max(0.0, Math.min(1.0, value));
@@ -256,7 +256,7 @@ export class GamepadXInputAdapter {
             return;
         }
 
-        // 构建 XInput 状态对象
+        // 构建 XInput StateObject
         const state: any = {
             wButtons: this.getButtonMask(),
             bLeftTrigger: this.floatToByte(this.currentState.lt),
@@ -267,7 +267,7 @@ export class GamepadXInputAdapter {
             sThumbRY: this.axisToShort(this.currentState.ry)
         };
 
-        // 提交状态
+        // 提交State
         this.controller.sendState(state);
     }
 
@@ -278,7 +278,7 @@ export class GamepadXInputAdapter {
         const buttons = this.currentState.buttons;
         let mask = 0;
 
-        // XInput 按钮常量
+        // XInput ButtonConstant
         const XINPUT_BUTTON = {
             A: 0x0001,
             B: 0x0002,
@@ -324,7 +324,7 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 将浮点Trigger values转换为 byte [0, 255]
+     * 将浮点Trigger values转换For byte [0, 255]
      */
     private floatToByte(value: number): number {
         return Math.floor(value * 255);

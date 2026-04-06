@@ -1,14 +1,14 @@
 /**
- * 端到端集成测试
+ * End到EndIntegration test
  *
- * 测试覆盖：
- * - 完整输入流程
- * - 多客户端场景
- * - 安全控制器集成
+ * Test coverage：
+ * - CompleteInput流程
+ * - 多Client场景
+ * - SafeController集成
  * - ApplyScheduler 集成
- * - 心跳集成
- * - 错误恢复
- * - 性能和压力测试
+ * - Heartbeat集成
+ * - Error恢复
+ * - 性能和压力Test
  */
 
 import { WsClient } from "../common/wsClient";
@@ -34,7 +34,7 @@ describe("End-to-End Integration Tests", () => {
     let applyScheduler: ApplyScheduler;
 
     beforeAll(async () => {
-        // 初始化全局 stateStore
+        // InitializeGlobal stateStore
         stateStore = new StateStore();
         (global as any).stateStore = stateStore;
 
@@ -56,7 +56,7 @@ describe("End-to-End Integration Tests", () => {
         stopInputExecutor();
         await stopWsServer();
         
-        // 清理全局 stateStore
+        // 清理Global stateStore
         delete (global as any).stateStore;
     });
 
@@ -71,7 +71,7 @@ describe("End-to-End Integration Tests", () => {
     afterEach(async () => {
         if (client) {
             client.close();
-            // 等待客户端关闭完成
+            // 等待Client关闭完成
             await new Promise((resolve) => setTimeout(resolve, 50));
         }
         // Reset input state
@@ -90,7 +90,7 @@ describe("End-to-End Integration Tests", () => {
             client = new WsClient({ url: `ws://localhost:${serverPort}` });
             await client.connect();
 
-            // Send input state (使用 input 类型消息)
+            // Send input state (使用 input TypeMessage)
             const inputMessage = {
                 type: "input",
                 data: {

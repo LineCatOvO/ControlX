@@ -1,16 +1,16 @@
 /**
- * validateConfig 单元测试
+ * validateConfig Unit test
  * 
- * 测试覆盖：
- * - inputUpdateInterval 验证
- * - heartbeatInterval 验证
- * - pingInterval 验证
- * - safeStateTimeout 验证
- * - enableLogging 验证
- * - defaultPort 验证
- * - portRange 验证
- * - isTestMode 验证
- * - 边界条件测试
+ * Test coverage：
+ * - inputUpdateInterval Verify
+ * - heartbeatInterval Verify
+ * - pingInterval Verify
+ * - safeStateTimeout Verify
+ * - enableLogging Verify
+ * - defaultPort Verify
+ * - portRange Verify
+ * - isTestMode Verify
+ * - 边界条件Test
  */
 
 import { validateConfig } from '../../src/config/validate';

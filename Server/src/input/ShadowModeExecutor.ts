@@ -62,7 +62,7 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
         this.router = router;
         this.shadowModeEnabled = config?.shadowMode ?? false;
 
-        // 创建Shadow mode manager
+        // CreateShadow mode manager
         this.shadowManager = new ShadowModeManager(
             executorManager,
             router,
@@ -90,7 +90,7 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 移除Input executor
+     * RemoveInput executor
      * @param executor Input executor
      */
     removeExecutor(executor: InputExecutorManager): void {
@@ -141,13 +141,13 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 重置所有执行器
+     * ResetAllExecutor
      */
     reset(): void {
-        // 重置 Executor
+        // Reset Executor
         this.executorManager.reset();
 
-        // 重置 Router
+        // Reset Router
         this.router.resetAll();
 
         if (this.shadowModeEnabled) {
@@ -156,7 +156,7 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 获取Shadow mode manager
+     * GetShadow mode manager
      * @returns Shadow mode manager
      */
     getShadowManager(): ShadowModeManager | null {
@@ -164,7 +164,7 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 获取Input router
+     * GetInput router
      * @returns Input router
      */
     getRouter(): InputRouter {
@@ -172,7 +172,7 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 获取底层Executor manager
+     * GetUnderlyingExecutor manager
      * @returns Executor manager
      */
     getExecutorManager(): InputExecutorManager {
@@ -180,31 +180,31 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 获取当前模式
-     * @returns 当前模式
+     * GetCurrentMode
+     * @returns CurrentMode
      */
     getCurrentMode(): 'executor' | 'router' | 'shadow' {
         return this.shadowManager.getCurrentMode();
     }
 
     /**
-     * 切换模式
-     * @param mode 目标模式
+     * SwitchMode
+     * @param mode 目标Mode
      */
     switchMode(mode: 'executor' | 'router' | 'shadow'): void {
         this.shadowManager.switchMode(mode);
     }
 
     /**
-     * 获取影子模式统计信息
-     * @returns 统计信息
+     * Get影子Mode统计Info
+     * @returns 统计Info
      */
     getShadowStats() {
         return this.shadowManager.getStats();
     }
 
     /**
-     * 获取影子模式一致性报告
+     * Get影子Mode一致性报告
      * @returns 一致性报告
      */
     getConsistencyReport() {
@@ -212,7 +212,7 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 销毁管理器
+     * DestroyManageManager
      */
     destroy(): void {
         console.log('[ShadowModeExecutor] Destroying');
@@ -221,12 +221,12 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
 }
 
 /**
- * 创建影子模式Executor manager工厂函数
+ * Create影子ModeExecutor manager工厂Function
  *
  * @param executorManager Executor manager
  * @param router Input router
  * @param shadowModeEnabled Whether shadow mode is enabled
- * @returns 影子模式Executor manager
+ * @returns 影子ModeExecutor manager
  */
 export function createShadowModeExecutorManager(
     executorManager: InputExecutorManager,

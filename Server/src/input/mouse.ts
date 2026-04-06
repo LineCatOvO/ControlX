@@ -2,14 +2,14 @@ import { InputExecutor } from './interfaces';
 import { InputState, InputDelta, InputEvent } from '../types/ws';
 import { mouse, Button, Point } from '@nut-tree-fork/nut-js';
 
-// 日志配置
+// LogConfig
 const LOG_CONFIG = {
-    enabled: true,           // 是否启用日志
-    verbose: false,          // 是否启用详细日志
-    statsInterval: 100,      // 每多少次操作输出一次统计
+    enabled: true,           // 是否EnableLog
+    verbose: false,          // 是否EnableDetailLog
+    statsInterval: 100,      // 每多少次OperationOutput一次统计
 };
 
-// 鼠标操作统计
+// MouseOperation统计
 const mouseStats = {
     totalUpdates: 0,
     totalMoves: 0,
@@ -22,7 +22,7 @@ const mouseStats = {
 };
 
 /**
- * 更新鼠标统计
+ * UpdateMouse统计
  */
 function updateStats(type: 'move' | 'click' | 'scroll' | 'release' | 'reset' | 'error', count: number = 1) {
     mouseStats.totalUpdates++;
@@ -42,7 +42,7 @@ function updateStats(type: 'move' | 'click' | 'scroll' | 'release' | 'reset' | '
         mouseStats.errorCount++;
     }
 
-    // 定期输出统计
+    // 定期Output统计
     if (mouseStats.totalUpdates % LOG_CONFIG.statsInterval === 0) {
         console.log('🖱️ Mouse Stats:', {
             totalUpdates: mouseStats.totalUpdates,
@@ -57,15 +57,15 @@ function updateStats(type: 'move' | 'click' | 'scroll' | 'release' | 'reset' | '
 }
 
 /**
- * 获取鼠标统计信息
+ * GetMouse统计Info
  */
 export function getMouseStats() {
     return { ...mouseStats };
 }
 
 /**
- * 设置日志配置
- * @param config 日志配置
+ * SetLogConfig
+ * @param config LogConfig
  */
 export function setMouseLogConfig(config: Partial<typeof LOG_CONFIG>) {
     Object.assign(LOG_CONFIG, config);
@@ -73,12 +73,12 @@ export function setMouseLogConfig(config: Partial<typeof LOG_CONFIG>) {
 }
 
 /**
- * 鼠标输入执行器
- * 负责将鼠标输入状态转换为系统鼠标事件
- * 使用 @nut-tree/nut-js 实现跨平台鼠标控制
+ * MouseInputExecutor
+ * 负责将MouseInputState转换For系统MouseEvent
+ * 使用 @nut-tree/nut-js Implementation跨平台Mouse控制
  */
 export class MouseExecutor implements InputExecutor {
-    // 记录当前鼠标状态
+    // 记录CurrentMouseState
     private currentMouseState = {
         x: 0,
         y: 0,
@@ -92,23 +92,23 @@ export class MouseExecutor implements InputExecutor {
     private screenHeight: number = 1080;
 
     /**
-     * 应用完整输入状态
-     * @param state 输入状态
+     * ApplyCompleteInputState
+     * @param state InputState
      */
     async applyState(state: InputState): Promise<void> {
-        // 只在状态发生变化时执行操作
+        // 只在State发生变化时ExecuteOperation
         if (this.hasMouseStateChanged(state.mouse)) {
             try {
-                // 移动鼠标位置
+                // 移动Mouse位置
                 if (state.mouse.x !== this.currentMouseState.x ||
                     state.mouse.y !== this.currentMouseState.y) {
                     await this.moveMouse(state.mouse.x, state.mouse.y);
                 }
 
-                // 处理鼠标按钮状态变化
+                // 处理MouseButtonState变化
                 await this.handleMouseButtonChanges(state.mouse);
 
-                // 更新当前状态
+                // UpdateCurrentState
                 this.updateCurrentMouseState(state.mouse);
 
                 if (LOG_CONFIG.verbose) {
@@ -130,13 +130,13 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 应用输入增量
-     * @param delta 输入增量
+     * ApplyInput增量
+     * @param delta Input增量
      */
     async applyDelta(delta: InputDelta): Promise<void> {
         if (delta.mouse) {
             try {
-                // 处理鼠标位置变化（使用绝对坐标）
+                // 处理Mouse位置变化（使用绝对坐标）
                 if (delta.mouse.x !== undefined || delta.mouse.y !== undefined) {
                     const newX = delta.mouse.x !== undefined ? delta.mouse.x : this.currentMouseState.x;
                     const newY = delta.mouse.y !== undefined ? delta.mouse.y : this.currentMouseState.y;
@@ -145,7 +145,7 @@ export class MouseExecutor implements InputExecutor {
                     this.currentMouseState.y = newY;
                 }
 
-                // 处理按钮状态变化（直接使用 left、right、middle）
+                // 处理ButtonState变化（直接使用 left、right、middle）
                 const buttonState = {
                     left: delta.mouse.left !== undefined ? delta.mouse.left : this.currentMouseState.left,
                     right: delta.mouse.right !== undefined ? delta.mouse.right : this.currentMouseState.right,
@@ -153,7 +153,7 @@ export class MouseExecutor implements InputExecutor {
                 };
                 await this.handleMouseButtonChanges(buttonState);
 
-                // 更新按钮状态
+                // UpdateButtonState
                 if (delta.mouse.left !== undefined) this.currentMouseState.left = delta.mouse.left;
                 if (delta.mouse.right !== undefined) this.currentMouseState.right = delta.mouse.right;
                 if (delta.mouse.middle !== undefined) this.currentMouseState.middle = delta.mouse.middle;
@@ -167,8 +167,8 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 应用输入事件
-     * @param event 输入事件
+     * ApplyInputEvent
+     * @param event InputEvent
      */
     async applyEvent(event: InputEvent): Promise<void> {
         try {
@@ -179,8 +179,8 @@ export class MouseExecutor implements InputExecutor {
                 await mouse.click(button);
                 updateStats('click', 1);
             }
-            // 注意：InputEvent 类型定义中没有 'mouse_scroll' 类型
-            // 如果需要滚动功能，需要先更新 ws.ts 中的 InputEvent 类型定义
+            // 注意：InputEvent Type定义In没有 'mouse_scroll' Type
+            // 如果需要滚动Function，需要先Update ws.ts InOf InputEvent Type定义
 
             console.log('🖱️ MouseEvent: Event applied', event.type, event.data);
         } catch (error) {
@@ -190,11 +190,11 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 重置输入状态
+     * ResetInputState
      */
     async reset(): Promise<void> {
         try {
-            // 释放所有鼠标按钮
+            // 释放AllMouseButton
             if (this.currentMouseState.left) {
                 await mouse.releaseButton(Button.LEFT);
                 updateStats('release', 1);
@@ -208,7 +208,7 @@ export class MouseExecutor implements InputExecutor {
                 updateStats('release', 1);
             }
 
-            // 重置状态
+            // ResetState
             this.currentMouseState = {
                 x: 0,
                 y: 0,
@@ -226,18 +226,18 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 移动鼠标到指定位置
-     * @param x X 坐标（相对坐标，0-1 范围）
-     * @param y Y 坐标（相对坐标，0-1 范围）
+     * 移动Mouse到指定位置
+     * @param x X 坐标（相对坐标，0-1 Range）
+     * @param y Y 坐标（相对坐标，0-1 Range）
      */
     private async moveMouse(x: number, y: number): Promise<void> {
         try {
-            // 将相对坐标转换为屏幕坐标
-            // 假设输入坐标是 0-1 的相对值，转换为实际屏幕坐标
+            // 将相对坐标转换For屏幕坐标
+            // 假设Input坐标是 0-1 Of相对Value，转换For实际屏幕坐标
             const screenX = Math.floor(x * this.screenWidth);
             const screenY = Math.floor(y * this.screenHeight);
 
-            // 确保坐标在屏幕范围内
+            // 确保坐标在屏幕RangeInside
             const clampedX = Math.max(0, Math.min(screenX, this.screenWidth - 1));
             const clampedY = Math.max(0, Math.min(screenY, this.screenHeight - 1));
 
@@ -254,11 +254,11 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 处理鼠标按钮状态变化
-     * @param newState 新的鼠标状态
+     * 处理MouseButtonState变化
+     * @param newState 新OfMouseState
      */
     private async handleMouseButtonChanges(newState: any): Promise<void> {
-        // 左键状态变化
+        // Left键State变化
         if (newState.left !== this.currentMouseState.left) {
             if (newState.left) {
                 await mouse.pressButton(Button.LEFT);
@@ -269,7 +269,7 @@ export class MouseExecutor implements InputExecutor {
             }
         }
 
-        // 右键状态变化
+        // Right键State变化
         if (newState.right !== this.currentMouseState.right) {
             if (newState.right) {
                 await mouse.pressButton(Button.RIGHT);
@@ -280,7 +280,7 @@ export class MouseExecutor implements InputExecutor {
             }
         }
 
-        // 中键状态变化
+        // In键State变化
         if (newState.middle !== this.currentMouseState.middle) {
             if (newState.middle) {
                 await mouse.pressButton(Button.MIDDLE);
@@ -293,7 +293,7 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 滚动鼠标
+     * 滚动Mouse
      * @param amount 滚动量
      * @param direction 滚动方向（'up' 或 'down'）
      */
@@ -313,9 +313,9 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 映射按钮名称到 nut.js Button 类型
-     * @param buttonName 按钮名称（'left', 'right', 'middle'）
-     * @returns Button 类型
+     * 映射ButtonName到 nut.js Button Type
+     * @param buttonName ButtonName（'left', 'right', 'middle'）
+     * @returns Button Type
      */
     private mapButtonName(buttonName: string): Button {
         switch (buttonName.toLowerCase()) {
@@ -331,8 +331,8 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 检查鼠标状态是否发生变化
-     * @param newState 新的鼠标状态
+     * 检查MouseState是否发生变化
+     * @param newState 新OfMouseState
      * @returns 是否发生变化
      */
     private hasMouseStateChanged(newState: any): boolean {
@@ -344,8 +344,8 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 更新当前鼠标状态
-     * @param newState 新的鼠标状态
+     * UpdateCurrentMouseState
+     * @param newState 新OfMouseState
      */
     private updateCurrentMouseState(newState: any): void {
         this.currentMouseState.x = newState.x;

@@ -37,8 +37,8 @@ export class WindowsKeyboardHost extends InputHost {
     }
 
     /**
-     * Initialize：加载 node-key-sender 驱动
-     * @returns 是否Initialize成功
+     * Initialize：加载 node-key-sender Driver
+     * @returns 是否InitializeSuccess
      */
     async initialize(): Promise<boolean> {
         try {
@@ -159,7 +159,7 @@ export class WindowsKeyboardHost extends InputHost {
 
     /**
      * Get current active key count
-     * @returns 活动按键数量
+     * @returns 活动Key数量
      */
     getActiveKeyCount(): number {
         return this.activeKeys.size;
@@ -167,7 +167,7 @@ export class WindowsKeyboardHost extends InputHost {
 
     /**
      * Get current active key list
-     * @returns 活动按键列表
+     * @returns 活动Key列表
      */
     getActiveKeys(): string[] {
         return [...this.activeKeys];

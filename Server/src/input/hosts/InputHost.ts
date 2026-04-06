@@ -1,30 +1,30 @@
 /**
- * 输入宿主抽象基类
+ * Input宿主抽象基Class
  * 
- * 职责：屏蔽底层驱动差异，提供统一的 lifecycle 和 execution 接口
+ * 职责：屏蔽UnderlyingDriverDifference，提供统一Of lifecycle 和 execution Interface
  * 
- * Design pattern：策略模式 (Strategy Pattern)
- * - 定义一族算法（不同平台的输入实现）
- * - 封装每个算法（每个具体 Host 类）
- * - 使它们可以互换（通过统一接口）
+ * Design pattern：策略Mode (Strategy Pattern)
+ * - 定义一族算法（Different平台OfInputImplementation）
+ * - 封装每个算法（每个具体 Host Class）
+ * - 使它们可以互换（通过统一Interface）
  */
 
 import { InputDeviceType, HostStatus, PlatformType, detectPlatform } from './types';
 
 /**
- * 输入宿主抽象基类
+ * Input宿主抽象基Class
  */
 export abstract class InputHost {
     /** Device type */
     protected readonly deviceType: InputDeviceType;
     
-    /** 运行平台 */
+    /** Run平台 */
     protected readonly platform: PlatformType;
     
-    /** 是否已启用 */
+    /** 是否已Enable */
     protected isEnabled: boolean = false;
     
-    /** 最后错误信息 */
+    /** 最AftererrorInfo */
     protected lastError?: string;
 
     /**
@@ -37,20 +37,20 @@ export abstract class InputHost {
     }
 
     /**
-     * Initialize：加载驱动/库
-     * 异步执行，避免阻塞启动流程
-     * @returns 是否Initialize成功
+     * Initialize：加载Driver/库
+     * 异步Execute，避免阻塞启动流程
+     * @returns 是否InitializeSuccess
      */
     abstract initialize(): Promise<boolean>;
 
     /**
-     * Apply state：核心执行逻辑
+     * Apply state：核心Execute逻辑
      * @param state Input state
      */
     abstract applyState(state: any): void;
 
     /**
-     * 重置：释放所有按键/摇杆归零
+     * Reset：释放AllKey/Joystick归零
      */
     abstract reset(): void;
 
@@ -60,8 +60,8 @@ export abstract class InputHost {
     abstract destroy(): void;
 
     /**
-     * 获取宿主状态
-     * @returns 宿主状态
+     * Get宿主State
+     * @returns 宿主State
      */
     getStatus(): HostStatus {
         return {
@@ -73,7 +73,7 @@ export abstract class InputHost {
     }
 
     /**
-     * 获取Device type
+     * GetDevice type
      * @returns Device type
      */
     getDeviceType(): InputDeviceType {
@@ -81,16 +81,16 @@ export abstract class InputHost {
     }
 
     /**
-     * 检查是否已启用
-     * @returns 是否已启用
+     * 检查是否已Enable
+     * @returns 是否已Enable
      */
     isHostEnabled(): boolean {
         return this.isEnabled;
     }
 
     /**
-     * 获取最后错误信息
-     * @returns 错误信息
+     * Get最AftererrorInfo
+     * @returns errorInfo
      */
     getLastError(): string | undefined {
         return this.lastError;

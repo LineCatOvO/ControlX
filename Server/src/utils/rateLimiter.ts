@@ -66,7 +66,7 @@ export class RateLimiter {
     /**
      * Check if message is allowed
      * @param clientId Client ID
-     * @returns 速率限制结果
+     * @returns 速率限制Result
      */
     checkLimit(clientId: string): RateLimitResult {
         // If not enabled, allow directly
@@ -177,7 +177,7 @@ export class RateLimiter {
     /**
      * Get client status
      * @param clientId Client ID
-     * @returns 客户端状态
+     * @returns ClientState
      */
     getClientState(clientId: string): ClientRateLimitState | undefined {
         return this.clientStates.get(clientId);
@@ -185,7 +185,7 @@ export class RateLimiter {
 
     /**
      * Get count of all limited clients
-     * @returns 被限制的客户端数量
+     * @returns 被限制OfClient数量
      */
     getBlockedClientCount(): number {
         const now = Date.now();
@@ -208,7 +208,7 @@ export class RateLimiter {
 
     /**
      * Get current configuration
-     * @returns 当前配置
+     * @returns CurrentConfig
      */
     getConfig(): RateLimiterConfig {
         return { ...this.config };

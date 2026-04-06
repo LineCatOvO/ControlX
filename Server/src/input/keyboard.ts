@@ -3,26 +3,26 @@ import { InputState, InputDelta, InputEvent } from "../types/ws";
 
 const keySender = require("node-key-sender");
 
-// 日志配置
+// LogConfig
 const LOG_CONFIG = {
-    enabled: true,           // 是否启用日志
-    verbose: false,          // 是否启用详细日志
-    statsInterval: 100,      // 每多少次操作输出一次统计
+    enabled: true,           // 是否EnableLog
+    verbose: false,          // 是否EnableDetailLog
+    statsInterval: 100,      // 每多少次OperationOutput一次统计
 };
 
-// 键盘映射统计
+// Keyboard映射统计
 const keyboardStats = {
     totalUpdates: 0,
     totalPresses: 0,
     totalReleases: 0,
-    redundantPresses: 0,     // 幂等性阻止的重复按键
+    redundantPresses: 0,     // 幂等性阻止Of重复Key
     resetCount: 0,
     errorCount: 0,
     lastUpdateTs: 0,
 };
 
 /**
- * 更新键盘统计
+ * UpdateKeyboard统计
  */
 function updateStats(type: 'press' | 'release' | 'redundant' | 'reset' | 'error', count: number = 1) {
     keyboardStats.totalUpdates++;
@@ -40,7 +40,7 @@ function updateStats(type: 'press' | 'release' | 'redundant' | 'reset' | 'error'
         keyboardStats.errorCount++;
     }
 
-    // 定期输出统计
+    // 定期Output统计
     if (keyboardStats.totalUpdates % LOG_CONFIG.statsInterval === 0) {
         console.log('🎹 Keyboard Stats:', {
             totalUpdates: keyboardStats.totalUpdates,
@@ -54,15 +54,15 @@ function updateStats(type: 'press' | 'release' | 'redundant' | 'reset' | 'error'
 }
 
 /**
- * 获取键盘统计信息
+ * GetKeyboard统计Info
  */
 export function getKeyboardStats() {
     return { ...keyboardStats };
 }
 
 /**
- * 设置日志配置
- * @param config 日志配置
+ * SetLogConfig
+ * @param config LogConfig
  */
 export function setKeyboardLogConfig(config: Partial<typeof LOG_CONFIG>) {
     Object.assign(LOG_CONFIG, config);
@@ -70,28 +70,28 @@ export function setKeyboardLogConfig(config: Partial<typeof LOG_CONFIG>) {
 }
 
 /**
- * 键盘输入执行器
- * 负责将键盘输入状态转换为系统键盘事件
- * 实现差集计算、幂等性保证、正确的按键顺序
+ * KeyboardInputExecutor
+ * 负责将KeyboardInputState转换For系统KeyboardEvent
+ * Implementation差集计算、幂等性保证、正确OfKey顺序
  */
 export class KeyboardExecutor implements InputExecutor {
-    // 记录当前键盘状态
+    // 记录CurrentKeyboardState
     private currentKeyboardState: Set<string> = new Set();
-    // 记录所有已发送过的按键（用于幂等性保证）
+    // 记录All已Send过OfKey（用于幂等性保证）
     private sentKeys: Set<string> = new Set();
-    // 记录按键的发送顺序
+    // 记录KeyOfSend顺序
     private keyOrder: string[] = [];
-    // 记录上一次的键盘状态（用于计算差异）
+    // 记录On一次OfKeyboardState（用于计算Difference）
     private previousKeyboardState: Set<string> = new Set();
 
     /**
-     * 应用完整输入状态
-     * @param state 输入状态
+     * ApplyCompleteInputState
+     * @param state InputState
      */
     applyState(state: InputState): void {
         const newState = state.keyboard || new Set();
 
-        // 计算与上一次状态的差异（差集计算）
+        // 计算与On一次StateOfDifference（差集计算）
         const keysToRelease = new Set(
             [...this.previousKeyboardState].filter((key) => !newState.has(key))
         );
@@ -100,44 +100,44 @@ export class KeyboardExecutor implements InputExecutor {
             [...newState].filter((key) => !this.previousKeyboardState.has(key))
         );
 
-        // 更新当前键盘状态为上一次状态
+        // UpdateCurrentKeyboardStateForOn一次State
         this.previousKeyboardState = new Set(this.currentKeyboardState);
 
-        // 更新当前键盘状态（在 updateKeyboardState 中处理 sentKeys）
+        // UpdateCurrentKeyboardState（在 updateKeyboardState In处理 sentKeys）
         this.updateKeyboardState(newState, keysToRelease, keysToPress);
     }
 
     /**
-     * 应用输入增量
-     * @param delta 输入增量
+     * ApplyInput增量
+     * @param delta Input增量
      */
     applyDelta(delta: InputDelta): void {
         if (delta.keyboard) {
-            // 创建新的键盘状态副本
+            // Create新OfKeyboardState副本
             const newState = new Set(this.currentKeyboardState);
 
-            // 处理按下的键
+            // 处理按UnderOf键
             if (delta.keyboard.pressed) {
                 delta.keyboard.pressed.forEach((key) => newState.add(key));
             }
 
-            // 处理释放的键
+            // 处理释放Of键
             if (delta.keyboard.released) {
                 delta.keyboard.released.forEach((key) => newState.delete(key));
             }
 
-            // 更新键盘状态
+            // UpdateKeyboardState
             this.updateKeyboardState(newState);
         }
     }
 
     /**
-     * 应用输入事件
-     * @param event 输入事件
+     * ApplyInputEvent
+     * @param event InputEvent
      */
     applyEvent(event: InputEvent): void {
         if (event.type === "key_down" || event.type === "key_up") {
-            // 创建新的键盘状态副本
+            // Create新OfKeyboardState副本
             const newState = new Set(this.currentKeyboardState);
 
             const key = event.data.key;
@@ -147,23 +147,23 @@ export class KeyboardExecutor implements InputExecutor {
                 newState.delete(key);
             }
 
-            // 更新键盘状态
+            // UpdateKeyboardState
             this.updateKeyboardState(newState);
         }
     }
 
     /**
-     * 更新键盘状态
-     * @param newState 新的键盘状态
-     * @param keysToRelease 需要释放的键
-     * @param keysToPress 需要按下的键
+     * UpdateKeyboardState
+     * @param newState 新OfKeyboardState
+     * @param keysToRelease 需要释放Of键
+     * @param keysToPress 需要按UnderOf键
      */
     private updateKeyboardState(
         newState: Set<string>,
         keysToRelease?: Set<string>,
         keysToPress?: Set<string>
     ): void {
-        // 如果没有提供差异信息，则重新计算
+        // 如果没有提供DifferenceInfo，则重新计算
         if (!keysToRelease || !keysToPress) {
             keysToRelease = new Set(
                 [...this.previousKeyboardState].filter((key) => !newState.has(key))
@@ -174,9 +174,9 @@ export class KeyboardExecutor implements InputExecutor {
             );
         }
 
-        // 只在状态有变化时记录日志
+        // 只在State有变化时记录Log
         if (keysToPress.size > 0 || keysToRelease.size > 0) {
-            // 详细日志
+            // DetailLog
             if (LOG_CONFIG.verbose) {
                 console.log(`🎹 KeyboardEvent [${new Date().toISOString()}]:`);
                 console.log(`   Previous: [${Array.from(this.previousKeyboardState).join(', ')}]`);
@@ -189,7 +189,7 @@ export class KeyboardExecutor implements InputExecutor {
                 `🎹 KeyboardEvent: State change - Pressing: [${Array.from(keysToPress).join(', ')}], Releasing: [${Array.from(keysToRelease).join(', ')}]`
             );
 
-            // 先释放不需要的键（正确的按键顺序）
+            // 先释放不需要Of键（正确OfKey顺序）
             if (keysToRelease.size > 0) {
                 try {
                     keySender.sendKey(Array.from(keysToRelease));
@@ -198,17 +198,17 @@ export class KeyboardExecutor implements InputExecutor {
                 } catch (error) {
                     console.error("❌ KeyboardError: Error releasing keys:", error);
                     updateStats('error', 1);
-                    // 抛出错误，让调用者知道操作失败
+                    // 抛出error，让调用者知道OperationFailure
                     throw new Error(`Failed to release keys: ${Array.from(keysToRelease).join(', ')}`);
                 }
             }
 
-            // 然后按下新增的键（幂等性保证）
+            // 然After按UnderAddOf键（幂等性保证）
             const newKeysToPress = new Set(
                 [...keysToPress].filter((key) => !this.sentKeys.has(key))
             );
 
-            // 统计被幂等性阻止的按键
+            // 统计被幂等性阻止OfKey
             const redundantKeys = keysToPress.size - newKeysToPress.size;
             if (redundantKeys > 0) {
                 updateStats('redundant', redundantKeys);
@@ -218,7 +218,7 @@ export class KeyboardExecutor implements InputExecutor {
             }
 
             if (newKeysToPress.size > 0) {
-                // 将新按键添加到已发送集合和顺序列表
+                // 将新Key添加到已SendSet和顺序列表
                 newKeysToPress.forEach((key) => {
                     this.sentKeys.add(key);
                     this.keyOrder.push(key);
@@ -236,21 +236,21 @@ export class KeyboardExecutor implements InputExecutor {
                 } catch (error) {
                     console.error("❌ KeyboardError: Error pressing keys:", error);
                     updateStats('error', 1);
-                    // 抛出错误，让调用者知道操作失败
+                    // 抛出error，让调用者知道OperationFailure
                     throw new Error(`Failed to press keys: ${Array.from(newKeysToPress).join(', ')}`);
                 }
             }
 
-            // 更新当前键盘状态
+            // UpdateCurrentKeyboardState
             this.currentKeyboardState = newState;
         }
     }
 
     /**
-     * 重置输入状态
+     * ResetInputState
      */
     reset(): void {
-        // 遍历所有已按下按键逐一发送 KeyUp（清零时的键盘行为）
+        // 遍历All已按UnderKey逐一Send KeyUp（清零时OfKeyboard行For）
         if (this.currentKeyboardState.size > 0) {
             console.log(`🎹 KeyboardEvent: Resetting - Releasing ${this.currentKeyboardState.size} key(s): [${Array.from(this.currentKeyboardState).join(', ')}]`);
 
@@ -263,7 +263,7 @@ export class KeyboardExecutor implements InputExecutor {
             }
         }
 
-        // 清空所有状态
+        // 清NullAllState
         this.currentKeyboardState.clear();
         this.previousKeyboardState.clear();
         this.sentKeys.clear();

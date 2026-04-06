@@ -1,12 +1,12 @@
 /**
- * KeyboardAdapter 单元测试
+ * KeyboardAdapter Unit test
  *
- * 测试覆盖：
- * - 构造函数
- * - applyState() 应用输入状态
- * - applyKeyboardState() 应用键盘状态
- * - reset() 重置状态
- * - getKeyboardState() 获取键盘状态
+ * Test coverage：
+ * - 构造Function
+ * - applyState() ApplyInputState
+ * - applyKeyboardState() ApplyKeyboardState
+ * - reset() ResetState
+ * - getKeyboardState() GetKeyboardState
  */
 
 import { KeyboardAdapter } from '../../../src/input/adapters/KeyboardAdapter';
@@ -237,7 +237,7 @@ describe('KeyboardAdapter Tests', () => {
         });
 
         test('should handle Unicode key names', () => {
-            adapter.applyKeyboardState(['中', '文', '键']);
+            adapter.applyKeyboardState(['In', '文', '键']);
 
             expect(mockExecutor.applyStateCalls[0].keyboard.size).toBe(3);
         });

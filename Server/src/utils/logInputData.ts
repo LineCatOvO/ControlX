@@ -1,5 +1,5 @@
 /**
- * 格式化输入数据以便于日志记录
+ * 格式化Input数据以便于Log记录
  */
 
 import {
@@ -9,14 +9,14 @@ import {
 } from "../types/ws";
 
 /**
- * 格式化输入消息日志
- * @param message 输入消息
- * @returns 格式化的日志字符串，如果没有有意义的输入则返回null
+ * 格式化InputMessageLog
+ * @param message InputMessage
+ * @returns 格式化OfLogString，如果没有有意义OfInput则Returnnull
  */
 export function formatInputMessageLog(message: InputMessage): string | null {
     const { data, metadata } = message;
 
-    // 检查是否有实际的输入变化，而非空状态
+    // 检查是否有实际OfInput变化，而非NullState
     const hasMeaningfulInput =
         (data.keyboard && data.keyboard.length > 0) ||
         (data.mouse &&
@@ -32,14 +32,14 @@ export function formatInputMessageLog(message: InputMessage): string | null {
                 (data.joystick.y !== undefined &&
                     Math.abs(data.joystick.y) > 0.01)));
 
-    // 如果没有有意义的输入变化，返回null表示不应记录日志
+    // 如果没有有意义OfInput变化，Returnnull表示不应记录Log
     if (!hasMeaningfulInput) {
         return null;
     }
 
     const logParts: string[] = ["Input"];
 
-    // 添加客户端ID和时间戳信息
+    // 添加ClientID和TimestampInfo
     if (metadata) {
         logParts.push(`[Client:${metadata.clientId}]`);
     }
@@ -49,17 +49,17 @@ export function formatInputMessageLog(message: InputMessage): string | null {
         logParts.push(`Frame:${data.frameId}`);
     }
 
-    // 添加运行时状态
+    // 添加Run时State
     if (data.runtimeStatus) {
         logParts.push(`Status:${data.runtimeStatus}`);
     }
 
-    // 添加键盘操作
+    // 添加KeyboardOperation
     if (data.keyboard && data.keyboard.length > 0) {
         logParts.push(`Keyboard:[${data.keyboard.join(", ")}]`);
     }
 
-    // 添加鼠标操作
+    // 添加MouseOperation
     if (data.mouse) {
         const mouseOps: string[] = [];
         if (data.mouse.x !== undefined) mouseOps.push(`X:${data.mouse.x}`);
@@ -75,7 +75,7 @@ export function formatInputMessageLog(message: InputMessage): string | null {
         }
     }
 
-    // 添加手柄操作
+    // 添加GamepadOperation
     if (data.joystick) {
         const joyOps: string[] = [];
         if (data.joystick.x !== undefined)
@@ -95,20 +95,20 @@ export function formatInputMessageLog(message: InputMessage): string | null {
 }
 
 /**
- * 格式化输入增量消息日志
- * @param message 输入增量消息
- * @returns 格式化的日志字符串
+ * 格式化Input增量MessageLog
+ * @param message Input增量Message
+ * @returns 格式化OfLogString
  */
 export function formatInputDeltaMessageLog(message: InputDeltaMessage): string {
     const { data, metadata } = message;
     const logParts: string[] = ["InputDelta"];
 
-    // 添加客户端ID和时间戳信息
+    // 添加ClientID和TimestampInfo
     if (metadata) {
         logParts.push(`[Client:${metadata.clientId}]`);
     }
 
-    // 添加键盘增量操作
+    // 添加Keyboard增量Operation
     if (data.keyboard) {
         if (data.keyboard.pressed && data.keyboard.pressed.length > 0) {
             logParts.push(`KeyDown:[${data.keyboard.pressed.join(", ")}]`);
@@ -118,7 +118,7 @@ export function formatInputDeltaMessageLog(message: InputDeltaMessage): string {
         }
     }
 
-    // 添加鼠标操作
+    // 添加MouseOperation
     if (data.mouse) {
         const mouseOps: string[] = [];
         if (data.mouse.x !== undefined) mouseOps.push(`X:${data.mouse.x}`);
@@ -134,7 +134,7 @@ export function formatInputDeltaMessageLog(message: InputDeltaMessage): string {
         }
     }
 
-    // 添加手柄操作
+    // 添加GamepadOperation
     if (data.joystick) {
         const joyOps: string[] = [];
         if (data.joystick.x !== undefined)
@@ -150,9 +150,9 @@ export function formatInputDeltaMessageLog(message: InputDeltaMessage): string {
 }
 
 /**
- * 格式化输入事件消息日志
- * @param message 输入事件消息
- * @returns 格式化的日志字符串
+ * 格式化InputEventMessageLog
+ * @param message InputEventMessage
+ * @returns 格式化OfLogString
  */
 export function formatInputEventMessageLog(message: InputEventMessage): string {
     const { data } = message;
@@ -161,7 +161,7 @@ export function formatInputEventMessageLog(message: InputEventMessage): string {
     if (data) {
         logParts.push(`${data.type}`);
 
-        // 根据事件类型添加具体数据
+        // 根据EventType添加具体数据
         switch (data.type) {
             case "key_down":
             case "key_up":

@@ -1,42 +1,42 @@
 /**
  * ============================================================================
- * 状态存储模块 (State Store Module)
+ * State Store Module (State Store Module)
  * ============================================================================
  * 
- * 【模块职责】
- * 本模块是输入系统的状态管理中心，负责管理输入状态的存储、历史记录和序列号校验。
+ * 【Module responsibility】
+ * This module is the state management center of the input system，Responsible for managing input state storage, history records and sequence number validation。
  * 
- * 【核心功能】
- * 1. 状态存储：存储最新的输入状态和历史状态记录
- * 2. 序列号管理：验证和管理状态序列号的单调性
- * 3. 时间记录：记录状态接收时间和应用时间
- * 4. 状态标准化：将数组类型转换为Set类型，补充默认值
+ * 【Core functionality】
+ * 1. State storage: Store latest input state and historical state records
+ * 2. Sequence number management: Validate and manage state sequence number monotonicity
+ * 3. Time recording: Record state receive time and apply time
+ * 4. State normalization: Convert array type to Set type, add default values
  * 
- * 【模块边界】
- * - ✅ 允许：存储状态、管理历史记录、验证序列号、标准化状态
- * - ❌ 禁止：验证状态合法性（由Validator负责）、应用状态（由Executor负责）、触发清零（由SafetyController负责）
+ * [Module Boundary]
+ * - ✅ Allow: Store state, manage history records, validate sequence number, normalize state
+ * - ❌ Prohibit: Validate state legality (by Validator), apply state (by Executor), trigger reset (by SafetyController)
  * 
- * 【数据流】
- * WebSocket接收 → StateStore.storeState() → ApplyScheduler.getLatestState() → Executor.applyState()
+ * [Data Flow]
+ * WebSocket receive → StateStore.storeState() → ApplyScheduler.getLatestState() → Executor.applyState()
  * 
- * 【状态生命周期】
- * 1. 接收：storeState() 存储新状态，记录receivedTime
- * 2. 应用：recordAppliedState() 记录appliedTime
- * 3. 清理：超过maxHistorySize的历史记录自动清理
+ * [State Lifecycle]
+ * 1. Receive: storeState() stores new state, records receivedTime
+ * 2. Apply: recordAppliedState() records appliedTime
+ * 3. Cleanup: Historical records exceeding maxHistorySize are automatically cleaned
  * 
- * 【依赖关系】
- * - 依赖：InputState类型定义
- * - 被依赖：ApplyScheduler（状态获取）、WebSocket处理器（状态存储）
+ * [Dependencies]
+ * - Depends on: InputState type definition
+ * - Depended by: ApplyScheduler (state retrieval), WebSocket handler (state storage)
  * 
- * 【关键设计】
- * - 存储模式：单一最新状态 + 历史记录列表
- * - 序列号验证：确保状态递增，防止乱序
- * - 状态标准化：自动转换数组为Set，补充默认值
+ * [Key Design]
+ * - Storage mode: Single latest state + historical record list
+ * - Sequence number validation: Ensure state increment, prevent out-of-order
+ * - State normalization: Automatically convert array to Set, add default values
  * 
- * 【注意事项】
- * - 状态存储前会进行基本验证和序列号检查
- * - 历史记录有上限，超过自动清理最旧记录
- * - 时间戳由ApplyScheduler提供，禁止自行调用Date.now()
+ * [Notes]
+ * - State is validated and sequence number checked before storage
+ * - History records have upper limit, oldest records are cleaned when exceeded
+ * - Timestamp provided by ApplyScheduler, prohibit calling Date.now() directly
  * 
  * @module input/stateStore
  * @version 2.0.0
@@ -46,21 +46,21 @@
 import { InputState } from "../types/ws";
 
 /**
- * 状态存储配置
+ * State store configuration
  */
 interface StateStoreConfig {
-    maxHistorySize: number; // 最大历史状态记录数
+    maxHistorySize: number; // Maximum historical state record count
 }
 
 /**
- * 状态存储
- * 负责管理ControlResultState的存储、时间语义和序列号校验
+ * State store
+ * Responsible for managing ControlResultState storage, time semantics and sequence number validation
  */
 export class StateStore {
-    // 最新状态
+    // Latest state
     private latestState: InputState | null = null;
 
-    // 状态历史记录（使用环形缓冲区优化内存）
+    // State history records (using ring buffer for memory optimization)
     private stateHistory: Array<{
         state: InputState;
         receivedTime: number;
@@ -68,28 +68,28 @@ export class StateStore {
         sequenceNumber: number;
     }> = [];
 
-    // 环形缓冲区索引
-    private historyHead: number = 0;  // 写入位置
-    private historyTail: number = 0;  // 读取位置
-    private historyFull: boolean = false; // 缓冲区是否已满
+    // Ring buffer index
+    private historyHead: number = 0;  // Write position
+    private historyTail: number = 0;  // Read position
+    private historyFull: boolean = false; // Whether buffer is full
 
-    // 最后应用的序列号
+    // Last applied sequence number
     private lastAppliedSequenceNumber: number = 0;
 
-    // 配置
+    // Config
     private readonly config: StateStoreConfig;
 
     /**
-     * 构造函数
-     * @param config 状态存储配置
+     * 构造Function
+     * @param config State store configuration
      */
     constructor(config?: Partial<StateStoreConfig>) {
         this.config = {
-            maxHistorySize: 100, // 默认保留100条历史记录
+            maxHistorySize: 100, // Default保留100条History记录
             ...config,
         };
 
-        // 预分配历史记录数组，避免动态扩容
+        // 预分配History记录Array，避免动态扩容
         this.stateHistory = new Array(this.config.maxHistorySize);
         for (let i = 0; i < this.config.maxHistorySize; i++) {
             this.stateHistory[i] = {
@@ -102,35 +102,35 @@ export class StateStore {
     }
 
     /**
-     * 存储新状态
-     * @param state 新状态
-     * @returns 是否成功存储
+     * Store新State
+     * @param state 新State
+     * @returns 是否SuccessStore
      */
     storeState(state: InputState): boolean {
-        // 转换数组为Set（处理客户端发送的数组类型）
+        // 转换ArrayForSet（处理ClientSendOfArrayType）
         const normalizedState = this.normalizeState(state);
         
-        // 验证状态完整性
+        // VerifyStateComplete性
         if (!this.isValidState(normalizedState)) {
             return false;
         }
 
-        // 验证序列号单调性
+        // Verifysequence number单调性
         const sequenceNumber = this.extractSequenceNumber(normalizedState);
         if (!this.isValidSequenceNumber(sequenceNumber)) {
             return false;
         }
 
-        // 存储状态
+        // StoreState
         const receivedTime = Date.now();
         this.latestState = normalizedState;
 
-        // 更新最后应用的序列号
+        // UpdateLast applied sequence number
         if (!isNaN(sequenceNumber)) {
             this.lastAppliedSequenceNumber = sequenceNumber;
         }
 
-        // 使用环形缓冲区添加历史记录
+        // 使用环形缓冲区添加History记录
         this.addToHistoryRingBuffer({
             state: normalizedState,
             receivedTime,
@@ -138,13 +138,13 @@ export class StateStore {
             sequenceNumber,
         });
 
-        // 只记录关键状态信息，不重复打印完整状态
+        // 只记录关键StateInfo，不重复打印CompleteState
         return true;
     }
 
     /**
-     * 使用环形缓冲区添加历史记录
-     * @param entry 历史记录条目
+     * 使用环形缓冲区添加History记录
+     * @param entry History记录条目
      */
     private addToHistoryRingBuffer(entry: {
         state: InputState;
@@ -152,41 +152,41 @@ export class StateStore {
         appliedTime: number | null;
         sequenceNumber: number;
     }): void {
-        // 写入当前位置
+        // 写入Current位置
         this.stateHistory[this.historyHead] = entry;
 
-        // 移动写入位置
+        // 移动Write position
         this.historyHead = (this.historyHead + 1) % this.config.maxHistorySize;
 
-        // 如果缓冲区已满，移动读取位置
+        // 如果缓冲区已满，移动Read position
         if (this.historyFull) {
             this.historyTail = (this.historyTail + 1) % this.config.maxHistorySize;
         }
 
-        // 检查缓冲区是否已满
+        // 检查Whether buffer is full
         if (this.historyHead === this.historyTail) {
             this.historyFull = true;
         }
     }
     /**
-     * 标准化状态，将数组转换为Set，并为缺少的字段添加默认值
-     * @param state 原始状态
-     * @returns 标准化后的状态
+     * Standard化State，将Array转换ForSet，并For缺少OfField添加DefaultValue
+     * @param state 原始State
+     * @returns Standard化AfterOfState
      */
     private normalizeState(state: any): InputState {
         const normalized = { ...state };
         
-        // 确保keyboard存在，默认空数组
+        // 确保keyboard存在，DefaultNullArray
         if (!normalized.keyboard) {
             normalized.keyboard = [];
         }
         
-        // 将keyboard数组转换为Set
+        // 将keyboardArray转换ForSet
         if (Array.isArray(normalized.keyboard)) {
             normalized.keyboard = new Set(normalized.keyboard);
         }
         
-        // 确保mouse存在，添加默认值
+        // 确保mouse存在，添加DefaultValue
         if (!normalized.mouse) {
             normalized.mouse = {
                 x: 0,
@@ -197,7 +197,7 @@ export class StateStore {
             };
         }
         
-        // 确保joystick存在，添加默认值
+        // 确保joystick存在，添加DefaultValue
         if (!normalized.joystick) {
             normalized.joystick = {
                 x: 0,
@@ -206,17 +206,17 @@ export class StateStore {
                 smoothing: 0.5
             };
         } else {
-            // 确保joystick的必填字段存在
+            // 确保joystickOf必填Field存在
             normalized.joystick.deadzone = normalized.joystick.deadzone || 0.1;
             normalized.joystick.smoothing = normalized.joystick.smoothing || 0.5;
         }
         
-        // 确保gamepad存在，默认空数组
+        // 确保gamepad存在，DefaultNullArray
         if (!normalized.gamepad) {
             normalized.gamepad = [];
         }
         
-        // 将gamepad数组转换为Set（如果存在）
+        // 将gamepadArray转换ForSet（如果存在）
         if (Array.isArray(normalized.gamepad)) {
             normalized.gamepad = new Set(normalized.gamepad);
         }
@@ -225,29 +225,29 @@ export class StateStore {
     }
 
     /**
-     * 获取最新状态
-     * @returns 最新状态
+     * GetLatest state
+     * @returns Latest state
      */
     getLatestState(): InputState | null {
         return this.latestState;
     }
 
     /**
-     * 记录状态应用时间
-     * @param sequenceNumber 序列号
-     * @param applyTime 应用时间戳（可选）
+     * 记录StateApply时间
+     * @param sequenceNumber sequence number
+     * @param applyTime ApplyTimestamp（optional）
      */
     recordAppliedState(sequenceNumber: number, applyTime?: number): void {
-        // 更新最后应用的序列号
+        // UpdateLast applied sequence number
         this.lastAppliedSequenceNumber = sequenceNumber;
 
-        // 在环形缓冲区中查找对应的历史记录
+        // 在环形缓冲区In查找对应OfHistory记录
         if (!this.historyFull && this.historyHead === this.historyTail) {
-            // 缓冲区为空，无需查找
+            // 缓冲区ForNull，无需查找
             return;
         }
 
-        // 从读取位置开始，遍历所有有效记录
+        // 从Read positionStart，遍历AllValid记录
         let current = this.historyTail;
         const end = this.historyFull ? this.historyTail : this.historyHead;
 
@@ -255,37 +255,37 @@ export class StateStore {
             const entry = this.stateHistory[current];
             if (entry.state !== null && entry.sequenceNumber === sequenceNumber) {
                 entry.appliedTime = applyTime || Date.now();
-                return; // 找到后立即返回
+                return; // 找到After立即Return
             }
             current = (current + 1) % this.config.maxHistorySize;
         } while (current !== end);
     }
 
     /**
-     * 验证状态完整性
-     * @param state 要验证的状态
-     * @returns 是否有效
+     * VerifyStateComplete性
+     * @param state 要VerifyOfState
+     * @returns Is valid
      */
     private isValidState(state: InputState): boolean {
-        // 基本验证：状态对象必须存在
+        // 基本Verify：StateObject必须存在
         if (!state) return false;
 
-        // 验证键盘字段（允许数组，将在normalizeState中转换为Set）
+        // VerifyKeyboardField（AllowArray，将在normalizeStateIn转换ForSet）
         if (!state.keyboard) {
             return false;
         }
 
-        // 验证鼠标字段（如果不存在，使用默认值）
+        // VerifyMouseField（如果不存在，使用DefaultValue）
         if (!state.mouse) {
             return false;
         }
 
-        // 验证摇杆字段
+        // VerifyJoystickField
         if (!state.joystick) {
             return false;
         }
 
-        // 验证可选字段（如果存在，必须是Set或数组）
+        // VerifyoptionalField（如果存在，必须是Set或Array）
         if (state.gamepad && !(state.gamepad instanceof Set) && !Array.isArray(state.gamepad)) {
             return false;
         }
@@ -296,41 +296,41 @@ export class StateStore {
     }
 
     /**
-     * 提取序列号
-     * @param state 状态对象
-     * @returns 序列号，如果frameId不是数字则返回NaN
+     * 提取sequence number
+     * @param state StateObject
+     * @returns sequence number，如果frameId不是Number则ReturnNaN
      */
     private extractSequenceNumber(state: InputState): number {
-        // 只接受数字frameId作为序列号
-        // 如果frameId不是数字，则返回NaN
+        // 只接受NumberframeId作Forsequence number
+        // 如果frameId不是Number，则ReturnNaN
         const frameId = (state as any).frameId;
         return typeof frameId === "number" ? frameId : NaN;
     }
 
     /**
-     * 验证序列号单调性
-     * @param sequenceNumber 要验证的序列号
-     * @returns 是否有效
+     * Verifysequence number单调性
+     * @param sequenceNumber 要VerifyOfsequence number
+     * @returns Is valid
      */
     private isValidSequenceNumber(sequenceNumber: number): boolean {
-        // 如果序列号不是数字，使用当前时间戳作为序列号
+        // 如果sequence number不是Number，使用CurrentTimestamp作Forsequence number
         if (isNaN(sequenceNumber)) {
             return true;
         }
 
-        // 如果没有状态被存储过，任何序列号都有效
+        // 如果没有State被Store过，任何sequence number都Valid
         if (this.lastAppliedSequenceNumber === 0) {
             return true;
         }
 
-        // 允许序列号相同或更大（处理重传和重新连接的情况）
-        // 注意：使用 lastAppliedSequenceNumber 而不是 latestState 的序列号
+        // Allowsequence numberSame或更大（处理重传和重新ConnectionOf情况）
+        // 注意：使用 lastAppliedSequenceNumber 而不是 latestState Ofsequence number
         return sequenceNumber >= this.lastAppliedSequenceNumber;
     }
 
     /**
-     * 获取状态历史记录（从环形缓冲区读取）
-     * @returns 状态历史记录
+     * GetStateHistory记录（从环形缓冲区读取）
+     * @returns StateHistory记录
      */
     getStateHistory(): Array<{
         state: InputState;
@@ -346,11 +346,11 @@ export class StateStore {
         }> = [];
 
         if (!this.historyFull && this.historyHead === this.historyTail) {
-            // 缓冲区为空
+            // 缓冲区ForNull
             return result;
         }
 
-        // 从读取位置开始，按顺序读取所有有效记录
+        // 从Read positionStart，按顺序读取AllValid记录
         let current = this.historyTail;
         const end = this.historyFull ? this.historyTail : this.historyHead;
 
@@ -366,33 +366,33 @@ export class StateStore {
     }
 
     /**
-     * 获取最后应用的序列号
-     * @returns 最后应用的序列号
+     * GetLast applied sequence number
+     * @returns Last applied sequence number
      */
     getLastAppliedSequenceNumber(): number {
         return this.lastAppliedSequenceNumber;
     }
 
     /**
-     * 获取最后接收时间
-     * @returns 最后接收时间
+     * Get最AfterReceive时间
+     * @returns 最AfterReceive时间
      */
     getLastReceivedTime(): number {
         return this.latestState ? Date.now() : 0;
     }
 
     /**
-     * 清空所有状态
+     * 清NullAllState
      */
     clear(): void {
         this.latestState = null;
 
-        // 重置环形缓冲区索引
+        // ResetRing buffer index
         this.historyHead = 0;
         this.historyTail = 0;
         this.historyFull = false;
 
-        // 重新初始化预分配数组
+        // 重新Initialize预分配Array
         for (let i = 0; i < this.config.maxHistorySize; i++) {
             this.stateHistory[i] = {
                 state: null as any,

@@ -1,13 +1,13 @@
 /**
- * Config Handler 单元测试
+ * Config Handler Unit test
  *
- * 测试覆盖：
- * - handleConfigGet 处理器
- * - handleConfigSet 处理器
- * - handleConfigSave 处理器
- * - handleConfigReset 处理器
- * - handleConfigValidate 处理器
- * - 配置变更回调
+ * Test coverage：
+ * - handleConfigGet Handler
+ * - handleConfigSet Handler
+ * - handleConfigSave Handler
+ * - handleConfigReset Handler
+ * - handleConfigValidate Handler
+ * - ConfigChangeCallback
  */
 
 import {

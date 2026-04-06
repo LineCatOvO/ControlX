@@ -306,7 +306,7 @@ export class InputValidator {
       return { valid: false, errors, warnings };
     }
 
-    // 支持Simplified format：Set<string> 或 string[]
+    // Support simplified format：Set<string> 或 string[]
     if (gamepadState instanceof Set || Array.isArray(gamepadState)) {
       const buttons = gamepadState instanceof Set 
         ? [...gamepadState] 
@@ -338,9 +338,9 @@ export class InputValidator {
       };
     }
 
-    // 支持Full format：{ buttons, axes, triggers }
+    // Support full format：{ buttons, axes, triggers }
     if (typeof gamepadState === 'object') {
-      // Validate buttons 字段（可选）
+      // Validate buttons field（optional）
       if (gamepadState.buttons !== undefined) {
         const buttons = gamepadState.buttons instanceof Set 
           ? [...gamepadState.buttons] 
@@ -379,7 +379,7 @@ export class InputValidator {
         }
       }
 
-      // Validate axes field（可选）
+      // Validate axes field（optional）
       if (gamepadState.axes !== undefined) {
         const axes = gamepadState.axes;
         const axisFields = ['leftX', 'leftY', 'rightX', 'rightY'];
@@ -409,7 +409,7 @@ export class InputValidator {
         }
       }
 
-      // Validate triggers field（可选）
+      // Validate triggers field（optional）
       if (gamepadState.triggers !== undefined) {
         const triggers = gamepadState.triggers;
 
@@ -618,7 +618,7 @@ export class InputValidator {
       }
     }
 
-    // Validate deadzone（可选）
+    // Validate deadzone（optional）
     if (joystickState.deadzone !== undefined) {
       if (typeof joystickState.deadzone !== 'number') {
         errors.push(
@@ -641,7 +641,7 @@ export class InputValidator {
       }
     }
 
-    // Validate smoothing（可选）
+    // Validate smoothing（optional）
     if (joystickState.smoothing !== undefined) {
       if (typeof joystickState.smoothing !== 'number') {
         errors.push(
@@ -692,7 +692,7 @@ export class InputValidator {
       return { valid: true, errors, warnings };
     }
 
-    // Check if sequence number decreased（错误）
+    // Check if sequence number decreased（error）
     if (newSeq < this.lastSequenceNumber) {
       errors.push(
         new ValidationError(
@@ -719,32 +719,32 @@ export class InputValidator {
    * @param value Axis value
    * @param min Minimum value
    * @param max Maximum value
-   * @returns 是否在范围内
+   * @returns Is within range
    */
   clampAxisValue(value: number, min: number = -1.0, max: number = 1.0): number {
     return Math.max(min, Math.min(max, value));
   }
 
   /**
-   * Validatetrigger value范围
+   * Validatetrigger valueRange
    * @param value trigger value
    * @param min Minimum value
    * @param max Maximum value
-   * @returns 是否在范围内
+   * @returns Is within range
    */
   clampTriggerValue(value: number, min: number = 0.0, max: number = 1.0): number {
     return Math.max(min, Math.min(max, value));
   }
 
   /**
-   * Validate序列号（public method，用于外部调用）
+   * Validatesequence number（public method，用于Outside部调用）
    * @param newSeq New sequence number
    * @param lastSeq Old sequence number
-   * @returns 是否单调递增
+   * @returns Is monotonically increasing
    * @deprecated 使用 validateSequenceNumberMonotonicity 代替
    */
   validateSequenceNumber(newSeq: number, lastSeq: number): boolean {
-    // If sequence number is not a number，使用当前时间戳作为序列号
+    // If sequence number is not a number，使用CurrentTimestamp作Forsequence number
     if (isNaN(newSeq)) {
       return true;
     }
@@ -754,14 +754,14 @@ export class InputValidator {
       return true;
     }
 
-    // 允许序列号相同或更大（Handle重传和重新Connect的情况）
+    // Allowsequence numberSame或更大（Handle重传和重新ConnectOf情况）
     return newSeq >= lastSeq;
   }
 
   /**
    * Extract sequence number
    * @param state State object
-   * @returns 序列号，如果 frameId 不是数字则返回 NaN
+   * @returns sequence number，如果 frameId 不是Number则Return NaN
    */
   extractSequenceNumber(state: any): number {
     const frameId = state?.frameId;
@@ -770,7 +770,7 @@ export class InputValidator {
 
   /**
    * Get current sequence number（for testing）
-   * @returns 当前序列号
+   * @returns Current sequence number
    */
   getCurrentSequenceNumber(): number {
     return this.lastSequenceNumber;

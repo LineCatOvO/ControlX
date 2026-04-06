@@ -1,16 +1,16 @@
-// 输入事件消息处理器
+// InputEventMessageHandler
 
 import { InputEventMessage } from '../../types/ws';
 import { getExecutorManager } from '../../input/executor';
 import { formatInputEventMessageLog } from '../../utils/logInputData';
 
 /**
- * 处理输入事件消息
- * @param ws WebSocket 连接
- * @param message 输入事件消息
+ * 处理InputEventMessage
+ * @param ws WebSocket connection
+ * @param message InputEventMessage
  */
 export function handleInputEvent(ws: any, message: InputEventMessage) {
-    // 检查消息数据
+    // 检查Message数据
     if (!message.data) {
         console.error("InputEventHandlerError: Invalid message data");
         
@@ -29,16 +29,16 @@ export function handleInputEvent(ws: any, message: InputEventMessage) {
     }
 
     try {
-        // 获取输入执行器管理器
+        // GetInputExecutorManageManager
         const executorManager = getExecutorManager();
 
-        // 应用输入事件到所有执行器
+        // ApplyInputEvent到AllExecutor
         executorManager.applyEvent(message.data);
 
-        // 记录详细的输入事件数据日志
+        // 记录DetailOfInputEvent数据Log
         console.log(formatInputEventMessageLog(message));
         
-        // 发送 ACK 消息
+        // Send ACK Message
         const ackMessage = {
             type: "ack",
             data: {

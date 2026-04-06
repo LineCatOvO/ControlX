@@ -1,4 +1,4 @@
-// Mouse adapter实现
+// Mouse adapterImplementation
 
 import { InputAdapter } from './InputAdapter';
 import { MouseExecutor } from '../mouse';
@@ -9,10 +9,10 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
  * Encapsulates MouseExecutor calling logic，implements InputAdapter interface
  *
  * Design notes：
- * - implements InputAdapter interface的所有方法（applyState, applyDelta, applyEvent, reset）
- * - MouseExecutor 方法是异步的，适配器方法返回 void（异步调用不阻塞）
- * - 内部委托给 MouseExecutor 执行实际的鼠标操作
- * - 提供鼠标特定的方法（applyMouseState, getMouseState）
+ * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
+ * - MouseExecutor Method是异步Of，AdapterMethodReturn void（异步调用不阻塞）
+ * - Inside部委托给 MouseExecutor Execute实际OfMouseOperation
+ * - 提供Mouse特定OfMethod（applyMouseState, getMouseState）
  */
 export class MouseAdapter implements InputAdapter {
     private executor: MouseExecutor;
@@ -22,47 +22,47 @@ export class MouseAdapter implements InputAdapter {
     }
 
     /**
-     * Apply complete input state（InputAdapter 接口方法）
+     * Apply complete input state（InputAdapter InterfaceMethod）
      * @param state Input state
      */
     applyState(state: InputState): void {
-        // MouseExecutor 的 applyState 是异步方法，直接调用不阻塞
+        // MouseExecutor Of applyState 是异步Method，直接调用不阻塞
         this.executor.applyState(state);
     }
 
     /**
-     * Apply input delta（InputAdapter 接口方法）
+     * Apply input delta（InputAdapter InterfaceMethod）
      * @param delta Input delta
      */
     applyDelta(delta: InputDelta): void {
-        // MouseExecutor 的 applyDelta 是异步方法，直接调用不阻塞
+        // MouseExecutor Of applyDelta 是异步Method，直接调用不阻塞
         this.executor.applyDelta(delta);
     }
 
     /**
-     * Apply input event（InputAdapter 接口方法）
+     * Apply input event（InputAdapter InterfaceMethod）
      * @param event Input event
      */
     applyEvent(event: InputEvent): void {
-        // MouseExecutor 的 applyEvent 是异步方法，直接调用不阻塞
+        // MouseExecutor Of applyEvent 是异步Method，直接调用不阻塞
         this.executor.applyEvent(event);
     }
 
     /**
-     * 重置Input state（InputAdapter 接口方法）
+     * ResetInput state（InputAdapter InterfaceMethod）
      */
     reset(): void {
-        // MouseExecutor 的 reset 是异步方法，直接调用不阻塞
+        // MouseExecutor Of reset 是异步Method，直接调用不阻塞
         this.executor.reset();
     }
 
     /**
-     * 应用鼠标状态（鼠标特定方法）
-     * @param x 鼠标 X 坐标
-     * @param y 鼠标 Y 坐标
-     * @param left 左键状态
-     * @param right 右键状态
-     * @param middle 中键状态
+     * ApplyMouseState（Mouse特定Method）
+     * @param x Mouse X 坐标
+     * @param y Mouse Y 坐标
+     * @param left Left键State
+     * @param right Right键State
+     * @param middle In键State
      */
     applyMouseState(
         x: number,
@@ -79,8 +79,8 @@ export class MouseAdapter implements InputAdapter {
     }
 
     /**
-     * 获取当前鼠标状态
-     * @returns 当前鼠标状态
+     * GetCurrentMouseState
+     * @returns CurrentMouseState
      */
     getMouseState(): {
         x: number;
@@ -89,7 +89,7 @@ export class MouseAdapter implements InputAdapter {
         right: boolean;
         middle: boolean;
     } {
-        // MouseExecutor 不暴露内部状态，返回默认值
+        // MouseExecutor 不暴露Inside部State，ReturnDefaultValue
         return { x: 0, y: 0, left: false, right: false, middle: false };
     }
 }
