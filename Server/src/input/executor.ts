@@ -1,35 +1,35 @@
 /**
  * ============================================================================
- * 输入执行器模块 (Input Executor Module)
+ * Input Executor Module (Input Executor Module)
  * ============================================================================
  *
  * 【模块职责】
- * 本模块是输入系统的执行层核心，负责管理所有输入执行器的生命周期和状态应用。
+ * This module is the execution layer core of the input system，Responsible for managing lifecycle and state application of all input executors。
  *
  * 【核心功能】
- * 1. 执行器管理：创建、配置和管理所有输入执行器（键盘、鼠标、摇杆、手柄）
- * 2. 状态应用：将输入状态应用到实际硬件或模拟设备
- * 3. 模式切换：支持生产模式、测试模式、DryRun模式
- * 4. 安全控制：集成SafetyController，确保异常情况下的安全清零
+ * 1. Executor management: create, configure and manage all input executors（键盘、鼠标、摇杆、手柄）
+ * 2. State application: apply input state to actual hardware or simulated devices
+ * 3. Mode switching: support production mode, test mode, DryRun mode
+ * 4. Safety control: integrate SafetyController, ensure safe clearing in exceptional cases
  *
  * 【模块边界】
- * - ✅ 允许：管理执行器生命周期、应用输入状态、触发安全清零
- * - ❌ 禁止：状态验证（由Validator负责）、状态存储（由StateStore负责）、时间管理（由ApplyScheduler负责）
+ * - ✅ Allowed: manage executor lifecycle, apply input state, trigger safe clearing
+ * - ❌ Prohibited: state validation (by Validator)、state storage (by StateStore)、time management (by ApplyScheduler)
  *
  * 【依赖关系】
- * - 依赖：SafetyController（安全清零）、ApplyScheduler（时间同步）
- * - 被依赖：app.ts（启动入口）、WebSocket处理器（状态接收）
+ * - Dependencies: SafetyController (safe clearing)、ApplyScheduler (time synchronization)
+ * - Depended by: app.ts (startup entry)、WebSocket handlers (state reception)
  *
  * 【关键设计】
- * - 适配器模式：通过InputAdapter接口实现多态，封装具体执行器的调用逻辑
- * - 管理器模式：DefaultInputExecutorManager统一管理所有适配器
- * - 模式切换：通过环境变量控制适配器类型（生产/测试/DryRun）
- * - 架构一致性：使用适配器接口而非直接调用执行器
+ * - Adapter pattern: polymorphism through InputAdapter interface，encapsulate calling logic of concrete executors
+ * - Manager pattern: DefaultInputExecutorManager unified management of all adapters
+ * - 模式切换：Control adapter type through environment variables（生产/测试/DryRun）
+ * - Architecture consistency: use adapter interface instead of direct executor calls
  *
  * 【注意事项】
- * - 执行器操作是同步的，不应阻塞主线程
- * - 异常情况下必须通过SafetyController清零，不能直接操作执行器
- * - 时间戳必须使用ApplyScheduler提供的tickTime，禁止调用Date.now()
+ * - Executor operations are synchronous, should not block main thread
+ * - Must clear through SafetyController in exceptional cases，cannot directly operate executor
+ * - Timestamp must use tickTime provided by ApplyScheduler，Prohibit calling Date.now()
  *
  * @module input/executor
  * @version 2.1.0
@@ -49,29 +49,29 @@ import { DryRunExecutor } from "./dryRunExecutor";
 import { ApplyScheduler } from "./applyScheduler";
 import { getMetricsCollector } from "../utils/metrics";
 
-// 导入适配器
+// Import adapters
 import { KeyboardAdapter } from "./adapters/KeyboardAdapter";
 import { MouseAdapter } from "./adapters/MouseAdapter";
 import { JoystickAdapter } from "./adapters/JoystickAdapter";
 import { GamepadAdapter } from "./adapters/GamepadAdapter";
 import { GamepadXInputAdapter } from "./adapters/GamepadXInputAdapter";
 
-// 检查运行模式
+// Check run mode
 const isTestMode = process.env.TEST_MODE === "true";
 const disableActualInput = process.env.DISABLE_ACTUAL_INPUT === "true";
 const isDryRunMode = process.env.DRY_RUN === "true" || (isTestMode && disableActualInput);
 
-// Dry Run执行器实例（用于调试和测试）
+// Dry Run executor instance（for debugging and testing）
 let dryRunExecutor: DryRunExecutor | null = null;
 
 /**
- * 输入执行器管理器实现
+ * Input executor manager implementation
  */
 export class DefaultInputExecutorManager implements InputExecutorManager {
     private executors: InputExecutor[] = [];
 
     /**
-     * 添加输入执行器
+     * Add input executor
      * @param executor 输入执行器
      */
     addExecutor(executor: InputExecutor): void {
@@ -79,7 +79,7 @@ export class DefaultInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 移除输入执行器
+     * Remove input executor
      * @param executor 输入执行器
      */
     removeExecutor(executor: InputExecutor): void {
@@ -87,38 +87,38 @@ export class DefaultInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 应用完整输入状态到所有执行器
-     * @param state 输入状态
+     * Apply complete input state to all executors
+     * @param state input state
      */
     applyState(state: any): void {
         this.executors.forEach((executor) => executor.applyState(state));
     }
 
     /**
-     * 应用输入增量到所有执行器
-     * @param delta 输入增量
+     * Apply input delta to all executors
+     * @param delta input delta
      */
     applyDelta(delta: any): void {
         this.executors.forEach((executor) => executor.applyDelta(delta));
     }
 
     /**
-     * 应用输入事件到所有执行器
-     * @param event 输入事件
+     * Apply input event to all executors
+     * @param event input event
      */
     applyEvent(event: any): void {
         this.executors.forEach((executor) => executor.applyEvent(event));
     }
 
     /**
-     * 重置所有执行器
+     * Reset all executors
      */
     reset(): void {
         this.executors.forEach((executor) => executor.reset());
     }
 
     /**
-     * 获取测试模式执行器（如果存在）
+     * Get test mode executors（if exists）
      */
     getTestModeExecutors(): InputExecutor[] {
         return this.executors.filter(
@@ -127,10 +127,10 @@ export class DefaultInputExecutorManager implements InputExecutorManager {
     }
 }
 
-// 创建输入执行器管理器实例
+// Create input executor manager instance
 const executorManager = new DefaultInputExecutorManager();
 
-// 根据模式添加适当的执行器（使用适配器架构）
+// Add appropriate executors based on mode（using adapter architecture）
 if (isDryRunMode) {
     console.log("🏃 Using DRY RUN mode executors (no actual input, full logging)");
     dryRunExecutor = new DryRunExecutor({ verbose: true, logToFile: false });
@@ -141,12 +141,12 @@ if (isDryRunMode) {
 } else {
     console.log("🎮 Using production mode executors (adapter architecture)");
 
-    // 创建执行器实例
+    // Create executor instances
     const keyboardExecutor = new KeyboardExecutor();
     const mouseExecutor = new MouseExecutor();
     const joystickExecutor = new JoystickExecutor();
 
-    // 创建适配器实例（封装执行器）
+    // Create adapter instances（encapsulate executors）
     const keyboardAdapter = new KeyboardAdapter(keyboardExecutor);
     const mouseAdapter = new MouseAdapter(mouseExecutor);
     const joystickAdapter = new JoystickAdapter(joystickExecutor);
@@ -156,25 +156,25 @@ if (isDryRunMode) {
     const gamepadAdapter = new GamepadAdapter(gamepadXInputAdapter);
     gamepadAdapter.initialize();
 
-    // 管理器使用适配器（而非直接使用执行器）
+    // Manager uses adapters（instead of directly using executors）
     executorManager.addExecutor(keyboardAdapter);
     executorManager.addExecutor(mouseAdapter);
     executorManager.addExecutor(joystickAdapter);
     executorManager.addExecutor(gamepadAdapter);
 }
 
-// 创建安全控制器
+// Create safety controller
 const safetyController = new SafetyController(executorManager);
 
-// 存储输入执行循环定时器ID
+// Store input execution loop timer ID
 let inputExecutorInterval: NodeJS.Timeout | null = null;
 
 /**
- * 开始输入执行循环
- * @returns 定时器ID，用于后续清理
+ * Start input execution loop
+ * @returns Timer ID, for subsequent cleanup
  */
 export function startInputExecutor() {
-    // 如果已经在运行，则先停止
+    // If already running，then stop first
     if (inputExecutorInterval) {
         clearInterval(inputExecutorInterval);
     }
@@ -187,19 +187,19 @@ export function startInputExecutor() {
         `${modeInfo} Starting input executor with interval: ${config.inputUpdateInterval}ms`
     );
 
-    // 启动安全控制器的超时检查
+    // Start safety controller timeout check
     safetyController.startTimeoutCheck();
 
-    // 启动ApplyScheduler（唯一时间权威）
+    // Start ApplyScheduler (unique time authority)
     const applyScheduler = (global as any).applyScheduler as ApplyScheduler;
     if (applyScheduler) {
-        // ApplyScheduler由app.ts启动，这里不重复启动
+        // ApplySchedulerStarted by app.ts，no duplicate start here
         console.log("ApplyScheduler: Already started");
     } else {
         console.error("ApplyScheduler: Not initialized");
     }
 
-    // 输入执行循环（125Hz）
+    // Input execution loop（125Hz）
     inputExecutorInterval = setInterval(() => {
         executeInput();
     }, config.inputUpdateInterval);
@@ -208,7 +208,7 @@ export function startInputExecutor() {
 }
 
 /**
- * 停止输入执行循环
+ * 停止Input execution loop
  */
 export function stopInputExecutor() {
     if (inputExecutorInterval) {
@@ -222,16 +222,16 @@ export function stopInputExecutor() {
 }
 
 /**
- * 执行输入
+ * Execute input
  */
 function executeInput() {
-    // 获取指标收集器
+    // Get metrics collector
     const metricsCollector = getMetricsCollector();
     
-    // 检查输入状态变化并记录指标
+    // 检查input state变化并记录指标
     const state = inputState as any;
     
-    // 记录键盘事件
+    // Record keyboard events
     if (state.keyboard && Object.keys(state.keyboard).length > 0) {
         const keyCount = Object.values(state.keyboard).filter((v: any) => v === true || v === 1).length;
         if (keyCount > 0) {
@@ -241,12 +241,12 @@ function executeInput() {
         }
     }
     
-    // 记录鼠标事件
+    // Record mouse events
     if (state.mouse && (state.mouse.x !== 0 || state.mouse.y !== 0 || state.mouse.buttons)) {
         metricsCollector.recordInputEvent('mouse');
     }
     
-    // 记录游戏手柄事件
+    // Record gamepad events
     if (state.gamepad && (state.gamepad.buttons || state.gamepad.axes)) {
         const hasButtonPress = state.gamepad.buttons && 
             Object.values(state.gamepad.buttons).some((v: any) => v > 0);
@@ -257,76 +257,76 @@ function executeInput() {
         }
     }
     
-    // 记录摇杆事件
+    // Record joystick events
     if (state.joystick && (state.joystick.x !== 0 || state.joystick.y !== 0)) {
         metricsCollector.recordInputEvent('joystick');
     }
     
-    // 应用当前输入状态到所有执行器
+    // 应用当前input state到所有执行器
     executorManager.applyState(inputState);
 
-    // 记录有效状态时间（applyTime由ApplyScheduler传入）
+    // Record valid state time（applyTimeprovided by ApplyScheduler）
     const applyTime = Date.now();
     safetyController.recordValidState(inputState, applyTime);
 
-    // 在测试模式下记录额外信息
+    // Record extra info in test mode
     if (isTestMode) {
         const testExecutors = executorManager.getTestModeExecutors();
         if (testExecutors.length > 0) {
-            // 可以在这里添加测试特定的日志
+            // Can add test-specific logs here
         }
     }
 }
 
 /**
- * 获取输入执行器管理器
- * @returns 输入执行器管理器实例
+ * Get input executor manager
+ * @returns Input executor manager instance
  */
 export function getExecutorManager(): InputExecutorManager {
     return executorManager;
 }
 
 /**
- * 获取安全控制器
- * @returns 安全控制器实例
+ * Get safety controller
+ * @returns Safety controller instance
  */
 export function getSafetyController(): SafetyController {
     return safetyController;
 }
 
 /**
- * 触发安全清零
+ * Trigger safety clearing
  */
 export function triggerSafetyClear(): void {
     safetyController.triggerSafetyClear();
 }
 
 /**
- * 触发异常清零
- * @param reason 异常原因
+ * Trigger exception clearing
+ * @param reason Exception reason
  */
 export function triggerExceptionClear(reason: string): void {
     safetyController.triggerExceptionClear(reason);
 }
 
 /**
- * 处理WebSocket断开连接
+ * Handle WebSocket disconnect
  */
 export function handleDisconnect(): void {
     safetyController.handleDisconnect();
 }
 
 /**
- * 记录有效状态
- * @param state 有效状态
- * @param tickTime tick 时间戳（由 ApplyScheduler 提供）
+ * Record valid state
+ * @param state Valid state
+ * @param tickTime tick timestamp（provided by ApplyScheduler）
  */
 export function recordValidState(state: any, tickTime: number): void {
     safetyController.recordValidState(state, tickTime);
 }
 
 /**
- * 获取测试执行器日志（测试模式专用）
+ * Get test executor logs（Test mode only）
  */
 export function getTestLogs(): any[] {
     const testExecutors = executorManager.getTestModeExecutors();
@@ -339,16 +339,16 @@ export function getTestLogs(): any[] {
 }
 
 /**
- * 获取Dry Run执行器实例
- * @returns Dry Run执行器实例或null
+ * 获取Dry Run executor instance
+ * @returns Dry Run executor instance或null
  */
 export function getDryRunExecutor(): DryRunExecutor | null {
     return dryRunExecutor;
 }
 
 /**
- * 获取Dry Run日志
- * @returns Dry Run日志数组
+ * Get Dry Run logs
+ * @returns Dry Run logs array
  */
 export function getDryRunLogs(): any[] {
     if (dryRunExecutor) {
@@ -358,8 +358,8 @@ export function getDryRunLogs(): any[] {
 }
 
 /**
- * 获取Dry Run统计信息
- * @returns Dry Run统计信息
+ * Get Dry Run statistics
+ * @returns Dry Run statistics
  */
 export function getDryRunStats(): any {
     if (dryRunExecutor) {
@@ -369,7 +369,7 @@ export function getDryRunStats(): any {
 }
 
 /**
- * 打印Dry Run摘要
+ * Print Dry Run summary
  */
 export function printDryRunSummary(): void {
     if (dryRunExecutor) {
@@ -378,8 +378,8 @@ export function printDryRunSummary(): void {
 }
 
 /**
- * 检查是否为Dry Run模式
- * @returns 是否为Dry Run模式
+ * Check if Dry Run mode
+ * @returns Whether Dry Run mode
  */
 export function isDryRun(): boolean {
     return isDryRunMode;

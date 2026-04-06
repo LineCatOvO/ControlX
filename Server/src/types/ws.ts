@@ -1,13 +1,13 @@
 /**
- * WebSocket消息类型定义
+ * WebSocket message type definition
  */
 
-// WebSocket消息基础接口
+// WebSocket message base interface
 export interface WsMessage {
     type: string;
 }
 
-// 输入元数据接口
+// Input metadata interface
 export interface InputMetadata {
     clientId: string;
     timestamp?: number;
@@ -15,37 +15,37 @@ export interface InputMetadata {
 }
 
 // =========================
-// 新增：符合文档的消息类型定义
+// New: message type definition conforming to documentation
 // =========================
 
-// 键盘事件结构
+// Keyboard event structure
 export interface KeyboardEvent {
-    keyId: string; // 键位标识符，如 "KEY_W", "KEY_A", "KEY_S", "KEY_D" 等
-    eventType: "pressed" | "released" | "held"; // 事件类型
+    keyId: string; // Key identifier, e.g. "KEY_W", "KEY_A", "KEY_S", "KEY_D"
+    eventType: "pressed" | "released" | "held"; // Event type
 }
 
-// 游戏手柄按键事件结构
+// Gamepad button event structure
 export interface GamepadButtonEvent {
-    buttonId: string; // 按键标识符，如 "BUTTON_A", "BUTTON_B", "BUTTON_X", "BUTTON_Y" 等
-    eventType: "pressed" | "released" | "held"; // 事件类型
+    buttonId: string; // Button identifier, e.g. "BUTTON_A", "BUTTON_B", "BUTTON_X", "BUTTON_Y"
+    eventType: "pressed" | "released" | "held"; // Event type
 }
 
-// 摇杆状态结构
+// Joystick state structure
 export interface JoystickState {
     x: number; // -1.0 到 1.0
     y: number; // -1.0 到 1.0
     deadzone: number; // 0.0 到 1.0
 }
 
-// 扳机状态结构
+// Trigger state structure
 export interface TriggerState {
     left: number; // 0.0 到 1.0
     right: number; // 0.0 到 1.0
 }
 
-// 游戏手柄状态结构
+// Gamepad state structure
 export interface GamepadState {
-    buttons: GamepadButtonEvent[]; // 手柄按键事件数组
+    buttons: GamepadButtonEvent[]; // Gamepad button event array
     joysticks: {
         left: JoystickState;
         right: JoystickState;
@@ -53,75 +53,75 @@ export interface GamepadState {
     triggers: TriggerState;
 }
 
-// 状态消息接口
+// State message interface
 export interface StateMessage extends WsMessage {
     type: "state";
-    stateId: number; // 客户端生成的单调递增标识（会话内）
-    clientSendTs: number; // 客户端发送时间戳（用于 RTT 延迟测量）
-    keyboardState: KeyboardEvent[]; // 键盘所有按键事件的数组
-    gamepadState: GamepadState; // 手柄状态字典
-    flags: string[]; // 包含 zero-output 等标志
+    stateId: number; // Client-generated monotonically increasing identifier (within session)
+    clientSendTs: number; // Client send timestamp (for RTT latency measurement)
+    keyboardState: KeyboardEvent[]; // Keyboard all key event array
+    gamepadState: GamepadState; // Gamepad state dictionary
+    flags: string[]; // Contains flags like zero-output
 }
 
-// 事件键盘变化结构
+// Event keyboard change structure
 export interface KeyboardEventDelta {
     keyId: string; // 键位标识符
-    eventType: "pressed" | "released"; // 事件类型
+    eventType: "pressed" | "released"; // Event type
 }
 
-// 事件游戏手柄按键变化结构
+// Event gamepad button change structure
 export interface GamepadButtonEventDelta {
     buttonId: string; // 按键标识符
-    eventType: "pressed" | "released"; // 事件类型
+    eventType: "pressed" | "released"; // Event type
 }
 
-// 事件消息接口
+// Event message interface
 export interface EventMessage extends WsMessage {
     type: "event";
-    eventId: number; // 客户端生成的单调递增标识（会话内）
-    baseStateId: number; // 事件所依附的基准状态
-    clientSendTs: number; // 客户端发送时间戳（用于 RTT 延迟测量）
+    eventId: number; // Client-generated monotonically increasing identifier (within session)
+    baseStateId: number; // Base state attached to event
+    clientSendTs: number; // Client send timestamp (for RTT latency measurement)
     delta: {
-        keyboard?: KeyboardEventDelta[]; // 键盘按键变化事件的数组
+        keyboard?: KeyboardEventDelta[]; // Keyboard key change event array
         gamepad?: {
-            buttons?: GamepadButtonEventDelta[]; // 手柄按键变化事件数组
+            buttons?: GamepadButtonEventDelta[]; // Gamepad button change event array
             joysticks?: {
-                left?: { x: number; y: number }; // 左摇杆变化状态
-                right?: { x: number; y: number }; // 右摇杆变化状态
+                left?: { x: number; y: number }; // Left joystick change state
+                right?: { x: number; y: number }; // Right joystick change state
             };
             triggers?: {
-                left?: number; // 左扳机变化值
-                right?: number; // 右扳机变化值
+                left?: number; // Left trigger change value
+                right?: number; // Right trigger change value
             };
         };
     };
-    flags: string[]; // 可含 zero-output 请求
+    flags: string[]; // Can contain zero-output request
 }
 
-// 状态ACK消息接口
+// State ACK message interface
 export interface StateAckMessage extends WsMessage {
     type: "stateAck";
-    ackStateId: number; // 累计确认到的最大 stateId
-    serverRecvTs: number; // 执行端收到该状态的时间
-    serverApplyTs: number; // 执行端应用/执行时间
-    status: "success" | "rejected"; // 状态
-    reason?: string; // 拒绝原因（如果有）
+    ackStateId: number; // Cumulative maximum confirmed stateId
+    serverRecvTs: number; // Execution end receive time of this state
+    serverApplyTs: number; // Execution end apply/execute time
+    status: "success" | "rejected"; // Status
+    reason?: string; // Reject reason (if any)
 }
 
-// 事件ACK消息接口
+// Event ACK message interface
 export interface EventAckMessage extends WsMessage {
     type: "eventAck";
-    ackEventId: number; // 确认的 eventId
+    ackEventId: number; // Confirmed eventId
     serverRecvTs: number; // 执行端收到该事件的时间
-    status: "success" | "rejected"; // 状态
-    reason?: string; // 拒绝原因（如果有）
+    status: "success" | "rejected"; // Status
+    reason?: string; // Reject reason (if any)
 }
 
 // =========================
-// 原有消息类型，保持兼容
+// Original message type, maintain compatibility
 // =========================
 
-// 输入事件接口
+// Input event interface
 export interface InputEvent {
     type:
         | "key_down"
@@ -133,7 +133,7 @@ export interface InputEvent {
     metadata: InputMetadata;
 }
 
-// 输入增量接口
+// Input delta interface
 export interface InputDelta {
     keyboard?: {
         pressed?: string[];
@@ -152,28 +152,28 @@ export interface InputDelta {
     };
 }
 
-// 游戏手柄摇杆轴状态
+// 游戏手柄摇杆轴Status
 export interface GamepadAxesState {
-    LX: number; // 左摇杆 X 轴 [-1.0, 1.0]
-    LY: number; // 左摇杆 Y 轴 [-1.0, 1.0]
-    RX: number; // 右摇杆 X 轴 [-1.0, 1.0]
-    RY: number; // 右摇杆 Y 轴 [-1.0, 1.0]
+    LX: number; // Left joystick X axis [-1.0, 1.0]
+    LY: number; // Left joystick Y axis [-1.0, 1.0]
+    RX: number; // Right joystick X axis [-1.0, 1.0]
+    RY: number; // Right joystick Y axis [-1.0, 1.0]
 }
 
-// 游戏手柄扳机状态
+// 游戏手柄扳机Status
 export interface GamepadTriggersState {
-    LT: number; // 左扳机 [0.0, 1.0]
-    RT: number; // 右扳机 [0.0, 1.0]
+    LT: number; // Left trigger [0.0, 1.0]
+    RT: number; // Right trigger [0.0, 1.0]
 }
 
-// 输入状态接口
+// 输入Status接口
 export interface InputState {
     frameId?: number;
     runtimeStatus?: "ok" | "degraded" | "rollback";
     keyboard: Set<string>;
-    gamepad?: Set<string>; // 游戏手柄按钮集合
-    gamepadAxes?: GamepadAxesState; // 游戏手柄摇杆轴（新增）
-    gamepadTriggers?: GamepadTriggersState; // 游戏手柄扳机（新增）
+    gamepad?: Set<string>; // Gamepad button set
+    gamepadAxes?: GamepadAxesState; // Gamepad joystick axes (new)
+    gamepadTriggers?: GamepadTriggersState; // Gamepad triggers (new)
     mouse: {
         x: number;
         y: number;
@@ -182,27 +182,27 @@ export interface InputState {
         middle: boolean;
     };
     joystick: {
-        x: number; // -1~1（独立摇杆设备，与游戏手柄摇杆分离）
+        x: number; // -1~1（Independent joystick device, separate from gamepad joysticks）
         y: number; // -1~1
         deadzone: number;
         smoothing: number;
     };
 }
 
-// 欢迎消息
+// Welcome message
 export interface WelcomeMessage extends WsMessage {
     type: "welcome";
     message: string;
 }
 
-// 输入数据消息
+// Input data message
 export interface InputMessage extends WsMessage {
     type: "input";
     data: {
         frameId?: number;
         runtimeStatus?: "ok" | "degraded" | "rollback";
         keyboard?: string[];
-        gamepad?: string[]; // 游戏手柄按钮数组
+        gamepad?: string[]; // Gamepad button array
         mouse?: {
             x?: number;
             y?: number;
@@ -220,26 +220,26 @@ export interface InputMessage extends WsMessage {
     metadata: InputMetadata;
 }
 
-// 输入增量消息
+// Input delta message
 export interface InputDeltaMessage extends WsMessage {
     type: "input_delta";
     data: InputDelta;
     metadata: InputMetadata;
 }
 
-// 输入事件消息
+// Input event message
 export interface InputEventMessage extends WsMessage {
     type: "input_event";
     data: InputEvent;
 }
 
-// 延迟测量消息
+// Latency measurement message
 export interface LatencyProbeMessage extends WsMessage {
     type: "latency_probe";
     timestamp?: number;
 }
 
-// 延迟测量响应消息
+// Latency measurement response message
 export interface LatencyProbeResponseMessage extends WsMessage {
     serverTimestamp: number;
     type: "latency_probe_response";
@@ -247,7 +247,7 @@ export interface LatencyProbeResponseMessage extends WsMessage {
     clientTimestamp: number;
 }
 
-// 调试消息
+// Debug message
 export interface DebugMessage extends WsMessage {
     type: "debug";
     level: "info" | "warn" | "error";
@@ -255,7 +255,7 @@ export interface DebugMessage extends WsMessage {
     data?: any;
 }
 
-// 错误消息
+// Error message
 export interface ErrorMessage extends WsMessage {
     type: "error";
     code: string;
@@ -263,7 +263,7 @@ export interface ErrorMessage extends WsMessage {
     details?: any;
 }
 
-// 确认消息
+// Acknowledge message
 export interface AckMessage extends WsMessage {
     type: "ack";
     messageId: string;
@@ -271,50 +271,50 @@ export interface AckMessage extends WsMessage {
     message?: string;
 }
 
-// 配置获取消息
+// Configuration get message
 export interface ConfigGetMessage extends WsMessage {
     type: "config_get";
 }
 
-// 配置设置消息
+// Configuration set message
 export interface ConfigSetMessage extends WsMessage {
     type: "config_set";
     data: Partial<Config>;
 }
 
-// 配置返回消息
+// Configuration return message
 export interface ConfigMessage extends WsMessage {
     type: "config";
     data: Config;
 }
 
-// 配置更新确认消息
+// 配置更新Acknowledge message
 export interface ConfigAckMessage extends WsMessage {
     type: "config_ack";
     message: string;
     data: Config;
 }
 
-// 配置错误消息
+// 配置Error message
 export interface ConfigErrorMessage extends WsMessage {
     type: "config_error";
     message: string;
 }
 
-// Ping消息
+// Ping message
 export interface PingMessage extends WsMessage {
     timestamp?: number;
     type: "ping";
 }
 
-// Pong消息
+// Pong message
 export interface PongMessage extends WsMessage {
     timestamp?: number;
     serverTimestamp?: number;
     type: "pong";
 }
 
-// 配置对象接口
+// Configuration object interface
 export interface Config {
     inputUpdateInterval: number;
     heartbeatInterval: number;
@@ -326,7 +326,7 @@ export interface Config {
     isTestMode: boolean;
 }
 
-// 客户端消息联合类型
+// Client message union type
 export type ClientMessage =
     | WelcomeMessage
     | InputMessage
@@ -340,7 +340,7 @@ export type ClientMessage =
     | StateMessage
     | EventMessage;
 
-// 服务器消息联合类型
+// Server message union type
 export type ServerMessage =
     | WelcomeMessage
     | ConfigMessage

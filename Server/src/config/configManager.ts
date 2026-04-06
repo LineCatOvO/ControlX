@@ -1,7 +1,7 @@
 /**
- * 配置管理器
+ * Configuration Manager
  * 
- * 负责配置的加载、验证、热更新和持久化
+ * Responsible for configuration loading, validation, hot update and persistence
  */
 
 import * as fs from 'fs';
@@ -10,13 +10,13 @@ import { Config, DEFAULT_CONFIG } from '../ws/messageTypes';
 import { validateConfig } from './validate';
 
 /**
- * 配置变更监听器类型
+ * Configuration change listener type
  */
 export type ConfigChangeListener = (newConfig: Config, oldConfig: Config) => void;
 
 /**
- * 配置管理器类
- * 实现配置的加载、验证、热更新和持久化
+ * Configuration Manager class
+ * Implement configuration loading, validation, hot update and persistence
  */
 export class ConfigManager {
     private config: Config;
@@ -25,12 +25,12 @@ export class ConfigManager {
     private autoSave: boolean = false;
 
     /**
-     * 创建配置管理器实例
-     * @param initialConfig 初始配置
-     * @param configPath 配置文件路径（可选）
+     * Create Configuration Manager instance
+     * @param initialConfig Initial configuration
+     * @param configPath Configuration file path (optional)
      */
     constructor(initialConfig?: Partial<Config>, configPath?: string) {
-        // 初始化配置
+        // Initialize configuration
         this.config = { ...DEFAULT_CONFIG, ...initialConfig };
         
         if (configPath) {
@@ -39,8 +39,8 @@ export class ConfigManager {
     }
 
     /**
-     * 解析配置文件路径
-     * @param configPath 配置文件路径
+     * Parse configuration file path
+     * @param configPath Configuration file path
      * @returns 绝对路径
      */
     private resolvePath(configPath: string): string {
@@ -50,8 +50,8 @@ export class ConfigManager {
     }
 
     /**
-     * 从文件加载配置
-     * @param configPath 配置文件路径（可选，使用构造函数中的路径）
+     * Load configuration from file
+     * @param configPath Configuration file path（可选，使用构造函数中的路径）
      * @returns 是否加载成功
      */
     loadFromFile(configPath?: string): boolean {
@@ -82,7 +82,7 @@ export class ConfigManager {
             this.config = { ...DEFAULT_CONFIG, ...parsedConfig };
             this.configPath = filePath;
 
-            // 通知监听器
+            // Notify listeners
             this.notifyListeners(oldConfig);
 
             console.log(`Config loaded from: ${filePath}`);
@@ -94,8 +94,8 @@ export class ConfigManager {
     }
 
     /**
-     * 保存配置到文件
-     * @param configPath 配置文件路径（可选，使用当前路径）
+     * Save configuration to file
+     * @param configPath Configuration file path（可选，使用当前路径）
      * @returns 是否保存成功
      */
     saveToFile(configPath?: string): boolean {
@@ -109,13 +109,13 @@ export class ConfigManager {
         }
 
         try {
-            // 确保目录存在
+            // Ensure directory exists
             const dir = path.dirname(filePath);
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });
             }
 
-            // 写入配置
+            // Write configuration
             const content = JSON.stringify(this.config, null, 2);
             fs.writeFileSync(filePath, content, 'utf8');
 
@@ -128,7 +128,7 @@ export class ConfigManager {
     }
 
     /**
-     * 获取当前配置
+     * Get current configuration
      * @returns 当前配置对象的副本
      */
     getConfig(): Config {
@@ -136,8 +136,8 @@ export class ConfigManager {
     }
 
     /**
-     * 获取配置项
-     * @param key 配置项键名
+     * Get configuration item
+     * @param key Configuration item key name
      * @returns 配置项值
      */
     get<K extends keyof Config>(key: K): Config[K] {
@@ -145,13 +145,13 @@ export class ConfigManager {
     }
 
     /**
-     * 更新配置
-     * @param updates 部分配置更新
-     * @param persist 是否持久化到文件
+     * Update configuration
+     * @param updates Partial configuration update
+     * @param persist Whether persist to file
      * @returns 是否更新成功
      */
     update(updates: Partial<Config>, persist: boolean = false): boolean {
-        // 验证新配置
+        // Validate new configuration
         const newConfig = { ...this.config, ...updates };
         
         if (!validateConfig(newConfig)) {
@@ -162,10 +162,10 @@ export class ConfigManager {
         const oldConfig = { ...this.config };
         this.config = newConfig;
 
-        // 通知监听器
+        // Notify listeners
         this.notifyListeners(oldConfig);
 
-        // 可选持久化
+        // Optional persistence
         if (persist && this.autoSave) {
             this.saveToFile();
         }
@@ -175,8 +175,8 @@ export class ConfigManager {
     }
 
     /**
-     * 热更新配置（运行时更新，不重启服务）
-     * @param updates 部分配置更新
+     * Hot update configuration (runtime update, no service restart)
+     * @param updates Partial configuration update
      * @returns 更新结果
      */
     hotUpdate(updates: Partial<Config>): {
@@ -188,7 +188,7 @@ export class ConfigManager {
         const oldConfig = { ...this.config };
         const changes: string[] = [];
 
-        // 处理undefined或null的情况
+        // Handle undefined or null case
         if (!updates || typeof updates !== 'object') {
             return {
                 success: false,
@@ -198,14 +198,14 @@ export class ConfigManager {
             };
         }
 
-        // 检测变更
+        // Detect change
         for (const key of Object.keys(updates) as (keyof Config)[]) {
             if (oldConfig[key] !== updates[key]) {
                 changes.push(`${key}: ${oldConfig[key]} -> ${updates[key]}`);
             }
         }
 
-        // 验证并更新
+        // Validate and update
         const success = this.update(updates);
 
         return {
@@ -217,7 +217,7 @@ export class ConfigManager {
     }
 
     /**
-     * 重置配置为默认值
+     * Reset configuration to default values
      */
     reset(): void {
         const oldConfig = { ...this.config };
@@ -227,16 +227,16 @@ export class ConfigManager {
     }
 
     /**
-     * 添加配置变更监听器
-     * @param listener 监听器函数
+     * Add configuration change listener
+     * @param listener Listener function
      */
     addListener(listener: ConfigChangeListener): void {
         this.listeners.push(listener);
     }
 
     /**
-     * 移除配置变更监听器
-     * @param listener 监听器函数
+     * Remove configuration change listener
+     * @param listener Listener function
      */
     removeListener(listener: ConfigChangeListener): void {
         const index = this.listeners.indexOf(listener);
@@ -246,8 +246,8 @@ export class ConfigManager {
     }
 
     /**
-     * 通知所有监听器
-     * @param oldConfig 旧配置
+     * Notify all listeners
+     * @param oldConfig Old configuration
      */
     private notifyListeners(oldConfig: Config): void {
         for (const listener of this.listeners) {
@@ -260,24 +260,24 @@ export class ConfigManager {
     }
 
     /**
-     * 启用自动保存
-     * @param enable 是否启用
+     * Enable auto save
+     * @param enable Whether enabled
      */
     setAutoSave(enable: boolean): void {
         this.autoSave = enable;
     }
 
     /**
-     * 获取配置文件路径
-     * @returns 配置文件路径
+     * Get configuration file path
+     * @returns Configuration file path
      */
     getConfigPath(): string | null {
         return this.configPath;
     }
 
     /**
-     * 验证配置是否有效
-     * @param config 要验证的配置
+     * Validate whether configuration is valid
+     * @param config Configuration to validate
      * @returns 是否有效
      */
     isValid(config: Partial<Config>): boolean {
@@ -285,9 +285,9 @@ export class ConfigManager {
     }
 
     /**
-     * 创建配置管理器实例并从文件加载
-     * @param configPath 配置文件路径
-     * @returns 配置管理器实例
+     * Create Configuration Manager instance并从文件加载
+     * @param configPath Configuration file path
+     * @returns Configuration Manager实例
      */
     static fromFile(configPath: string): ConfigManager {
         const manager = new ConfigManager();
@@ -296,5 +296,5 @@ export class ConfigManager {
     }
 }
 
-// 导出默认实例
+// Export default instance
 export const configManager = new ConfigManager();

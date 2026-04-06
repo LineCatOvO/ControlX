@@ -1,8 +1,8 @@
-// 终端状态面板模块
-// 使用ANSI转义序列实现动态终端监控
+// Terminal status panel module
+// Implement dynamic terminal monitoring using ANSI escape sequence
 
 /**
- * 终端状态面板类
+ * Terminal status panel class
  */
 export class TerminalMonitor {
     private state: any;
@@ -12,13 +12,13 @@ export class TerminalMonitor {
     private frameCount: number;
     private lastRenderTime: number;
     private clientConnected: boolean;
-    private panelLines: string[]; // 当前面板行内容
-    private panelHeight: number; // 面板高度（行数）
+    private panelLines: string[]; // Current panel line content
+    private panelHeight: number; // Panel height (number of lines)
 
     /**
-     * 构造函数
-     * @param state 要监控的状态对象
-     * @param fps 渲染频率，默认为20 FPS（优化后，减少闪烁）
+     * Constructor
+     * @param state State object to monitor
+     * @param fps Render frequency, default 20 FPS (optimized, reduce flicker)
      */
     constructor(state: any, fps: number = 20) {
         this.state = state;
@@ -27,28 +27,28 @@ export class TerminalMonitor {
         this.frameCount = 0;
         this.lastRenderTime = 0;
         this.clientConnected = false;
-        this.panelLines = []; // 初始化面板行内容
-        this.panelHeight = 12; // 固定面板高度
+        this.panelLines = []; // Initialize panel line content
+        this.panelHeight = 12; // Fixed panel height
     }
 
     /**
-     * 开始监控
+     * Start monitoring
      */
     start(): void {
-        // 隐藏光标
+        // Hide cursor
         process.stdout.write('\x1b[?25l');
 
-        // 设置渲染间隔
+        // Set render interval
         this.intervalId = setInterval(() => {
             this.render();
         }, 1000 / this.fps);
 
-        // 设置进程退出清理
+        // Set process exit cleanup
         process.on('exit', () => {
             this.stop();
         });
 
-        // 设置Ctrl+C退出清理
+        // Set Ctrl+C exit cleanup
         process.on('SIGINT', () => {
             this.stop();
             process.exit(0);
@@ -58,43 +58,43 @@ export class TerminalMonitor {
     }
 
     /**
-     * 停止监控
+     * Stop monitoring
      */
     stop(): void {
-        // 清除渲染间隔
+        // Clear render interval
         if (this.intervalId) {
             clearInterval(this.intervalId);
             this.intervalId = null;
         }
 
-        // 显示光标
+        // Show cursor
         process.stdout.write('\x1b[?25h');
 
-        // 清空面板内容
+        // Clear panel content
         this.clearPanel();
 
-        // 在面板底部生成新的prompt输入行
+        // Generate new prompt input line at bottom of panel
         process.stdout.write('\n');
 
         console.log('Terminal monitor stopped');
     }
 
     /**
-     * 设置客户端连接状态
-     * @param connected 连接状态
+     * Set client connection status
+     * @param connected Connection status
      */
     setClientConnected(connected: boolean): void {
         this.clientConnected = connected;
     }
 
     /**
-     * 渲染状态面板
+     * Render status panel
      */
     private render(): void {
         const currentTime = Date.now();
         this.frameCount++;
 
-        // 计算FPS
+        // Calculate FPS
         let displayFps = this.fps;
         if (currentTime - this.startTime >= 1000) {
             displayFps = Math.round((this.frameCount * 1000) / (currentTime - this.startTime));
@@ -102,14 +102,14 @@ export class TerminalMonitor {
             this.startTime = currentTime;
         }
 
-        // 计算渲染耗时
+        // Calculate render time
         const renderTime = currentTime - this.lastRenderTime;
         this.lastRenderTime = currentTime;
 
-        // 生成所有要显示的行
+        // Generate all lines to display
         const lines: string[] = [];
         
-        // 添加头部
+        // Add header
         lines.push('┌─────────────────────────────────────────────────┐');
         lines.push('│ ControlX Server Input Monitor           │');
         lines.push('├─────────────────────────────────────────────────┤');
@@ -117,16 +117,16 @@ export class TerminalMonitor {
         lines.push(`│ FPS:      ${displayFps.toString().padEnd(2)} (${renderTime}ms)                               │`);
         lines.push('└─────────────────────────────────────────────────┘');
         
-        // 提取状态信息
+        // Extract status information
         const { keyboard, gamepad, mouse, joystick } = this.state;
 
-        // 格式化状态信息
+        // Format status information
         const keyboardKeys = Array.from(keyboard || []).join(' ');
         const gamepadButtons = Array.from(gamepad || []).join(' ');
         const mouseInfo = `x=${mouse.x.toString().padStart(4)} y=${mouse.y.toString().padStart(4)} left=${mouse.left} right=${mouse.right}`;
         const joystickInfo = `x=${joystick.x.toFixed(2).padStart(5)} y=${joystick.y.toFixed(2).padStart(5)} deadzone=${joystick.deadzone}`;
 
-        // 添加输入状态
+        // Add input status
         lines.push('┌─────────────────────────────────────────────────┐');
         lines.push(`│ Keyboard: ${keyboardKeys.padEnd(43)} │`);
         lines.push(`│ Gamepad:  ${gamepadButtons.padEnd(43)} │`);
@@ -134,7 +134,7 @@ export class TerminalMonitor {
         lines.push(`│ Joystick: ${joystickInfo.padEnd(36)} │`);
         lines.push('└─────────────────────────────────────────────────┘');
 
-        // 只在面板内容变化时更新
+        // Update only when panel content changes
         if (!this.areLinesEqual(lines, this.panelLines)) {
             this.updatePanel(lines);
             this.panelLines = lines;
@@ -142,9 +142,9 @@ export class TerminalMonitor {
     }
 
     /**
-     * 检查两行数组是否相等
-     * @param lines1 第一行数组
-     * @param lines2 第二行数组
+     * Check if two line arrays are equal
+     * @param lines1 First line array
+     * @param lines2 Second line array
      * @returns 是否相等
      */
     private areLinesEqual(lines1: string[], lines2: string[]): boolean {
@@ -160,57 +160,57 @@ export class TerminalMonitor {
     }
 
     /**
-     * 更新面板内容
-     * @param lines 新的面板行内容
+     * Update panel content
+     * @param lines New panel line content
      */
     private updatePanel(lines: string[]): void {
-        // 保存当前光标位置
+        // Save current cursor position
         process.stdout.write('\x1b[s');
         
-        // 移动到终端底部
+        // Move to terminal bottom
         process.stdout.write('\x1b[9999;1H');
         
-        // 向上移动足够的行数，为面板腾出空间
+        // Move up enough lines to make space for panel
         process.stdout.write(`\x1b[${this.panelHeight}A`);
         
-        // 写入面板内容
+        // Write panel content
         for (let i = 0; i < this.panelHeight; i++) {
-            // 清除当前行
+            // Clear current line
             process.stdout.write('\x1b[2K');
-            // 写入行内容
+            // Write line content
             if (i < lines.length) {
                 process.stdout.write(lines[i]);
             }
-            // 移动到下一行
+            // Move to next line
             process.stdout.write('\n');
         }
         
-        // 恢复光标位置
+        // Restore cursor position
         process.stdout.write('\x1b[u');
     }
 
     /**
-     * 清空面板内容
+     * Clear panel content
      */
     private clearPanel(): void {
-        // 保存当前光标位置
+        // Save current cursor position
         process.stdout.write('\x1b[s');
         
-        // 移动到终端底部
+        // Move to terminal bottom
         process.stdout.write('\x1b[9999;1H');
         
-        // 向上移动足够的行数，覆盖面板区域
+        // Move up enough lines to cover panel area
         process.stdout.write(`\x1b[${this.panelHeight}A`);
         
-        // 清空面板内容
+        // Clear panel content
         for (let i = 0; i < this.panelHeight; i++) {
-            // 清除当前行
+            // Clear current line
             process.stdout.write('\x1b[2K');
-            // 移动到下一行
+            // Move to next line
             process.stdout.write('\n');
         }
         
-        // 恢复光标位置
+        // Restore cursor position
         process.stdout.write('\x1b[u');
     }
 }

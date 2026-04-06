@@ -1,23 +1,23 @@
 /**
  * ============================================================================
- * 系统资源监控模块 (Resource Monitor Module)
+ * System Resource Monitor Module (Resource Monitor Module)
  * ============================================================================
  *
  * 【模块职责】
- * 本模块提供系统资源监控功能，包括 CPU 使用率、内存使用量等。
+ * This module provides system resource monitoring functionality, including CPU usage, memory usage, etc.。
  *
  * 【核心功能】
- * 1. CPU 使用率监控：实时计算 CPU 使用百分比
- * 2. 内存使用量监控：监控堆内存、RSS 等
- * 3. 进程运行时间：记录服务运行时长
- * 4. 资源统计导出：提供 JSON 格式的资源统计
+ * 1. CPU usage monitoring: real-time CPU usage percentage calculation
+ * 2. Memory usage monitoring: monitor heap memory, RSS, etc.
+ * 3. Process running time: record service running duration
+ * 4. Resource statistics export: provide JSON format resource statistics
  *
  * 【使用示例】
  * ```typescript
  * const monitor = ResourceMonitor.getInstance();
  * monitor.start();
  * 
- * // 获取当前资源使用情况
+ * // Get current resource usage
  * const stats = monitor.getResourceStats();
  * console.log(`CPU: ${stats.cpuUsage}%`);
  * console.log(`Memory: ${stats.memoryUsage.heapUsed}MB`);
@@ -31,7 +31,7 @@
 import { getMetricsCollector, SystemResourceStats } from './metrics';
 
 /**
- * CPU 时间信息
+ * CPU time information
  */
 interface CpuTime {
     user: number;
@@ -41,8 +41,8 @@ interface CpuTime {
 }
 
 /**
- * 资源监控器类
- * 单例模式，提供全局资源监控
+ * Resource monitor class
+ * Singleton pattern, provide global resource monitoring
  */
 export class ResourceMonitor {
     private static instance: ResourceMonitor | null = null;
@@ -54,7 +54,7 @@ export class ResourceMonitor {
     private constructor() {}
 
     /**
-     * 获取单例实例
+     * Get singleton instance
      */
     public static getInstance(): ResourceMonitor {
         if (!ResourceMonitor.instance) {
@@ -64,7 +64,7 @@ export class ResourceMonitor {
     }
 
     /**
-     * 重置单例（仅用于测试）
+     * Reset singleton (only for testing)
      */
     public static resetInstance(): void {
         if (ResourceMonitor.instance?.monitoringInterval) {
@@ -74,8 +74,8 @@ export class ResourceMonitor {
     }
 
     /**
-     * 启动资源监控
-     * @param intervalMs 监控间隔（毫秒），默认 5000ms
+     * Start resource monitoring
+     * @param intervalMs Monitoring interval (ms), default 5000ms
      */
     public start(intervalMs: number = 5000): void {
         if (this.monitoringInterval) {
@@ -83,11 +83,11 @@ export class ResourceMonitor {
             return;
         }
 
-        // 初始化 CPU 时间
+        // Initialize CPU time
         this.lastCpuTime = this.getCpuTime();
         this.startTime = Date.now();
 
-        // 启动定时监控
+        // Start scheduled monitoring
         this.monitoringInterval = setInterval(() => {
             this.updateStats();
         }, intervalMs);
@@ -96,7 +96,7 @@ export class ResourceMonitor {
     }
 
     /**
-     * 停止资源监控
+     * Stop resource monitoring
      */
     public stop(): void {
         if (this.monitoringInterval) {
@@ -107,7 +107,7 @@ export class ResourceMonitor {
     }
 
     /**
-     * 获取当前 CPU 时间
+     * Get current CPU time
      */
     private getCpuTime(): CpuTime {
         const usage = process.cpuUsage();
@@ -121,7 +121,7 @@ export class ResourceMonitor {
     }
 
     /**
-     * 计算 CPU 使用率
+     * Calculate CPU usage
      */
     private calculateCpuUsage(): number {
         if (!this.lastCpuTime) {
@@ -129,31 +129,31 @@ export class ResourceMonitor {
         }
 
         const currentTime = this.getCpuTime();
-        const timeDiff = (currentTime.timestamp - this.lastCpuTime.timestamp) * 1000; // 转换为微秒
+        const timeDiff = (currentTime.timestamp - this.lastCpuTime.timestamp) * 1000; // Convert to microseconds
         const cpuDiff = currentTime.total - this.lastCpuTime.total;
 
-        // CPU 使用率 = CPU 时间差 / 实际时间差
+        // CPU usage = CPU time difference / actual time difference
         const cpuUsage = (cpuDiff / timeDiff) * 100;
 
-        // 更新上次 CPU 时间
+        // Update last CPU time
         this.lastCpuTime = currentTime;
 
-        // 限制在 0-100 范围内
+        // Limit to 0-100 range
         return Math.min(Math.max(cpuUsage, 0), 100);
     }
 
     /**
-     * 更新统计信息
+     * Update statistics
      */
     private updateStats(): void {
-        // 计算 CPU 使用率
+        // Calculate CPU usage
         this.currentCpuUsage = this.calculateCpuUsage();
 
-        // 更新指标收集器
+        // Update metric collector
         const metricsCollector = getMetricsCollector();
         metricsCollector.setGauge('cpu_usage_percent', this.currentCpuUsage);
 
-        // 更新内存指标
+        // Update memory metrics
         const memStats = this.getMemoryStats();
         metricsCollector.setGauge('memory_heap_used_bytes', memStats.heapUsed);
         metricsCollector.setGauge('memory_heap_total_bytes', memStats.heapTotal);
@@ -161,14 +161,14 @@ export class ResourceMonitor {
     }
 
     /**
-     * 获取内存统计
+     * Get memory statistics
      */
     private getMemoryStats(): NodeJS.MemoryUsage {
         return process.memoryUsage();
     }
 
     /**
-     * 获取当前资源统计
+     * Get current resource statistics
      */
     public getResourceStats(): SystemResourceStats {
         const memUsage = this.getMemoryStats();
@@ -187,7 +187,7 @@ export class ResourceMonitor {
     }
 
     /**
-     * 获取格式化的资源统计（人类可读）
+     * Get formatted resource statistics (human readable)
      */
     public getFormattedStats(): {
         cpuUsage: string;
@@ -214,7 +214,7 @@ export class ResourceMonitor {
     }
 
     /**
-     * 格式化字节数
+     * Format bytes
      */
     private formatBytes(bytes: number): string {
         const units = ['B', 'KB', 'MB', 'GB'];
@@ -230,7 +230,7 @@ export class ResourceMonitor {
     }
 
     /**
-     * 格式化运行时间
+     * Format running time
      */
     private formatUptime(ms: number): string {
         const seconds = Math.floor(ms / 1000);
@@ -250,7 +250,7 @@ export class ResourceMonitor {
     }
 
     /**
-     * 导出为 JSON 格式
+     * Export as JSON format
      */
     public toJSON(): Record<string, any> {
         return {
@@ -260,7 +260,7 @@ export class ResourceMonitor {
     }
 
     /**
-     * 重置统计
+     * Reset statistics
      */
     public reset(): void {
         this.lastCpuTime = this.getCpuTime();
@@ -269,7 +269,7 @@ export class ResourceMonitor {
     }
 }
 
-// 导出单例获取函数
+// Export singleton get function
 export function getResourceMonitor(): ResourceMonitor {
     return ResourceMonitor.getInstance();
 }

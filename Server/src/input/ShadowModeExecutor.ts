@@ -1,13 +1,13 @@
 /**
- * 影子模式输入执行器管理器
+ * Shadow Mode Input Executor Manager
  *
- * 包装现有的 DefaultInputExecutorManager，添加影子模式支持
- * 实现双写机制，同时调用旧 Executor 和新 Router
+ * Wraps existing DefaultInputExecutorManager，Add shadow mode support
+ * Implement dual-write mechanism，Call both old Executor and new Router
  *
- * 设计模式：装饰器模式
- * - 包装现有 InputExecutorManager
- * - 透明添加影子模式功能
- * - 保持向后兼容
+ * Design pattern: Decorator pattern
+ * - Wraps existing InputExecutorManager
+ * - Transparently add shadow mode functionality
+ * - Maintain backward compatibility
  */
 
 import { InputExecutorManager } from './interfaces';
@@ -16,12 +16,12 @@ import { ShadowModeManager } from './shadow/ShadowModeManager';
 import { InputState, InputDelta, InputEvent } from '../types/ws';
 
 /**
- * 影子模式配置选项
+ * Shadow mode config options
  */
 interface ShadowModeExecutorConfig {
-    /** 是否启用影子模式 */
+    /** Whether shadow mode is enabled */
     shadowMode: boolean;
-    /** 影子模式详细配置 */
+    /** Shadow mode detailed config */
     shadowConfig?: {
         verbose?: boolean;
         consistencyCheck?: boolean;
@@ -32,26 +32,26 @@ interface ShadowModeExecutorConfig {
 }
 
 /**
- * 影子模式输入执行器管理器
+ * Shadow Mode Input Executor Manager
  */
 export class ShadowModeInputExecutorManager implements InputExecutorManager {
-    /** 被装饰的执行器管理器 */
+    /** Decorated executor manager */
     private readonly executorManager: InputExecutorManager;
 
-    /** 输入路由器 */
+    /** Input router */
     private readonly router: InputRouter;
 
-    /** 影子模式管理器 */
+    /** Shadow mode manager */
     private readonly shadowManager: ShadowModeManager;
 
-    /** 是否启用影子模式 */
+    /** Whether shadow mode is enabled */
     private readonly shadowModeEnabled: boolean;
 
     /**
-     * 构造函数
-     * @param executorManager 执行器管理器
-     * @param router 输入路由器
-     * @param config 配置
+     * Constructor
+     * @param executorManager Executor manager
+     * @param router Input router
+     * @param config Config
      */
     constructor(
         executorManager: InputExecutorManager,
@@ -62,7 +62,7 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
         this.router = router;
         this.shadowModeEnabled = config?.shadowMode ?? false;
 
-        // 创建影子模式管理器
+        // 创建Shadow mode manager
         this.shadowManager = new ShadowModeManager(
             executorManager,
             router,
@@ -82,43 +82,43 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 添加输入执行器
-     * @param executor 输入执行器
+     * Add input executor
+     * @param executor Input executor
      */
     addExecutor(executor: InputExecutorManager): void {
         this.executorManager.addExecutor(executor);
     }
 
     /**
-     * 移除输入执行器
-     * @param executor 输入执行器
+     * 移除Input executor
+     * @param executor Input executor
      */
     removeExecutor(executor: InputExecutorManager): void {
         this.executorManager.removeExecutor(executor);
     }
 
     /**
-     * 应用完整输入状态
-     * 影子模式下双写到 Executor 和 Router
-     * @param state 输入状态
+     * Apply complete input state
+     * Dual write to Executor and Router in shadow mode
+     * @param state Input state
      */
     applyState(state: InputState): void {
         if (this.shadowModeEnabled) {
-            // 影子模式：双写
+            // Shadow mode: dual write
             this.shadowManager.applyState(state);
         } else {
-            // 非影子模式：只写 Executor
+            // Non-shadow mode: only write Executor
             this.executorManager.applyState(state);
         }
     }
 
     /**
-     * 应用输入增量
-     * @param delta 输入增量
+     * Apply input delta
+     * @param delta Input delta
      */
     applyDelta(delta: InputDelta): void {
-        // 增量执行暂时只走 Executor
-        // 未来可以扩展 Router 支持增量
+        // Delta execution temporarily only goes through Executor
+        // Future can extend Router to support delta
         this.executorManager.applyDelta(delta);
 
         if (this.shadowModeEnabled) {
@@ -127,12 +127,12 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 应用输入事件
-     * @param event 输入事件
+     * Apply input event
+     * @param event Input event
      */
     applyEvent(event: InputEvent): void {
-        // 事件执行暂时只走 Executor
-        // 未来可以扩展 Router 支持事件
+        // Event execution temporarily only goes through Executor
+        // Future can extend Router to support event
         this.executorManager.applyEvent(event);
 
         if (this.shadowModeEnabled) {
@@ -156,24 +156,24 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 获取影子模式管理器
-     * @returns 影子模式管理器
+     * 获取Shadow mode manager
+     * @returns Shadow mode manager
      */
     getShadowManager(): ShadowModeManager | null {
         return this.shadowModeEnabled ? this.shadowManager : null;
     }
 
     /**
-     * 获取输入路由器
-     * @returns 输入路由器
+     * 获取Input router
+     * @returns Input router
      */
     getRouter(): InputRouter {
         return this.router;
     }
 
     /**
-     * 获取底层执行器管理器
-     * @returns 执行器管理器
+     * 获取底层Executor manager
+     * @returns Executor manager
      */
     getExecutorManager(): InputExecutorManager {
         return this.executorManager;
@@ -221,12 +221,12 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
 }
 
 /**
- * 创建影子模式执行器管理器工厂函数
+ * 创建影子模式Executor manager工厂函数
  *
- * @param executorManager 执行器管理器
- * @param router 输入路由器
- * @param shadowModeEnabled 是否启用影子模式
- * @returns 影子模式执行器管理器
+ * @param executorManager Executor manager
+ * @param router Input router
+ * @param shadowModeEnabled Whether shadow mode is enabled
+ * @returns 影子模式Executor manager
  */
 export function createShadowModeExecutorManager(
     executorManager: InputExecutorManager,

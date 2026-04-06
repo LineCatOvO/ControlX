@@ -1,14 +1,14 @@
 import { config } from '../config/config';
 
 /**
- * 心跳管理器
- * @param ws WebSocket连接
+ * Heartbeat manager
+ * @param ws WebSocket connection
  */
 export function setupHeartbeat(ws: any) {
-  // 标记连接为活跃状态
+  // Mark connection as active
   ws.isAlive = true;
   
-  // 心跳定时器
+  // Heartbeat timer
   const heartbeatTimer = setInterval(() => {
     if (ws.readyState !== 1) { // WebSocket.OPEN = 1
       clearInterval(heartbeatTimer);
@@ -16,29 +16,29 @@ export function setupHeartbeat(ws: any) {
     }
     
     if (!ws.isAlive) {
-      // 连接已超时，关闭连接
+      // Connection timed out, close connection
       console.log('Client heartbeat timeout, closing connection');
       clearInterval(heartbeatTimer);
       ws.terminate();
       return;
     }
     
-    // 发送ping
+    // Send ping
     ws.isAlive = false;
     ws.ping();
   }, config.pingInterval);
   
-  // 处理pong响应
+  // Handle pong response
   ws.on('pong', () => {
     ws.isAlive = true;
   });
   
-  // 连接关闭时清理定时器
+  // Cleanup timer when connection closes
   ws.on('close', () => {
     clearInterval(heartbeatTimer);
   });
   
-  // 连接错误时清理定时器
+  // Cleanup timer when connection errors
   ws.on('error', () => {
     clearInterval(heartbeatTimer);
   });

@@ -1,25 +1,25 @@
 import { InputState, GamepadAxesState, GamepadTriggersState } from "../types/ws";
 
-// 游戏手柄摇杆轴默认状态
+// Gamepad joystick axes default state
 const defaultGamepadAxes: GamepadAxesState = {
-    LX: 0, // 左摇杆 X 轴
-    LY: 0, // 左摇杆 Y 轴
-    RX: 0, // 右摇杆 X 轴
-    RY: 0, // 右摇杆 Y 轴
+    LX: 0, // Left joystick X axis
+    LY: 0, // Left joystick Y axis
+    RX: 0, // Right joystick X axis
+    RY: 0, // Right joystick Y axis
 };
 
-// 游戏手柄扳机默认状态
+// Gamepad triggers default state
 const defaultGamepadTriggers: GamepadTriggersState = {
-    LT: 0, // 左扳机
-    RT: 0, // 右扳机
+    LT: 0, // Left trigger
+    RT: 0, // Right trigger
 };
 
-// 输入状态管理
+// Input state management
 export const inputState: InputState = {
-    keyboard: new Set<string>(), // 存储当前按下的键
-    gamepad: new Set<string>(), // 存储当前按下的游戏手柄按钮
-    gamepadAxes: defaultGamepadAxes, // 游戏手柄摇杆轴状态
-    gamepadTriggers: defaultGamepadTriggers, // 游戏手柄扳机状态
+    keyboard: new Set<string>(), // Store currently pressed keys
+    gamepad: new Set<string>(), // Store currently pressed gamepad buttons
+    gamepadAxes: defaultGamepadAxes, // Gamepad joystick axes state
+    gamepadTriggers: defaultGamepadTriggers, // Gamepad triggers state
     mouse: {
         x: 0,
         y: 0,
@@ -28,7 +28,7 @@ export const inputState: InputState = {
         middle: false,
     },
     joystick: {
-        x: 0, // 独立摇杆设备（与游戏手柄摇杆分离）
+        x: 0, // Independent joystick device（separate from gamepad joystick）
         y: 0,
         deadzone: 0.1,
         smoothing: 0.5,

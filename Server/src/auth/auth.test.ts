@@ -1,7 +1,7 @@
 /**
- * 认证模块单元测试
+ * Authentication module unit test
  *
- * 测试 AuthManager 类的核心功能
+ * Test AuthManager class core functionality
  */
 
 import { AuthManager, AuthConfig, AuthResult, TokenInfo } from './auth';

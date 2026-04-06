@@ -3,7 +3,7 @@
  * 
  * 职责：屏蔽底层驱动差异，提供统一的 lifecycle 和 execution 接口
  * 
- * 设计模式：策略模式 (Strategy Pattern)
+ * Design pattern：策略模式 (Strategy Pattern)
  * - 定义一族算法（不同平台的输入实现）
  * - 封装每个算法（每个具体 Host 类）
  * - 使它们可以互换（通过统一接口）
@@ -15,7 +15,7 @@ import { InputDeviceType, HostStatus, PlatformType, detectPlatform } from './typ
  * 输入宿主抽象基类
  */
 export abstract class InputHost {
-    /** 设备类型 */
+    /** Device type */
     protected readonly deviceType: InputDeviceType;
     
     /** 运行平台 */
@@ -28,8 +28,8 @@ export abstract class InputHost {
     protected lastError?: string;
 
     /**
-     * 构造函数
-     * @param deviceType 设备类型
+     * Constructor
+     * @param deviceType Device type
      */
     constructor(deviceType: InputDeviceType) {
         this.deviceType = deviceType;
@@ -37,15 +37,15 @@ export abstract class InputHost {
     }
 
     /**
-     * 初始化：加载驱动/库
+     * Initialize：加载驱动/库
      * 异步执行，避免阻塞启动流程
-     * @returns 是否初始化成功
+     * @returns 是否Initialize成功
      */
     abstract initialize(): Promise<boolean>;
 
     /**
-     * 应用状态：核心执行逻辑
-     * @param state 输入状态
+     * Apply state：核心执行逻辑
+     * @param state Input state
      */
     abstract applyState(state: any): void;
 
@@ -55,7 +55,7 @@ export abstract class InputHost {
     abstract reset(): void;
 
     /**
-     * 销毁：清理资源
+     * Destroy：清理资源
      */
     abstract destroy(): void;
 
@@ -73,8 +73,8 @@ export abstract class InputHost {
     }
 
     /**
-     * 获取设备类型
-     * @returns 设备类型
+     * 获取Device type
+     * @returns Device type
      */
     getDeviceType(): InputDeviceType {
         return this.deviceType;

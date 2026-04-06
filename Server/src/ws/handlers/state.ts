@@ -1,12 +1,12 @@
-// 状态消息处理器
+// State message handler
 
 import { StateMessage, StateAckMessage } from '../../types/ws';
 import { InputValidator, ValidationError } from '../../input/validator';
 
-// 创建验证器实例
+// Create validator instance
 const validator = new InputValidator();
 
-// 错误码定义
+// Error code definition
 const ERROR_CODES = {
     VALIDATION_FAILED: 'VALIDATION_FAILED',
     SEQUENCE_ERROR: 'SEQUENCE_ERROR',
@@ -15,7 +15,7 @@ const ERROR_CODES = {
     WEBSOCKET_ERROR: 'WEBSOCKET_ERROR',
 } as const;
 
-// ACK 统计
+// ACK statistics
 const ackStats = {
   total: 0,
   success: 0,
@@ -24,20 +24,20 @@ const ackStats = {
   timestamps: [] as number[],
 };
 
-// 验证统计
+// Validation statistics
 const validationStats = {
   total: 0,
   passed: 0,
   failed: 0,
-  sequenceErrors: 0,  // 序列号错误计数
+  sequenceErrors: 0,  // Sequence number error count
   errorsByField: {} as Record<string, number>,
   timestamps: [] as number[],
 };
 
 /**
- * 更新 ACK 统计
- * @param status ACK 状态
- * @param serverApplyTs 服务端应用时间
+ * Update ACK statistics
+ * @param status ACK status
+ * @param serverApplyTs Server application time
  */
 function updateAckStats(status: 'success' | 'rejected' | 'error', serverApplyTs: number) {
   ackStats.total++;
@@ -52,12 +52,12 @@ function updateAckStats(status: 'success' | 'rejected' | 'error', serverApplyTs:
 
   ackStats.timestamps.push(serverApplyTs);
 
-  // 只保留最近 1000 个时间戳
+  // Only keep recent 1000 timestamps
   if (ackStats.timestamps.length > 1000) {
     ackStats.timestamps.shift();
   }
 
-  // 每 100 个 ACK 输出一次统计
+  // Every 100 ACKs output statistics once
   if (ackStats.total % 100 === 0) {
     console.log('ACK Stats:', {
       total: ackStats.total,
@@ -70,15 +70,15 @@ function updateAckStats(status: 'success' | 'rejected' | 'error', serverApplyTs:
 }
 
 /**
- * 更新验证统计
- * @param valid 验证是否通过
- * @param errors 验证错误列表
+ * Update validation statistics
+ * @param valid Whether validation passed
+ * @param errors Validation error list
  */
 function updateValidationStats(valid: boolean, errors: ValidationError[]) {
   validationStats.total++;
   validationStats.timestamps.push(Date.now());
 
-  // 只保留最近 1000 个时间戳
+  // Only keep recent 1000 timestamps
   if (validationStats.timestamps.length > 1000) {
     validationStats.timestamps.shift();
   }
@@ -88,21 +88,21 @@ function updateValidationStats(valid: boolean, errors: ValidationError[]) {
   } else {
     validationStats.failed++;
 
-    // 统计各字段的错误数量
+    // Count errors by field
     errors.forEach(error => {
       if (error.field) {
         validationStats.errorsByField[error.field] =
           (validationStats.errorsByField[error.field] || 0) + 1;
       }
 
-      // 检测序列号错误
+      // Detect sequence number error
       if (error.message.includes('sequence') || error.message.includes('序列号')) {
         validationStats.sequenceErrors++;
       }
     });
   }
 
-  // 每 100 次验证输出一次统计
+  // Output statistics every 100 validations
   if (validationStats.total % 100 === 0) {
     console.log('Validation Stats:', {
       total: validationStats.total,
@@ -116,32 +116,32 @@ function updateValidationStats(valid: boolean, errors: ValidationError[]) {
 }
 
 /**
- * 获取 ACK 统计
+ * Get ACK statistics
  */
 function getAckStats() {
   return { ...ackStats };
 }
 
 /**
- * 获取验证统计
+ * Get validation statistics
  */
 function getValidationStats() {
   return { ...validationStats };
 }
 
 /**
- * 处理状态通道消息
- * @param ws WebSocket 连接
- * @param message 状态消息
+ * Handle state channel message
+ * @param ws WebSocket connection
+ * @param message State message
  */
 export function handleState(ws: any, message: StateMessage) {
     const recvTime = Date.now();
     const stateId = message.stateId;
 
-    // 获取全局状态存储实例
+    // Get global state store instance
     const stateStore = (global as any).stateStore;
 
-    // 检查状态存储是否可用
+    // Check if state store is available
     if (!stateStore) {
         console.error(`[StateHandler] ❌ StateStore not available for state ${stateId}`);
         sendErrorAck(ws, stateId, recvTime, ERROR_CODES.STATE_STORE_ERROR, 'StateStore not available');
@@ -149,8 +149,8 @@ export function handleState(ws: any, message: StateMessage) {
     }
 
     try {
-        // 将 StateMessage 转换为 InputState 格式
-        // 注意：joystick 属性用于独立摇杆设备，游戏手柄摇杆使用 gamepadAxes
+        // Convert StateMessage to InputState format
+        // Note: joystick property is for independent joystick device, gamepad joysticks use gamepadAxes
         const inputState = {
             frameId: message.stateId,
             keyboard: new Set(message.keyboardState
@@ -161,42 +161,42 @@ export function handleState(ws: any, message: StateMessage) {
                 .filter(btnEvent => btnEvent.eventType === 'pressed' || btnEvent.eventType === 'held')
                 .map(btnEvent => btnEvent.buttonId)
             ),
-            // 游戏手柄摇杆轴映射（完整提取左右摇杆）
+            // Gamepad joystick axis mapping (extract left and right joysticks completely)
             gamepadAxes: {
                 LX: message.gamepadState.joysticks.left.x,
                 LY: message.gamepadState.joysticks.left.y,
                 RX: message.gamepadState.joysticks.right.x,
                 RY: message.gamepadState.joysticks.right.y
             },
-            // 游戏手柄扳机映射
+            // Gamepad trigger mapping
             gamepadTriggers: {
                 LT: message.gamepadState.triggers.left,
                 RT: message.gamepadState.triggers.right
             },
             mouse: {
-                x: 0, // 暂时使用默认值，后续可扩展
+                x: 0, // Temporarily use default value, can be extended later
                 y: 0,
                 left: false,
                 right: false,
                 middle: false
             },
-            // joystick 属性保留用于独立摇杆设备（与游戏手柄摇杆分离）
+            // joystick property is reserved for independent joystick device (separate from gamepad joysticks)
             joystick: {
-                x: 0, // 独立摇杆设备默认值
+                x: 0, // Independent joystick device default value
                 y: 0,
                 deadzone: 0.1,
                 smoothing: 0.5
             }
         };
 
-        // 验证输入状态（包括序列号单调性验证）
+        // Validate input state (including sequence number monotonicity validation)
         const validationResult = validator.validate(inputState);
 
-        // 更新验证统计
+        // Update validation statistics
         updateValidationStats(validationResult.valid, validationResult.errors);
 
         if (!validationResult.valid) {
-            // 验证失败，记录详细错误
+            // Validation failed, log detailed error
             validationResult.errors.forEach(error => {
                 console.error(`[StateHandler] ❌ Validation error: ${error.message}`);
                 if (error.field) {
@@ -210,18 +210,18 @@ export function handleState(ws: any, message: StateMessage) {
                 }
             });
 
-            // 检查是否是序列号错误
+            // Check if it is a sequence number error
             const isSequenceError = validationResult.errors.some(
                 err => err.message.includes('sequence') || err.message.includes('序列号')
             );
 
             if (isSequenceError) {
                 console.warn(`[StateHandler] ⚠️ Sequence number error for state ${stateId}, resetting validator`);
-                // 序列号错误时，重置验证器状态（处理重传场景）
+                // Reset validator state on sequence number error (handle retransmission scenario)
                 validator.reset();
             }
 
-            // 触发安全清零（在发送 ACK 之前）
+            // Trigger safety clear (before sending ACK)
             const safetyController = (global as any).safetyController;
             if (safetyController && typeof safetyController.triggerExceptionClear === "function") {
                 safetyController.triggerExceptionClear(
@@ -229,7 +229,7 @@ export function handleState(ws: any, message: StateMessage) {
                 );
             }
 
-            // 发送错误 ACK 消息
+            // Send error ACK message
             sendErrorAck(
                 ws,
                 stateId,
@@ -240,32 +240,32 @@ export function handleState(ws: any, message: StateMessage) {
             return;
         }
 
-        // 验证通过，存储状态
+        // Validation passed, store state
         const stored = stateStore.storeState(inputState);
 
         if (!stored) {
             console.warn(`[StateHandler] ⚠️ StateStore rejected state ${stateId}`);
         }
 
-        // 发送成功 ACK 消息
+        // Send success ACK message
         sendAck(ws, stateId, recvTime, stored ? 'success' : 'rejected', stored ? undefined : 'StateStore rejected');
 
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         console.error(`[StateHandler] ❌ Error handling state message ${stateId}:`, errorMsg);
 
-        // 发送错误 ACK 消息
+        // Send error ACK message
         sendErrorAck(ws, stateId, recvTime, ERROR_CODES.INTERNAL_ERROR, `Internal error: ${errorMsg}`);
     }
 }
 
 /**
- * 发送成功 ACK 消息
- * @param ws WebSocket 连接
- * @param stateId 状态 ID
- * @param recvTime 接收时间
- * @param status ACK 状态
- * @param reason 原因（可选）
+ * Send success ACK message
+ * @param ws WebSocket connection
+ * @param stateId State ID
+ * @param recvTime Receive time
+ * @param status ACK status
+ * @param reason Reason (optional)
  */
 function sendAck(ws: any, stateId: number, recvTime: number, status: 'success' | 'rejected', reason?: string) {
     const ackMessage: StateAckMessage = {
@@ -287,12 +287,12 @@ function sendAck(ws: any, stateId: number, recvTime: number, status: 'success' |
 }
 
 /**
- * 发送错误 ACK 消息
- * @param ws WebSocket 连接
- * @param stateId 状态 ID
- * @param recvTime 接收时间
- * @param errorCode 错误码
- * @param reason 错误原因
+ * Send error ACK message
+ * @param ws WebSocket connection
+ * @param stateId State ID
+ * @param recvTime Receive time
+ * @param errorCode Error code
+ * @param reason Error reason
  */
 function sendErrorAck(ws: any, stateId: number, recvTime: number, errorCode: string, reason: string) {
     const ackMessage: StateAckMessage = {
@@ -313,5 +313,5 @@ function sendErrorAck(ws: any, stateId: number, recvTime: number, errorCode: str
     }
 }
 
-// 导出统计函数供外部使用
+// Export statistics function for external use
 export { getAckStats, getValidationStats };

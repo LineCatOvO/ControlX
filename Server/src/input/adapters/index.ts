@@ -1,12 +1,12 @@
 /**
- * 输入适配器导出
- * 统一导出所有输入适配器
+ * Input adapter exports
+ * Unified export of all input adapters
  */
 
-// 基类接口
+// Base class interface
 export type { InputAdapter, KeyboardAdapter as IKeyboardAdapter, GamepadAdapter as IGamepadAdapter, MouseAdapter as IMouseAdapter, JoystickAdapter as IJoystickAdapter } from './InputAdapter';
 
-// 适配器实现
+// Adapter implementations
 export { KeyboardAdapter } from './KeyboardAdapter';
 export { GamepadAdapter } from './GamepadAdapter';
 export { GamepadXInputAdapter } from './GamepadXInputAdapter';

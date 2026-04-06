@@ -4,36 +4,36 @@
  * ViGEmBus 驱动检测结果
  */
 export interface ViGEmDetectionResult {
-    /** 是否可用 */
+    /** Whether available */
     available: boolean;
-    /** 错误消息（如果不可用） */
+    /** Error message if unavailable */
     error?: string;
-    /** 是否已连接虚拟控制器 */
+    /** Whether virtual controller is connected */
     connected?: boolean;
 }
 
 /**
- * XInput 控制器状态
+ * XInput controller state
  */
 export interface XInputState {
-    /** 左摇杆 X 轴 [-1.0, 1.0] */
+    /** Left joystick X axis [-1.0, 1.0] */
     lx: number;
-    /** 左摇杆 Y 轴 [-1.0, 1.0] */
+    /** Left joystick Y axis [-1.0, 1.0] */
     ly: number;
-    /** 右摇杆 X 轴 [-1.0, 1.0] */
+    /** Right joystick X axis [-1.0, 1.0] */
     rx: number;
-    /** 右摇杆 Y 轴 [-1.0, 1.0] */
+    /** Right joystick Y axis [-1.0, 1.0] */
     ry: number;
-    /** 左扳机 [0.0, 1.0] */
+    /** Left trigger [0.0, 1.0] */
     lt: number;
-    /** 右扳机 [0.0, 1.0] */
+    /** Right trigger [0.0, 1.0] */
     rt: number;
-    /** 按钮状态集合 */
+    /** Button state set */
     buttons: Set<string>;
 }
 
 /**
- * 按钮映射类型
+ * Button mapping type
  */
 export type XInputButton = 
     | 'A' | 'B' | 'X' | 'Y'
@@ -43,17 +43,17 @@ export type XInputButton =
     | 'DPadUp' | 'DPadDown' | 'DPadLeft' | 'DPadRight';
 
 /**
- * GamepadXInputAdapter 类
- * 负责通过 ViGEmBus 创建虚拟 Xbox 360 控制器
+ * GamepadXInputAdapter class
+ * Responsible for creating virtual Xbox 360 controller via ViGEmBus
  */
 export class GamepadXInputAdapter {
-    /** ViGEmClient 库引用（可选） */
+    /** ViGEmClient library reference (optional) */
     private vigemClient: any = null;
-    /** 虚拟控制器引用 */
+    /** Virtual controller reference */
     private controller: any = null;
-    /** 是否已连接 */
+    /** Whether connected */
     private isConnected: boolean = false;
-    /** 当前控制器状态 */
+    /** Current controller state */
     private currentState: XInputState = this.getDefaultState();
 
     constructor() {
@@ -61,7 +61,7 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 初始化适配器（尝试加载 ViGEmClient）
+     * Initialize adapter (attempt to load ViGEmClient)
      */
     private initialize(): void {
         try {
@@ -78,7 +78,7 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 检测 ViGEmBus 是否可用
+     * 检测 ViGEmBus Whether available
      * @returns 检测结果
      */
     public detect(): ViGEmDetectionResult {
@@ -90,7 +90,7 @@ export class GamepadXInputAdapter {
         }
 
         try {
-            // 尝试创建虚拟控制器来验证驱动是否可用
+            // 尝试创建虚拟控制器来验证驱动Whether available
             const testController = this.vigemClient.createX360Controller();
             if (!testController) {
                 return {
@@ -111,7 +111,7 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 连接虚拟控制器
+     * Connect virtual controller
      * @returns 是否连接成功
      */
     public connect(): boolean {
@@ -141,7 +141,7 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 断开虚拟控制器连接
+     * Disconnect virtual controller
      */
     public disconnect(): void {
         if (this.controller && this.isConnected) {
@@ -157,10 +157,10 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 应用游戏手柄状态
-     * @param buttons 按钮状态集合
-     * @param axes 摇杆轴值
-     * @param triggers 扳机值
+     * Apply gamepad state
+     * @param buttons Button state set
+     * @param axes Joystick axis values
+     * @param triggers Trigger values
      */
     public applyState(
         buttons: Set<string> | string[],
@@ -172,7 +172,7 @@ export class GamepadXInputAdapter {
         }
 
         try {
-            // 更新当前状态
+            // 更新Current state
             this.currentState.buttons = new Set(Array.from(buttons));
             this.currentState.lx = this.clampAxis(axes.LX || 0);
             this.currentState.ly = this.clampAxis(axes.LY || 0);
@@ -181,7 +181,7 @@ export class GamepadXInputAdapter {
             this.currentState.lt = this.clampTrigger(triggers.LT || 0);
             this.currentState.rt = this.clampTrigger(triggers.RT || 0);
 
-            // 提交状态到虚拟控制器
+            // Submit state to virtual controller
             this.submitState();
         } catch (error: any) {
             console.error('❌ GamepadXInputAdapter: Error applying state:', error.message);
@@ -189,7 +189,7 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 重置控制器状态
+     * Reset controller state
      */
     public reset(): void {
         if (!this.isConnected) {
@@ -206,21 +206,21 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 获取连接状态
+     * Get connection status
      */
     public getConnected(): boolean {
         return this.isConnected;
     }
 
     /**
-     * 获取当前状态
+     * Get current state
      */
     public getCurrentState(): XInputState {
         return { ...this.currentState };
     }
 
     /**
-     * 获取默认状态（零状态）
+     * Get default state (zero state)
      */
     private getDefaultState(): XInputState {
         return {
@@ -235,21 +235,21 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 限制摇杆轴值范围 [-1.0, 1.0]
+     * 限制Joystick axis values范围 [-1.0, 1.0]
      */
     private clampAxis(value: number): number {
         return Math.max(-1.0, Math.min(1.0, value));
     }
 
     /**
-     * 限制扳机值范围 [0.0, 1.0]
+     * 限制Trigger values范围 [0.0, 1.0]
      */
     private clampTrigger(value: number): number {
         return Math.max(0.0, Math.min(1.0, value));
     }
 
     /**
-     * 提交状态到虚拟控制器
+     * Submit state to virtual controller
      */
     private submitState(): void {
         if (!this.controller) {
@@ -272,7 +272,7 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 将按钮集合转换为 XInput 按钮掩码
+     * Convert button set to XInput button mask
      */
     private getButtonMask(): number {
         const buttons = this.currentState.buttons;
@@ -317,14 +317,14 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 将浮点轴值转换为 short [-32768, 32767]
+     * Convert float axis value to short [-32768, 32767]
      */
     private axisToShort(value: number): number {
         return Math.floor(value * 32767);
     }
 
     /**
-     * 将浮点扳机值转换为 byte [0, 255]
+     * 将浮点Trigger values转换为 byte [0, 255]
      */
     private floatToByte(value: number): number {
         return Math.floor(value * 255);

@@ -1,24 +1,24 @@
 /**
- * 认证模块
+ * Auth module
  *
- * 负责 WebSocket 连接的认证和授权管理
- * 支持 Token 验证机制，兼容 Express 5.x 和 WebSocket (ws 8.x)
+ * Responsible for WebSocket connection authentication and authorization management
+ * Support Token validation mechanism, compatible with Express 5.x and WebSocket (ws 8.x)
  */
 
 /**
- * 认证配置接口
+ * Auth config interface
  */
 export interface AuthConfig {
-    enabled: boolean;               // 是否启用认证
-    tokenSecret: string;            // Token 密钥
-    tokenExpiry: number;            // Token 过期时间（毫秒）
-    maxConnectionsPerToken: number; // 每个 Token 最大连接数
-    whitelist: string[];            // IP 白名单
-    blacklist: string[];            // IP 黑名单
+    enabled: boolean;               // Whether authentication is enabled
+    tokenSecret: string;            // Token secret
+    tokenExpiry: number;            // Token expiry time (ms)
+    maxConnectionsPerToken: number; // Each token Maximum connections
+    whitelist: string[];            // IP whitelist
+    blacklist: string[];            // IP blacklist
 }
 
 /**
- * 认证结果接口
+ * Auth result interface
  */
 export interface AuthResult {
     success: boolean;
@@ -28,7 +28,7 @@ export interface AuthResult {
 }
 
 /**
- * Token 信息接口
+ * Token info interface
  */
 export interface TokenInfo {
     token: string;
@@ -39,26 +39,26 @@ export interface TokenInfo {
 }
 
 /**
- * 默认认证配置
- * 可从环境变量或配置文件读取
+ * Default auth config
+ * Can be loaded from environment variablesor config file
  */
 const DEFAULT_CONFIG: AuthConfig = {
-    enabled: process.env.AUTH_ENABLED !== 'false', // 默认启用
+    enabled: process.env.AUTH_ENABLED !== 'false', // Default enabled
     tokenSecret: process.env.AUTH_TOKEN_SECRET || 'controlx-secret-key-change-in-production',
-    tokenExpiry: parseInt(process.env.AUTH_TOKEN_EXPIRY || '3600000', 10), // 默认 1 小时
+    tokenExpiry: parseInt(process.env.AUTH_TOKEN_EXPIRY || '3600000', 10), // Default 1 hour
     maxConnectionsPerToken: parseInt(process.env.AUTH_MAX_CONNECTIONS || '5', 10),
     whitelist: process.env.AUTH_WHITELIST?.split(',').filter(Boolean) || [],
     blacklist: process.env.AUTH_BLACKLIST?.split(',').filter(Boolean) || []
 };
 
 /**
- * 认证管理器类
+ * Auth Manager class
  *
- * 提供 WebSocket 连接的认证和授权功能：
- * - Token 验证
- * - IP 白名单/黑名单检查
- * - 连接数限制
- * - 权限管理
+ * Provide WebSocket connectionauth and authorization features：
+ * - Token validation
+ * - IP whitelist/blacklist check
+ * - Connection limit
+ * - Permission management
  */
 export class AuthManager {
     private config: AuthConfig;
@@ -66,30 +66,30 @@ export class AuthManager {
     private connectionCounts: Map<string, number> = new Map();
 
     /**
-     * 构造函数
-     * @param config 认证配置（可选，默认从环境变量读取）
+     * Constructor
+     * @param config Auth config（Optional, default read from environment variables）
      */
     constructor(config: Partial<AuthConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
     }
 
     /**
-     * 验证连接请求
+     * Validate connection request
      *
-     * 验证流程：
-     * 1. 检查认证是否启用
-     * 2. 检查 IP 黑名单
-     * 3. 检查 IP 白名单
-     * 4. 验证 Token
-     * 5. 检查 Token 过期
-     * 6. 检查连接数限制
+     * Validation flow：
+     * 1. Check if authentication is enabled
+     * 2. Check IP blacklist
+     * 3. Check IP whitelist
+     * 4. Validate token
+     * 5. Check Token expiry
+     * 6. Check connection limit
      *
-     * @param token 认证 Token
-     * @param clientIp 客户端 IP 地址
-     * @returns 认证结果
+     * @param token Authentication Token
+     * @param clientIp Client IP address
+     * @returns Authentication result
      */
     authenticate(token: string, clientIp: string): AuthResult {
-        // 检查认证是否启用
+        // Check if authentication is enabled
         if (!this.config.enabled) {
             return {
                 success: true,
@@ -97,7 +97,7 @@ export class AuthManager {
             };
         }
 
-        // 检查 IP 黑名单
+        // Check IP blacklist
         if (this.config.blacklist.length > 0 && this.config.blacklist.includes(clientIp)) {
             return {
                 success: false,
@@ -106,7 +106,7 @@ export class AuthManager {
             };
         }
 
-        // 检查 IP 白名单（如果配置了白名单）
+        // Check IP whitelist（如果配置了白名单）
         if (this.config.whitelist.length > 0 && !this.config.whitelist.includes(clientIp)) {
             return {
                 success: false,
@@ -115,7 +115,7 @@ export class AuthManager {
             };
         }
 
-        // 验证 Token
+        // Validate token
         if (!token) {
             return {
                 success: false,
@@ -124,7 +124,7 @@ export class AuthManager {
             };
         }
 
-        // 检查 Token 是否有效
+        // Check if token is valid
         const tokenInfo = this.activeTokens.get(token);
         if (!tokenInfo) {
             return {
@@ -134,7 +134,7 @@ export class AuthManager {
             };
         }
 
-        // 检查 Token 是否过期
+        // Check if token is expired
         if (Date.now() > tokenInfo.expiresAt) {
             this.activeTokens.delete(token);
             return {
@@ -144,7 +144,7 @@ export class AuthManager {
             };
         }
 
-        // 检查连接数限制
+        // Check connection limit
         const currentConnections = this.connectionCounts.get(token) || 0;
         if (currentConnections >= this.config.maxConnectionsPerToken) {
             return {
@@ -154,7 +154,7 @@ export class AuthManager {
             };
         }
 
-        // 增加连接计数
+        // Increment connection count
         this.connectionCounts.set(token, currentConnections + 1);
 
         return {
@@ -164,11 +164,11 @@ export class AuthManager {
     }
 
     /**
-     * 生成新 Token
+     * Generate new token
      *
-     * @param clientId 客户端 ID
-     * @param permissions 权限列表（默认：input, config_read）
-     * @returns Token 信息
+     * @param clientId Client ID
+     * @param permissions Permission list（Default: input, config_read）
+     * @returns Token info
      */
     generateToken(clientId: string, permissions: string[] = ['input', 'config_read']): TokenInfo {
         const token = this.generateTokenString();
@@ -187,12 +187,12 @@ export class AuthManager {
     }
 
     /**
-     * 生成 Token 字符串
+     * Generate token string
      *
-     * 使用随机字节生成唯一 Token
-     * 格式：cx_<32字节十六进制>
+     * Generate unique token using random bytes
+     * Format: cx_<32-byte hexadecimal>
      *
-     * @returns Token 字符串
+     * @returns Token string
      */
     private generateTokenString(): string {
         const randomBytes = Array.from({ length: 32 }, () =>
@@ -202,11 +202,11 @@ export class AuthManager {
     }
 
     /**
-     * 撤销 Token
+     * Revoke token
      *
-     * 删除 Token 及相关连接计数
+     * Delete token and related connection count
      *
-     * @param token 要撤销的 Token
+     * @param token Token to revoke
      */
     revokeToken(token: string): void {
         this.activeTokens.delete(token);
@@ -214,7 +214,7 @@ export class AuthManager {
     }
 
     /**
-     * 连接断开时减少计数
+     * Decrement connection count on disconnect
      *
      * @param token Token
      */
@@ -226,11 +226,11 @@ export class AuthManager {
     }
 
     /**
-     * 检查权限
+     * Check permission
      *
      * @param token Token
-     * @param permission 权限名称
-     * @returns 是否有权限
+     * @param permission Permission name
+     * @returns Whether has permission
      */
     hasPermission(token: string, permission: string): boolean {
         const tokenInfo = this.activeTokens.get(token);
@@ -241,18 +241,18 @@ export class AuthManager {
     }
 
     /**
-     * 获取活跃 Token 数量
+     * Get active token count
      *
-     * @returns 活跃 Token 数量
+     * @returns Active token count
      */
     getActiveTokenCount(): number {
         return this.activeTokens.size;
     }
 
     /**
-     * 清理过期 Token
+     * Cleanup expired tokens
      *
-     * 定期调用以清理已过期的 Token
+     * Regularly call to cleanup expired tokens
      */
     cleanupExpiredTokens(): void {
         const now = Date.now();
@@ -265,39 +265,39 @@ export class AuthManager {
     }
 
     /**
-     * 更新配置
+     * Update config
      *
-     * @param config 新配置（部分配置）
+     * @param config New config (partial config)
      */
     updateConfig(config: Partial<AuthConfig>): void {
         this.config = { ...this.config, ...config };
     }
 
     /**
-     * 获取当前配置
+     * Get current config
      *
-     * @returns 当前配置（副本）
+     * @returns Current config (copy)
      */
     getConfig(): AuthConfig {
         return { ...this.config };
     }
 
     /**
-     * 验证 WebSocket 连接握手
+     * Verify WebSocket connection handshake
      *
-     * 用于 ws 库的 verifyClient 回调
+     * For ws library verifyClient callback
      *
-     * @param info WebSocket 连接信息
-     * @returns 是否允许连接
+     * @param info WebSocket connection info
+     * @returns Whether to allow connection
      */
     verifyWebSocketConnection(info: { origin: string; secure: boolean; req: any }): boolean {
-        // 获取客户端 IP
+        // Get client IP
         const clientIp = this.extractClientIp(info.req);
 
-        // 从 URL 参数或 header 获取 token
+        // Get token from URL parameter or header
         const token = this.extractTokenFromRequest(info.req);
 
-        // 执行认证
+        // Execute authentication
         const result = this.authenticate(token, clientIp);
 
         if (!result.success) {
@@ -308,13 +308,13 @@ export class AuthManager {
     }
 
     /**
-     * 从请求中提取客户端 IP
+     * Extract client IP from request
      *
-     * @param req HTTP 请求对象
-     * @returns 客户端 IP 地址
+     * @param req HTTP request object
+     * @returns Client IP address
      */
     private extractClientIp(req: any): string {
-        // 尝试从各种来源获取 IP
+        // Try to get IP from various sources
         const forwarded = req.headers?.['x-forwarded-for'];
         if (forwarded) {
             return forwarded.split(',')[0].trim();
@@ -322,7 +322,7 @@ export class AuthManager {
 
         const remoteAddress = req.socket?.remoteAddress || req.connection?.remoteAddress;
         if (remoteAddress) {
-            // 处理 IPv6 映射的 IPv4 地址
+            // Handle IPv6-mapped IPv4 address
             if (remoteAddress.startsWith('::ffff:')) {
                 return remoteAddress.substring(7);
             }
@@ -333,31 +333,31 @@ export class AuthManager {
     }
 
     /**
-     * 从请求中提取 Token
+     * Extract token from request
      *
-     * 支持从以下位置获取 Token：
-     * 1. URL 参数：?token=xxx
+     * Support getting token from following locations：
+     * 1. URL parameter：?token=xxx
      * 2. Authorization header：Bearer xxx
      * 3. Cookie：auth_token=xxx
      *
-     * @param req HTTP 请求对象
-     * @returns Token 字符串
+     * @param req HTTP request object
+     * @returns Token string
      */
     private extractTokenFromRequest(req: any): string {
-        // 从 URL 参数获取
+        // Get from URL parameter
         const url = req.url || '';
         const tokenParam = url.match(/token=([^&]+)/)?.[1];
         if (tokenParam) {
             return tokenParam;
         }
 
-        // 从 Authorization header 获取
+        // Get from Authorization header
         const authHeader = req.headers?.authorization;
         if (authHeader?.startsWith('Bearer ')) {
             return authHeader.substring(7);
         }
 
-        // 从 Cookie 获取
+        // Get from Cookie
         const cookie = req.headers?.cookie;
         if (cookie) {
             const tokenCookie = cookie.match(/auth_token=([^;]+)/)?.[1];
@@ -370,5 +370,5 @@ export class AuthManager {
     }
 }
 
-// 导出默认实例（使用环境变量配置）
+// Export default instance（Using environment variables config）
 export const authManager = new AuthManager();

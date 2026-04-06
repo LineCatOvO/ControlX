@@ -1,23 +1,23 @@
 /**
  * ============================================================================
- * 可观测性指标模块 (Metrics Module)
+ * Observability Metrics Module (Metrics Module)
  * ============================================================================
  *
  * 【模块职责】
- * 本模块提供统一的指标收集、聚合和导出功能，用于系统可观测性。
+ * This module provides unified metric collection, aggregation and export functionality for system observability。
  *
  * 【核心功能】
- * 1. 指标注册：支持计数器、仪表盘、直方图等指标类型
- * 2. 指标收集：自动收集和更新指标值
- * 3. 指标聚合：支持时间窗口聚合和统计计算
- * 4. 指标导出：提供 JSON 格式的指标导出
+ * 1. Metric registration: support counter, gauge, histogram and other metric types
+ * 2. Metric collection: automatically collect and update metric values
+ * 3. Metric aggregation: support time window aggregation and statistical calculation
+ * 4. Metric export: provide JSON format metric export
  *
- * 【指标类型】
- * - Counter: 单调递增计数器，用于请求数、错误数等
- * - Gauge: 可增可减的仪表盘，用于连接数、内存使用等
- * - Histogram: 直方图，用于延迟分布、请求大小等
+ * 【Metric types】
+ * - Counter: Monotonically increasing counter, used for request count, error count, etc.
+ * - Gauge: Gauge that can increase or decrease, used for connection count, memory usage, etc.
+ * - Histogram: Histogram, used for latency distribution, request size, etc.
  *
- * 【使用示例】
+ * 【Usage example】
  * ```typescript
  * const metrics = MetricsCollector.getInstance();
  * metrics.registerCounter('requests_total', 'Total number of requests');
@@ -32,7 +32,7 @@
  */
 
 /**
- * 指标类型枚举
+ * Metric types枚举
  */
 export enum MetricType {
     COUNTER = 'counter',
@@ -41,7 +41,7 @@ export enum MetricType {
 }
 
 /**
- * 指标元数据接口
+ * Metric metadata interface
  */
 export interface MetricMetadata {
     name: string;
@@ -52,7 +52,7 @@ export interface MetricMetadata {
 }
 
 /**
- * 计数器指标
+ * Counter metric
  */
 export interface CounterMetric {
     type: MetricType.COUNTER;
@@ -61,7 +61,7 @@ export interface CounterMetric {
 }
 
 /**
- * 仪表盘指标
+ * Gauge metric
  */
 export interface GaugeMetric {
     type: MetricType.GAUGE;
@@ -70,7 +70,7 @@ export interface GaugeMetric {
 }
 
 /**
- * 直方图指标
+ * Histogram metric
  */
 export interface HistogramMetric {
     type: MetricType.HISTOGRAM;
@@ -81,12 +81,12 @@ export interface HistogramMetric {
 }
 
 /**
- * 指标联合类型
+ * Metric union type
  */
 export type Metric = CounterMetric | GaugeMetric | HistogramMetric;
 
 /**
- * 指标快照接口
+ * Metric snapshot interface
  */
 export interface MetricSnapshot {
     name: string;
@@ -97,7 +97,7 @@ export interface MetricSnapshot {
 }
 
 /**
- * 连接状态记录
+ * Connection status record
  */
 export interface ConnectionRecord {
     clientId: string;
@@ -109,7 +109,7 @@ export interface ConnectionRecord {
 }
 
 /**
- * 输入统计记录
+ * Input statistics record
  */
 export interface InputStats {
     keyboardEvents: number;
@@ -178,7 +178,7 @@ export class MetricsCollector {
     // ==================== 指标注册 ====================
 
     /**
-     * 注册计数器指标
+     * 注册Counter metric
      * @param name 指标名称
      * @param description 描述
      * @param unit 单位（可选）
@@ -202,7 +202,7 @@ export class MetricsCollector {
     }
 
     /**
-     * 注册仪表盘指标
+     * 注册Gauge metric
      * @param name 指标名称
      * @param description 描述
      * @param unit 单位（可选）
@@ -226,7 +226,7 @@ export class MetricsCollector {
     }
 
     /**
-     * 注册直方图指标
+     * 注册Histogram metric
      * @param name 指标名称
      * @param description 描述
      * @param buckets 桶边界

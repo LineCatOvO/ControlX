@@ -1,4 +1,4 @@
-// 延迟探测消息处理器
+// 延迟探测Message handling器
 
 import { LatencyProbeMessage, LatencyProbeResponseMessage } from '../../types/ws';
 import { getMetricsCollector } from '../../utils/metrics';
@@ -67,9 +67,9 @@ export function resetRttStats() {
 }
 
 /**
- * 处理延迟探测消息
+ * Handle latency probe消息
  * @param ws WebSocket连接
- * @param message 延迟探测消息
+ * @param message Latency probe message
  */
 export function handleLatencyProbe(ws: any, message: LatencyProbeMessage) {
   try {

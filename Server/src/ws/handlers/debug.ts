@@ -1,7 +1,7 @@
 /**
- * 调试消息处理器
+ * Debug message handler
  * 
- * 处理调试消息的发送、过滤和日志级别控制
+ * Handle debug message sending, filtering and log level control
  */
 
 import { 
@@ -14,8 +14,8 @@ import {
 } from "../messageTypes";
 
 /**
- * 调试管理器类
- * 管理调试消息的发送和过滤
+ * Debug manager class
+ * Manage debug message sending and filtering
  */
 export class DebugManager {
     private config: DebugConfig;
@@ -26,23 +26,23 @@ export class DebugManager {
     }
 
     /**
-     * 注册WebSocket客户端
-     * @param ws WebSocket连接
+     * Register WebSocket client
+     * @param ws WebSocket connection
      */
     registerClient(ws: any): void {
         this.wsClients.add(ws);
     }
 
     /**
-     * 注销WebSocket客户端
-     * @param ws WebSocket连接
+     * Unregister WebSocket client
+     * @param ws WebSocket connection
      */
     unregisterClient(ws: any): void {
         this.wsClients.delete(ws);
     }
 
     /**
-     * 获取当前调试配置
+     * Get current debug configuration
      * @returns 调试配置
      */
     getConfig(): DebugConfig {
@@ -50,16 +50,16 @@ export class DebugManager {
     }
 
     /**
-     * 更新调试配置
-     * @param updates 部分配置更新
+     * Update debug configuration
+     * @param updates Partial configuration update
      */
     updateConfig(updates: Partial<DebugConfig>): void {
         this.config = { ...this.config, ...updates };
     }
 
     /**
-     * 检查日志级别是否应该输出
-     * @param level 日志级别
+     * Check if log level should output
+     * @param level Log level
      * @returns 是否应该输出
      */
     private shouldLog(level: LogLevel): boolean {
@@ -75,7 +75,7 @@ export class DebugManager {
     }
 
     /**
-     * 检查来源是否应该输出
+     * Check if source should output
      * @param source 来源标识
      * @returns 是否应该输出
      */
@@ -108,7 +108,7 @@ export class DebugManager {
 
     /**
      * 记录调试消息
-     * @param level 日志级别
+     * @param level Log level
      * @param message 消息内容
      * @param source 来源标识
      * @param data 附加数据
@@ -202,7 +202,7 @@ export const debugManager = new DebugManager();
 
 /**
  * 处理调试配置设置消息
- * @param ws WebSocket连接
+ * @param ws WebSocket connection
  * @param message 调试配置设置消息
  */
 export function handleDebugConfigSet(ws: any, message: DebugConfigSetMessage): void {
@@ -218,7 +218,7 @@ export function handleDebugConfigSet(ws: any, message: DebugConfigSetMessage): v
 
 /**
  * 处理调试配置获取消息
- * @param ws WebSocket连接
+ * @param ws WebSocket connection
  */
 export function handleDebugConfigGet(ws: any): void {
     const response: DebugConfigMessage = {

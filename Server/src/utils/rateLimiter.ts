@@ -1,22 +1,22 @@
 /**
- * 速率限制器模块
+ * Rate limiter module
  *
- * 负责限制消息处理速率，防止 DoS 攻击
+ * Responsible for limiting message processing rate, prevent DoS attack
  */
 
 /**
- * 速率限制配置接口
+ * Rate limit configuration interface
  */
 export interface RateLimiterConfig {
-    maxMessagesPerSecond: number;      // 每秒最大消息数
-    maxMessagesPerMinute: number;      // 每分钟最大消息数
-    maxBurstSize: number;              // 最大突发消息数
-    cooldownPeriod: number;            // 冷却期（毫秒）
-    enabled: boolean;                  // 是否启用速率限制
+    maxMessagesPerSecond: number;      // Maximum messages per second
+    maxMessagesPerMinute: number;      // Maximum messages per minute
+    maxBurstSize: number;              // Maximum burst message count
+    cooldownPeriod: number;            // Cooldown period (ms)
+    enabled: boolean;                  // Whether enable rate limit
 }
 
 /**
- * 速率限制结果接口
+ * Rate limit result interface
  */
 export interface RateLimitResult {
     allowed: boolean;
@@ -26,7 +26,7 @@ export interface RateLimitResult {
 }
 
 /**
- * 客户端速率限制状态
+ * Client rate limit status
  */
 interface ClientRateLimitState {
     messageCount: number;
@@ -38,7 +38,7 @@ interface ClientRateLimitState {
 }
 
 /**
- * 速率限制器类
+ * Rate limiter class
  */
 export class RateLimiter {
     private config: RateLimiterConfig;
@@ -46,30 +46,30 @@ export class RateLimiter {
     private cleanupInterval: NodeJS.Timeout | null = null;
 
     /**
-     * 构造函数
-     * @param config 速率限制配置
+     * Constructor
+     * @param config Rate limit configuration
      */
     constructor(config: Partial<RateLimiterConfig> = {}) {
         this.config = {
-            maxMessagesPerSecond: 100,      // 每秒最多 100 条消息
-            maxMessagesPerMinute: 1000,     // 每分钟最多 1000 条消息
-            maxBurstSize: 20,               // 最大突发 20 条消息
-            cooldownPeriod: 5000,           // 冷却期 5 秒
+            maxMessagesPerSecond: 100,      // Maximum per second 100 messages
+            maxMessagesPerMinute: 1000,     // Maximum per minute 1000 messages
+            maxBurstSize: 20,               // Maximum burst 20 messages
+            cooldownPeriod: 5000,           // Cooldown period 5 s
             enabled: true,
             ...config
         };
 
-        // 启动定期清理
+        // Start periodic cleanup
         this.startCleanup();
     }
 
     /**
-     * 检查消息是否允许
-     * @param clientId 客户端 ID
+     * Check if message is allowed
+     * @param clientId Client ID
      * @returns 速率限制结果
      */
     checkLimit(clientId: string): RateLimitResult {
-        // 如果未启用，直接允许
+        // If not enabled, allow directly
         if (!this.config.enabled) {
             return {
                 allowed: true,
@@ -81,7 +81,7 @@ export class RateLimiter {
         const now = Date.now();
         let state = this.clientStates.get(clientId);
 
-        // 如果没有状态，创建新状态
+        // If no status, create new status
         if (!state) {
             state = {
                 messageCount: 0,
@@ -94,7 +94,7 @@ export class RateLimiter {
             this.clientStates.set(clientId, state);
         }
 
-        // 检查是否在冷却期
+        // Check if in cooldown period
         if (now < state.blockedUntil) {
             return {
                 allowed: false,
@@ -104,15 +104,15 @@ export class RateLimiter {
             };
         }
 
-        // 检查每分钟限制
+        // Check per minute limit
         if (now - state.minuteStartTime >= 60000) {
-            // 重置分钟计数
+            // Reset minute count
             state.minuteCount = 0;
             state.minuteStartTime = now;
         }
 
         if (state.minuteCount >= this.config.maxMessagesPerMinute) {
-            // 超过分钟限制，进入冷却期
+            // Exceed minute limit, enter cooldown period
             state.blockedUntil = now + this.config.cooldownPeriod;
             return {
                 allowed: false,
@@ -122,16 +122,16 @@ export class RateLimiter {
             };
         }
 
-        // 检查每秒限制
+        // Check per second limit
         if (now - state.lastMessageTime >= 1000) {
-            // 重置秒计数
+            // Reset second count
             state.messageCount = 0;
             state.burstCount = 0;
         }
 
-        // 检查突发限制
+        // Check burst limit
         if (state.burstCount >= this.config.maxBurstSize) {
-            // 超过突发限制，需要等待
+            // Exceed burst limit, need to wait
             const waitTime = 1000 - (now - state.lastMessageTime);
             return {
                 allowed: false,
@@ -141,9 +141,9 @@ export class RateLimiter {
             };
         }
 
-        // 检查每秒限制
+        // Check per second limit
         if (state.messageCount >= this.config.maxMessagesPerSecond) {
-            // 超过秒限制，需要等待
+            // Exceed second limit, need to wait
             const waitTime = 1000 - (now - state.lastMessageTime);
             return {
                 allowed: false,
@@ -153,7 +153,7 @@ export class RateLimiter {
             };
         }
 
-        // 允许消息，更新计数
+        // Allow message, update count
         state.messageCount++;
         state.burstCount++;
         state.minuteCount++;
@@ -167,16 +167,16 @@ export class RateLimiter {
     }
 
     /**
-     * 重置客户端速率限制状态
-     * @param clientId 客户端 ID
+     * Reset client rate limit status
+     * @param clientId Client ID
      */
     resetClient(clientId: string): void {
         this.clientStates.delete(clientId);
     }
 
     /**
-     * 获取客户端状态
-     * @param clientId 客户端 ID
+     * Get client status
+     * @param clientId Client ID
      * @returns 客户端状态
      */
     getClientState(clientId: string): ClientRateLimitState | undefined {
@@ -184,7 +184,7 @@ export class RateLimiter {
     }
 
     /**
-     * 获取所有被限制的客户端数量
+     * Get count of all limited clients
      * @returns 被限制的客户端数量
      */
     getBlockedClientCount(): number {
@@ -199,15 +199,15 @@ export class RateLimiter {
     }
 
     /**
-     * 更新配置
-     * @param config 新配置
+     * Update configuration
+     * @param config New configuration
      */
     updateConfig(config: Partial<RateLimiterConfig>): void {
         this.config = { ...this.config, ...config };
     }
 
     /**
-     * 获取当前配置
+     * Get current configuration
      * @returns 当前配置
      */
     getConfig(): RateLimiterConfig {
@@ -215,14 +215,14 @@ export class RateLimiter {
     }
 
     /**
-     * 启动定期清理
+     * Start periodic cleanup
      */
     private startCleanup(): void {
-        // 每 60 秒清理一次过期状态
+        // Cleanup expired status every 60 seconds
         this.cleanupInterval = setInterval(() => {
             const now = Date.now();
             for (const [clientId, state] of this.clientStates.entries()) {
-                // 清理超过 5 分钟未活动的客户端
+                // Cleanup clients inactive for more than 5 minutes
                 if (now - state.lastMessageTime > 300000) {
                     this.clientStates.delete(clientId);
                 }
@@ -231,7 +231,7 @@ export class RateLimiter {
     }
 
     /**
-     * 停止定期清理
+     * Stop periodic cleanup
      */
     stopCleanup(): void {
         if (this.cleanupInterval) {
@@ -241,7 +241,7 @@ export class RateLimiter {
     }
 
     /**
-     * 销毁速率限制器
+     * Destroy rate limiter
      */
     destroy(): void {
         this.stopCleanup();
@@ -249,5 +249,5 @@ export class RateLimiter {
     }
 }
 
-// 导出默认实例
+// Export default instance
 export const rateLimiter = new RateLimiter();
