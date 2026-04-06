@@ -1,15 +1,15 @@
 /**
  * InputRouterManager
  * 
- * 职责：
- * 1. 作For系统OfUnique入口，负责State聚合与分发
- * 2. 维护LocalState缓存，用于计算 Delta 或审计
- * 3. 并行处理Different设备TypeOfStateApply，降低Latency
- * 4. 故障隔离，单个 Host Failure不影响其他 Host
+ * Responsibility：
+ * 1. 作ForSystemOfUnique入Port，ResponsibleStateAggregateAndDistribute
+ * 2. MaintainLocalStateCache，ForCalc Delta orAudit
+ * 3. ParallelHandleDifferentDeviceTypeOfStateApply，ReduceLatency
+ * 4. FaultIsolation，单One Host FailurenotInfluenceOther Host
  * 
- * 设计Mode：门面Mode (Facade Pattern)
- * - 提供统一Of高层Interface
- * - 隐藏子系统Of复杂性
+ * DesignMode：FacadeMode (Facade Pattern)
+ * - ProvideUnifiedOfHighLevelInterface
+ * - 隐藏子SystemOfComplexity
  */
 
 import { InputHost } from '../hosts/InputHost';
@@ -20,13 +20,13 @@ import { InputState } from '../../types/ws';
  * InputRouterManager
  */
 export class InputRouter {
-    /** Host 注册表 */
+    /** Host Register表 */
     private hosts: Map<InputDeviceType, InputHost> = new Map();
     
-    /** LocalState缓存，用于审计和 Delta 计算 */
+    /** LocalStateCache，ForAuditand Delta Calc */
     private stateCache: Map<InputDeviceType, any> = new Map();
     
-    /** 统计Info */
+    /** StatisticsInfo */
     private stats: {
         totalApplications: number;
         failedApplications: number;
@@ -38,13 +38,13 @@ export class InputRouter {
     };
 
     /**
-     * 注册Input宿主
+     * RegisterInputHost
      * 
-     * @param type 设备Type
-     * @param host Input宿主实例
+     * @param type DeviceType
+     * @param host InputHostInstance
      */
     registerHost(type: InputDeviceType, host: InputHost): void {
-        // 如果已存在，先Destroy旧Of
+        // IfAlreadyStoreIn，FirstDestroyOldOf
         const existingHost = this.hosts.get(type);
         if (existingHost) {
             console.log(`[InputRouter] Replacing existing ${type} host`);
@@ -54,7 +54,7 @@ export class InputRouter {
         this.hosts.set(type, host);
         console.log(`[InputRouter] Registered ${type} host`);
         
-        // 异步Initialize，不阻塞注册
+        // AsyncInitialize，notBlockRegister
         host.initialize().then((success: boolean) => {
             if (success) {
                 console.log(`[InputRouter] ✅ ${type} host initialized successfully`);
@@ -67,19 +67,19 @@ export class InputRouter {
     }
 
     /**
-     * Get已注册Of宿主
+     * GetAlreadyRegisterOfHost
      * 
-     * @param type 设备Type
-     * @returns Input宿主或 undefined
+     * @param type DeviceType
+     * @returns InputHostor undefined
      */
     getHost(type: InputDeviceType): InputHost | undefined {
         return this.hosts.get(type);
     }
 
     /**
-     * 统一ApplyInputState
+     * UnifiedApplyInputState
      * 
-     * 并行处理Different设备TypeOfStateApply，提高Response速度
+     * ParallelHandleDifferentDeviceTypeOfStateApply，ImproveResponseSpeed
      * 
      * @param fullState CompleteInputState
      */
@@ -87,7 +87,7 @@ export class InputRouter {
         this.stats.totalApplications++;
         this.stats.lastApplicationTime = Date.now();
 
-        // 并行处理Different设备Type
+        // ParallelHandleDifferentDeviceType
         const promises: Promise<void>[] = [];
 
         // KeyboardState
@@ -95,7 +95,7 @@ export class InputRouter {
             promises.push(this.dispatch(InputDeviceType.KEYBOARD, fullState.keyboard));
         }
 
-        // 游戏GamepadState
+        // GameGamepadState
         if (fullState.gamepad) {
             promises.push(this.dispatch(InputDeviceType.GAMEPAD, {
                 buttons: fullState.gamepad,
@@ -114,20 +114,20 @@ export class InputRouter {
             promises.push(this.dispatch(InputDeviceType.JOYSTICK, fullState.joystick));
         }
 
-        // 不等待Execute完成（实时性要求高）
-        // 如需等待，可使用：await Promise.all(promises);
+        // notWaitPendingExecute完成（实Time性要求高）
+        // 如NeedWaitPending，CanUse：await Promise.all(promises);
     }
 
     /**
-     * 分发State到具体宿主
+     * DistributeStatetoSpecificHost
      * 
-     * @param type 设备Type
-     * @param state 设备State
+     * @param type DeviceType
+     * @param state DeviceState
      */
     private async dispatch(type: InputDeviceType, state: any): Promise<void> {
         const host = this.hosts.get(type);
         
-        // 宿主不存在或未Enable，降级处理
+        // HostnotStoreInorNotYetEnable，FallbackHandle
         if (!host || !host.isHostEnabled()) {
             if (!host) {
                 console.debug(`[InputRouter] No host registered for ${type}`);
@@ -138,7 +138,7 @@ export class InputRouter {
         }
 
         try {
-            // UpdateState缓存
+            // UpdateStateCache
             this.stateCache.set(type, state);
             
             // ApplyState
@@ -148,13 +148,13 @@ export class InputRouter {
             console.error(`[InputRouter] Error applying state for ${type}:`, error);
             this.stats.failedApplications++;
             
-            // Update宿主OferrorInfo
-            // 宿主Inside部应该已经处理了error记录
+            // UpdateHostOferrorInfo
+            // HostInsidePartShouldAlreadyThroughHandle了errorRecord
         }
     }
 
     /**
-     * ResetAll宿主
+     * ResetAllHost
      */
     resetAll(): void {
         console.log('[InputRouter] Resetting all hosts');
@@ -169,7 +169,7 @@ export class InputRouter {
     }
 
     /**
-     * DestroyAll宿主
+     * DestroyAllHost
      */
     destroyAll(): void {
         console.log('[InputRouter] Destroying all hosts');
@@ -185,9 +185,9 @@ export class InputRouter {
     }
 
     /**
-     * GetAll宿主OfState
+     * GetAllHostOfState
      * 
-     * @returns 宿主StateArray
+     * @returns HostStateArray
      */
     getAllHostStatuses(): Array<{ type: InputDeviceType; status: any }> {
         const statuses: Array<{ type: InputDeviceType; status: any }> = [];
@@ -203,9 +203,9 @@ export class InputRouter {
     }
 
     /**
-     * GetRouterManager统计Info
+     * GetRouterManagerStatisticsInfo
      * 
-     * @returns 统计Info
+     * @returns StatisticsInfo
      */
     getStats(): {
         totalApplications: number;
@@ -229,17 +229,17 @@ export class InputRouter {
     }
 
     /**
-     * GetState缓存
+     * GetStateCache
      * 
-     * @param type 设备Type
-     * @returns 缓存OfState
+     * @param type DeviceType
+     * @returns CacheOfState
      */
     getCachedState(type: InputDeviceType): any {
         return this.stateCache.get(type);
     }
 
     /**
-     * 清除State缓存
+     * Clear除StateCache
      */
     clearCache(): void {
         this.stateCache.clear();

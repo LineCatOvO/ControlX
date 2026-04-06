@@ -115,7 +115,7 @@ export class StateStore {
             return false;
         }
 
-        // Verifysequence number单调ity
+        // Verifysequence numberMonotonicity
         const sequenceNumber = this.extractSequenceNumber(normalizedState);
         if (!this.isValidSequenceNumber(sequenceNumber)) {
             return false;
@@ -130,7 +130,7 @@ export class StateStore {
             this.lastAppliedSequenceNumber = sequenceNumber;
         }
 
-        // use环形bufferAddHistoryrecord
+        // useRingbufferAddHistoryrecord
         this.addToHistoryRingBuffer({
             state: normalizedState,
             receivedTime,
@@ -138,13 +138,13 @@ export class StateStore {
             sequenceNumber,
         });
 
-        // 只recordkeyStateInfo，non-duplicateprintCompleteState
+        // OnlyrecordkeyStateInfo，non-duplicateprintCompleteState
         return true;
     }
 
     /**
-     * use环形bufferAddHistoryrecord
-     * @param entry Historyrecorditem目
+     * useRingbufferAddHistoryrecord
+     * @param entry HistoryrecorditemItem
      */
     private addToHistoryRingBuffer(entry: {
         state: InputState;
@@ -241,13 +241,13 @@ export class StateStore {
         // UpdateLast applied sequence number
         this.lastAppliedSequenceNumber = sequenceNumber;
 
-        // 在环形bufferIn查找correspond toOfHistoryrecord
+        // InRingbufferInFindcorrespond toOfHistoryrecord
         if (!this.historyFull && this.historyHead === this.historyTail) {
-            // bufferForNull，无需查找
+            // bufferForNull，NoNeedFind
             return;
         }
 
-        // fromRead positionStart，遍历AllValidrecord
+        // fromRead positionStart，TraverseAllValidrecord
         let current = this.historyTail;
         const end = this.historyFull ? this.historyTail : this.historyHead;
 
@@ -255,7 +255,7 @@ export class StateStore {
             const entry = this.stateHistory[current];
             if (entry.state !== null && entry.sequenceNumber === sequenceNumber) {
                 entry.appliedTime = applyTime || Date.now();
-                return; // 找到After立即Return
+                return; // 找toAfterImmediatelyReturn
             }
             current = (current + 1) % this.config.maxHistorySize;
         } while (current !== end);
@@ -267,15 +267,15 @@ export class StateStore {
      * @returns Is valid
      */
     private isValidState(state: InputState): boolean {
-        // 基本Verify：StateObject必须exist
+        // Base本Verify：StateObjectMustexist
         if (!state) return false;
 
-        // VerifyKeyboardField（AllowArray，will在normalizeStateInConvertForSet）
+        // VerifyKeyboardField（AllowArray，willInnormalizeStateInConvertForSet）
         if (!state.keyboard) {
             return false;
         }
 
-        // VerifyMouseField（If不exist，useDefaultValue）
+        // VerifyMouseField（Ifnotexist，useDefaultValue）
         if (!state.mouse) {
             return false;
         }
@@ -285,7 +285,7 @@ export class StateStore {
             return false;
         }
 
-        // VerifyoptionalField（Ifexist，必须是SetorArray）
+        // VerifyoptionalField（Ifexist，MustIsSetorArray）
         if (state.gamepad && !(state.gamepad instanceof Set) && !Array.isArray(state.gamepad)) {
             return false;
         }
@@ -296,19 +296,19 @@ export class StateStore {
     }
 
     /**
-     * 提取sequence number
+     * Extractsequence number
      * @param state StateObject
      * @returns sequence number，IfframeIdnotNumberThenReturnNaN
      */
     private extractSequenceNumber(state: InputState): number {
-        // 只接受NumberframeIdasForsequence number
+        // Only接受NumberframeIdasForsequence number
         // IfframeIdnotNumber，ThenReturnNaN
         const frameId = (state as any).frameId;
         return typeof frameId === "number" ? frameId : NaN;
     }
 
     /**
-     * Verifysequence number单调ity
+     * Verifysequence numberMonotonicity
      * @param sequenceNumber wantVerifyOfsequence number
      * @returns Is valid
      */
@@ -318,18 +318,18 @@ export class StateStore {
             return true;
         }
 
-        // If没有State被Store过，anysequence number都Valid
+        // IfNoHasStateBeStore过，anysequence numberAllValid
         if (this.lastAppliedSequenceNumber === 0) {
             return true;
         }
 
-        // Allowsequence numberSameor更大（Handle重传和重newConnectionOfcase）
-        // Note：use lastAppliedSequenceNumber 而not latestState Ofsequence number
+        // Allowsequence numberSameorLarger（HandleReTransferandRenewConnectionOfcase）
+        // Note：use lastAppliedSequenceNumber Andnot latestState Ofsequence number
         return sequenceNumber >= this.lastAppliedSequenceNumber;
     }
 
     /**
-     * GetStateHistoryrecord（from环形bufferRead）
+     * GetStateHistoryrecord（fromRingbufferRead）
      * @returns StateHistoryrecord
      */
     getStateHistory(): Array<{
@@ -350,7 +350,7 @@ export class StateStore {
             return result;
         }
 
-        // fromRead positionStart，按顺序ReadAllValidrecord
+        // fromRead positionStart，PressOrderReadAllValidrecord
         let current = this.historyTail;
         const end = this.historyFull ? this.historyTail : this.historyHead;
 
@@ -382,7 +382,7 @@ export class StateStore {
     }
 
     /**
-     * 清NullAllState
+     * ClearNullAllState
      */
     clear(): void {
         this.latestState = null;
@@ -392,7 +392,7 @@ export class StateStore {
         this.historyTail = 0;
         this.historyFull = false;
 
-        // 重newInitializepreallocateArray
+        // RenewInitializepreallocateArray
         for (let i = 0; i < this.config.maxHistorySize; i++) {
             this.stateHistory[i] = {
                 state: null as any,

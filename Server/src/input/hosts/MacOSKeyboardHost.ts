@@ -1,47 +1,47 @@
 /**
- * MacOS Keyboard宿主Implementation（待制作）
+ * MacOS KeyboardHostImplementation（PendingMake）
  *
- * TODO: 使用 Quartz Event Services Implementation MacOS KeyboardInput
+ * TODO: Use Quartz Event Services Implementation MacOS KeyboardInput
  *
- * 技术选型：
- * - Quartz Event Services: MacOS 原生Event注入 API
- * - 库选择：node-key-sender（已Support跨平台）或 robotjs
- * - 备选：直接调用 CGEvent 系列Function
+ * TechStack：
+ * - Quartz Event Services: MacOS NativeEventInject API
+ * - LibSelect：node-key-sender（AlreadySupportCrossPlatform）or robotjs
+ * - 备选：DirectCall CGEvent 系列Function
  *
- * 待ImplementationFunction：
- * - [ ] 加载 Quartz Event库
- * - [ ] ImplementationKey码映射（MacOS 键码）
- * - [ ] ImplementationKey按Under/释放Event
- * - [ ] Implementation差集算法（同 WindowsKeyboardHost）
+ * PendingImplementationFunction：
+ * - [ ] Load Quartz EventLib
+ * - [ ] ImplementationKeyCodeMap（MacOS KeyCode）
+ * - [ ] ImplementationKeyPressUnder/ReleaseEvent
+ * - [ ] ImplementationDiffAlgorithm（Same WindowsKeyboardHost）
  * - [ ] ImplementationResetFunction
- * - [ ] Implementation资源清理
+ * - [ ] Implementation资SourceClear理
  *
- * 依赖安装：
+ * DepInstall：
  * ```bash
  * npm install robotjs
- * # 或
+ * # or
  * npm install @libuio/node-uio
  * ```
  *
- * 权限Config（MacOS 10.15+）：
- * - 需要在系统SetIn授予"辅助Function"权限
+ * PermissionConfig（MacOS 10.15+）：
+ * - Need要InSystemSetIn授予"AuxiliaryFunction"Permission
  * - System Preferences → Security & Privacy → Privacy → Accessibility
  *
- * Key码映射参考：
+ * KeyCodeMapReference：
  * - https://gist.github.com/utilitymac/345e1c911c10126093e3
  *
  * @todo Implementation MacOS KeyboardInputSupport
- * @status TODO - 待制作
+ * @status TODO - PendingMake
  */
 
 import { InputHost } from './InputHost';
 import { InputDeviceType } from './types';
 
 export class MacOSKeyboardHost extends InputHost {
-    /** Quartz Event源（待Implementation） */
+    /** Quartz EventSource（PendingImplementation） */
     private eventSource: any = null;
 
-    /** Current按UnderOf键Set（待Implementation） */
+    /** CurrentPressUnderOfKeySet（PendingImplementation） */
     private activeKeys: Set<string> = new Set();
 
     constructor() {
@@ -49,21 +49,21 @@ export class MacOSKeyboardHost extends InputHost {
     }
 
     /**
-     * Initialize：加载 Quartz Event Services
-     * @returns 是否InitializeSuccess
+     * Initialize：Load Quartz Event Services
+     * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
-        // TODO: Implementation Quartz Event源Initialize
+        // TODO: Implementation Quartz EventSourceInitialize
         console.warn('[MacOSKB] TODO: Implement Quartz Event Services initialization');
 
         try {
-            // TODO: 动态Import Quartz Event库
+            // TODO: DynamicImport Quartz EventLib
             // const { CGEventSource, CGEvent } = require('quartz-events');
 
-            // TODO: CreateEvent源
+            // TODO: CreateEventSource
             // this.eventSource = CGEventSource.create('hid');
 
-            // TODO: 检查辅助Function权限
+            // TODO: CheckAuxiliaryFunctionPermission
             // const hasPermission = CGEventSource.checkAccessibility();
             // if (!hasPermission) {
             //     throw new Error('Accessibility permission not granted');
@@ -81,21 +81,21 @@ export class MacOSKeyboardHost extends InputHost {
     }
 
     /**
-     * ApplyState：使用 Quartz Event Services SendKeyboardEvent
-     * @param pressedKeys 按UnderOf键Set
+     * ApplyState：Use Quartz Event Services SendKeyboardEvent
+     * @param pressedKeys PressUnderOfKeySet
      */
     applyState(pressedKeys: Set<string>): void {
-        // TODO: Implementation差集算法
+        // TODO: ImplementationDiffAlgorithm
         if (!this.isEnabled || !this.eventSource) {
             console.debug('[MacOSKB] TODO: Device not enabled');
             return;
         }
 
-        // TODO: 计算差集
+        // TODO: CalcDiff
         // const toRelease = [...this.activeKeys].filter(k => !pressedKeys.has(k));
         // const toPress = [...pressedKeys].filter(k => !this.activeKeys.has(k));
 
-        // TODO: MacOS 键码映射
+        // TODO: MacOS KeyCodeMap
         // const keyCodeMap: Record<string, number> = {
         //     'a': 0, 'b': 11, 'c': 8, 'd': 2, 'e': 14,
         //     'f': 3, 'g': 5, 'h': 4, 'i': 34, 'j': 38,
@@ -105,10 +105,10 @@ export class MacOSKeyboardHost extends InputHost {
         //     'z': 6,
         //     'return': 36, 'escape': 53, 'backspace': 51,
         //     'tab': 48, 'space': 49, 'enter': 76,
-        //     // ... 更多键码
+        //     // ... MoreKeyCode
         // };
 
-        // TODO: 释放Key
+        // TODO: ReleaseKey
         // if (toRelease.length) {
         //     for (const key of toRelease) {
         //         const keyCode = keyCodeMap[key];
@@ -117,7 +117,7 @@ export class MacOSKeyboardHost extends InputHost {
         //     }
         // }
 
-        // TODO: 按UnderKey
+        // TODO: PressUnderKey
         // if (toPress.length) {
         //     for (const key of toPress) {
         //         const keyCode = keyCodeMap[key];
@@ -126,22 +126,22 @@ export class MacOSKeyboardHost extends InputHost {
         //     }
         // }
 
-        // TODO: Update活动键Set
+        // TODO: UpdateActiveKeySet
         // this.activeKeys = pressedKeys;
 
         console.debug('[MacOSKB] TODO: applyState stub called');
     }
 
     /**
-     * Reset：释放AllKey
+     * Reset：ReleaseAllKey
      */
     reset(): void {
-        // TODO: ImplementationReset逻辑
+        // TODO: ImplementationResetLogic
         if (!this.isEnabled || !this.eventSource) {
             return;
         }
 
-        // TODO: 释放All按UnderOf键
+        // TODO: ReleaseAllPressUnderOfKey
         // if (this.activeKeys.size > 0) {
         //     const keyCodeMap: Record<string, number> = { /* ... */ };
         //     for (const key of this.activeKeys) {
@@ -156,13 +156,13 @@ export class MacOSKeyboardHost extends InputHost {
     }
 
     /**
-     * Destroy：清理 Quartz Event源
+     * Destroy：Clear理 Quartz EventSource
      */
     destroy(): void {
-        // TODO: ImplementationDestroy逻辑
+        // TODO: ImplementationDestroyLogic
         this.reset();
 
-        // TODO: 释放Event源
+        // TODO: ReleaseEventSource
         // if (this.eventSource) {
         //     this.eventSource.release();
         //     this.eventSource = null;

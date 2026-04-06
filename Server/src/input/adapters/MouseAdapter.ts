@@ -10,9 +10,9 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
  *
  * Design notes：
  * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
- * - MouseExecutor Method是异步Of，AdapterMethodReturn void（异步调用不阻塞）
- * - Inside部委托给 MouseExecutor Execute实际OfMouseOperation
- * - 提供Mouse特定OfMethod（applyMouseState, getMouseState）
+ * - MouseExecutor MethodIsAsyncOf，AdapterMethodReturn void（AsyncCallnotBlock）
+ * - InsidePartDelegateTo MouseExecutor ExecuteActualOfMouseOperation
+ * - ProvideMouseSpecificOfMethod（applyMouseState, getMouseState）
  */
 export class MouseAdapter implements InputAdapter {
     private executor: MouseExecutor;
@@ -26,7 +26,7 @@ export class MouseAdapter implements InputAdapter {
      * @param state Input state
      */
     applyState(state: InputState): void {
-        // MouseExecutor Of applyState 是异步Method，直接调用不阻塞
+        // MouseExecutor Of applyState IsAsyncMethod，DirectCallnotBlock
         this.executor.applyState(state);
     }
 
@@ -35,7 +35,7 @@ export class MouseAdapter implements InputAdapter {
      * @param delta Input delta
      */
     applyDelta(delta: InputDelta): void {
-        // MouseExecutor Of applyDelta 是异步Method，直接调用不阻塞
+        // MouseExecutor Of applyDelta IsAsyncMethod，DirectCallnotBlock
         this.executor.applyDelta(delta);
     }
 
@@ -44,7 +44,7 @@ export class MouseAdapter implements InputAdapter {
      * @param event Input event
      */
     applyEvent(event: InputEvent): void {
-        // MouseExecutor Of applyEvent 是异步Method，直接调用不阻塞
+        // MouseExecutor Of applyEvent IsAsyncMethod，DirectCallnotBlock
         this.executor.applyEvent(event);
     }
 
@@ -52,17 +52,17 @@ export class MouseAdapter implements InputAdapter {
      * ResetInput state（InputAdapter InterfaceMethod）
      */
     reset(): void {
-        // MouseExecutor Of reset 是异步Method，直接调用不阻塞
+        // MouseExecutor Of reset IsAsyncMethod，DirectCallnotBlock
         this.executor.reset();
     }
 
     /**
-     * ApplyMouseState（Mouse特定Method）
-     * @param x Mouse X 坐标
-     * @param y Mouse Y 坐标
-     * @param left Left键State
-     * @param right Right键State
-     * @param middle In键State
+     * ApplyMouseState（MouseSpecificMethod）
+     * @param x Mouse X Coord
+     * @param y Mouse Y Coord
+     * @param left LeftKeyState
+     * @param right RightKeyState
+     * @param middle InKeyState
      */
     applyMouseState(
         x: number,
@@ -89,7 +89,7 @@ export class MouseAdapter implements InputAdapter {
         right: boolean;
         middle: boolean;
     } {
-        // MouseExecutor 不暴露Inside部State，ReturnDefaultValue
+        // MouseExecutor notExposeInsidePartState，ReturnDefaultValue
         return { x: 0, y: 0, left: false, right: false, middle: false };
     }
 }

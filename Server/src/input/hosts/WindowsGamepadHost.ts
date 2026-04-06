@@ -3,10 +3,10 @@
  * 
  * Implement virtual Xbox 360 controller using ViGEmBus + node-vigemclient
  * 
- * 降级策略：
- * - ViGEmBus Driver未安装：记录error，Disable宿主
- * - ModuleLoadFailure：记录error，Disable宿主
- * - ExecuteFailure：记录error，不影响其他宿主
+ * FallbackStrategy：
+ * - ViGEmBus DriverNotYetInstall：Recorderror，DisableHost
+ * - ModuleLoadFailure：Recorderror，DisableHost
+ * - ExecuteFailure：Recorderror，notInfluenceOtherHost
  * 
  * XInput ButtonMap：
  * - A: 0x0001, B: 0x0002, X: 0x0004, Y: 0x0008
@@ -134,7 +134,7 @@ export class WindowsGamepadHost extends InputHost {
             // Build XInput state
             const xinputState = this.buildXInputState(state);
             
-            // 提交State到虚拟Controller
+            // SubmitStatetoVirtualController
             this.controller.sendState(xinputState);
             
             // UpdateLocalState
@@ -163,14 +163,14 @@ export class WindowsGamepadHost extends InputHost {
     /**
      * Build XInput state
      * 
-     * XInput State结构：
-     * - wButtons: Button位掩码
-     * - bLeftTrigger: Left扳机 (0-255)
-     * - bRightTrigger: Right扳机 (0-255)
-     * - sThumbLX: LeftJoystick X 轴 (-32768 到 32767)
-     * - sThumbLY: LeftJoystick Y 轴 (-32768 到 32767)
-     * - sThumbRX: RightJoystick X 轴 (-32768 到 32767)
-     * - sThumbRY: RightJoystick Y 轴 (-32768 到 32767)
+     * XInput StateStructure：
+     * - wButtons: Button位掩Code
+     * - bLeftTrigger: LeftTrigger (0-255)
+     * - bRightTrigger: RightTrigger (0-255)
+     * - sThumbLX: LeftJoystick X Axis (-32768 to 32767)
+     * - sThumbLY: LeftJoystick Y Axis (-32768 to 32767)
+     * - sThumbRX: RightJoystick X Axis (-32768 to 32767)
+     * - sThumbRY: RightJoystick Y Axis (-32768 to 32767)
      * 
      * @param state Gamepad state
      * @returns XInput StateObject
@@ -185,7 +185,7 @@ export class WindowsGamepadHost extends InputHost {
             }
         });
 
-        // Convert joystick axis values（-1.0~1.0 到 -32768~32767）
+        // Convert joystick axis values（-1.0~1.0 to -32768~32767）
         const leftX = state.axes?.leftX ?? 0;
         const leftY = state.axes?.leftY ?? 0;
         const rightX = state.axes?.rightX ?? 0;
@@ -196,7 +196,7 @@ export class WindowsGamepadHost extends InputHost {
         const sThumbRX = Math.round(this.clamp(rightX, -1, 1) * 32767);
         const sThumbRY = Math.round(this.clamp(rightY, -1, 1) * 32767);
 
-        // Convert trigger values（0.0~1.0 到 0~255）
+        // Convert trigger values（0.0~1.0 to 0~255）
         const leftTrigger = state.triggers?.left ?? 0;
         const rightTrigger = state.triggers?.right ?? 0;
 
@@ -219,7 +219,7 @@ export class WindowsGamepadHost extends InputHost {
      * @param value Value
      * @param min MinimumValue
      * @param max MaximumValue
-     * @returns 限制AfterOfValue
+     * @returns LimitAfterOfValue
      */
     private clamp(value: number, min: number, max: number): number {
         return Math.max(min, Math.min(max, value));
@@ -258,7 +258,7 @@ export class WindowsGamepadHost extends InputHost {
     }
 
     /**
-     * Destroy宿主
+     * DestroyHost
      * Disconnect controller, cleanup resources
      */
     destroy(): void {
@@ -282,7 +282,7 @@ export class WindowsGamepadHost extends InputHost {
 
     /**
      * Get current active button count
-     * @returns 活动Button数量
+     * @returns ActiveButtonNumberAmount
      */
     getActiveButtonCount(): number {
         return this.activeButtons.size;
@@ -290,7 +290,7 @@ export class WindowsGamepadHost extends InputHost {
 
     /**
      * Get current active button list
-     * @returns 活动ButtonList
+     * @returns ActiveButtonList
      */
     getActiveButtons(): string[] {
         return [...this.activeButtons];

@@ -60,7 +60,7 @@ export class DebugManager {
     /**
      * Check if log level should output
      * @param level Log level
-     * @returns 是否应该Output
+     * @returns WhetherShouldOutput
      */
     private shouldLog(level: LogLevel): boolean {
         if (!this.config.enabled) {
@@ -76,8 +76,8 @@ export class DebugManager {
 
     /**
      * Check if source should output
-     * @param source 来源Identifier
-     * @returns 是否应该Output
+     * @param source ComeSourceIdentifier
+     * @returns WhetherShouldOutput
      */
     private shouldIncludeSource(source?: string): boolean {
         if (!source || !this.config.filters || this.config.filters.length === 0) {
@@ -90,7 +90,7 @@ export class DebugManager {
     }
 
     /**
-     * SendDebugMessage到AllClient
+     * SendDebugMessagetoAllClient
      * @param message DebugMessage
      */
     private broadcast(message: DebugMessage): void {
@@ -100,18 +100,18 @@ export class DebugManager {
             try {
                 ws.send(messageStr);
             } catch (error) {
-                // Client可能Disconnected，Remove它
+                // ClientCanCanDisconnected，RemoveIt
                 this.wsClients.delete(ws);
             }
         }
     }
 
     /**
-     * 记录DebugMessage
+     * RecordDebugMessage
      * @param level Log level
      * @param message MessageInside容
-     * @param source 来源Identifier
-     * @param data 附加数据
+     * @param source ComeSourceIdentifier
+     * @param data AttachNumber据
      */
     log(level: LogLevel, message: string, source?: string, data?: any): void {
         if (!this.shouldLog(level)) {
@@ -129,25 +129,25 @@ export class DebugManager {
             data
         };
 
-        // 添加Timestamp
+        // AddTimestamp
         if (this.config.includeTimestamp) {
             debugMessage.timestamp = Date.now();
         }
 
-        // 添加来源
+        // AddComeSource
         if (this.config.includeSource && source) {
             debugMessage.source = source;
         }
 
-        // 广播到Client
+        // BroadcasttoClient
         this.broadcast(debugMessage);
 
-        // 同时Output到控制台
+        // SameTimeOutputtoConsole
         this.logToConsole(debugMessage);
     }
 
     /**
-     * Output到控制台
+     * OutputtoConsole
      * @param message DebugMessage
      */
     private logToConsole(message: DebugMessage): void {
@@ -179,7 +179,7 @@ export class DebugManager {
         }
     }
 
-    // 便捷Method
+    // ConvenientMethod
     debug(message: string, source?: string, data?: any): void {
         this.log("DEBUG", message, source, data);
     }
@@ -197,11 +197,11 @@ export class DebugManager {
     }
 }
 
-// ExportDefault实例
+// ExportDefaultInstance
 export const debugManager = new DebugManager();
 
 /**
- * 处理DebugConfigSetMessage
+ * HandleDebugConfigSetMessage
  * @param ws WebSocket connection
  * @param message DebugConfigSetMessage
  */
@@ -217,7 +217,7 @@ export function handleDebugConfigSet(ws: any, message: DebugConfigSetMessage): v
 }
 
 /**
- * 处理DebugConfigGetMessage
+ * HandleDebugConfigGetMessage
  * @param ws WebSocket connection
  */
 export function handleDebugConfigGet(ws: any): void {
@@ -231,7 +231,7 @@ export function handleDebugConfigGet(ws: any): void {
 
 /**
  * CreateDebugLogManager
- * @param source 来源Identifier
+ * @param source ComeSourceIdentifier
  * @returns DebugLogManagerObject
  */
 export function createLogger(source: string) {

@@ -4,12 +4,12 @@ import { getExecutorManager } from "../../input/executor";
 import { inputState } from "../../input/state";
 
 /**
- * 处理Input增量Message
+ * HandleInputDeltaMessage
  * @param ws WebSocket connection
- * @param message Input增量Message
+ * @param message InputDeltaMessage
  */
 export function handleInputDelta(ws: any, message: InputDeltaMessage) {
-    // 检查Message数据
+    // CheckMessageNumber据
     if (!message.data) {
         console.error("InputDeltaHandlerError: Invalid message data");
         
@@ -54,11 +54,11 @@ export function handleInputDelta(ws: any, message: InputDeltaMessage) {
             };
         }
 
-        // ✅ 触发InputExecutor
+        // ✅ TriggerInputExecutor
         const executorManager = getExecutorManager();
         executorManager.applyState(inputState);
 
-        // 记录DetailOfInput增量数据Log
+        // RecordDetailOfInputDeltaNumber据Log
         console.log(formatInputDeltaMessageLog(message));
         
         // Send ACK Message

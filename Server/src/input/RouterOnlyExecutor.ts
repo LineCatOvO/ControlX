@@ -186,7 +186,7 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
  * Create Router-only executor manager
  *
  * @param router Input router
- * @param enabled 是否Enable
+ * @param enabled WhetherEnable
  * @returns Router-only executor manager
  */
 export function createRouterOnlyExecutorManager(
@@ -209,7 +209,7 @@ export function createRouterOnlyExecutorManager(
 // Router-only mode config
 const isRouterOnlyMode = process.env.ROUTER_ONLY === 'true';
 
-// Router-only 实例
+// Router-only Instance
 let routerOnlyManager: RouterOnlyExecutorManager | null = null;
 let inputRouter: InputRouter | null = null;
 
@@ -254,7 +254,7 @@ export function executeInputRouterOnly(): void {
         getExecutorManager().applyState(inputState);
     }
 
-    // recordValidState时间
+    // recordValidStateTime
     const applyTime = Date.now();
     getSafetyController().recordValidState(inputState, applyTime);
 }
@@ -274,7 +274,7 @@ export function getInputRouter(): InputRouter | null {
 }
 
 /**
- * 检查是否For Router-only Mode
+ * CheckWhetherFor Router-only Mode
  */
 export function isRouterOnlyModeEnabled(): boolean {
     return isRouterOnlyMode && routerOnlyManager !== null;

@@ -10,8 +10,8 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
  *
  * Design notes：
  * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
- * - Inside部委托给 JoystickExecutor Execute实际OfJoystickOperation
- * - 提供Joystick特定OfMethod（applyJoystickState, getJoystickState）
+ * - InsidePartDelegateTo JoystickExecutor ExecuteActualOfJoystickOperation
+ * - ProvideJoystickSpecificOfMethod（applyJoystickState, getJoystickState）
  */
 export class JoystickAdapter implements InputAdapter {
     private executor: JoystickExecutor;
@@ -52,11 +52,11 @@ export class JoystickAdapter implements InputAdapter {
     }
 
     /**
-     * ApplyJoystickState（Joystick特定Method）
-     * @param x X 轴Value
-     * @param y Y 轴Value
-     * @param deadzone 死区
-     * @param smoothing 平滑系数
+     * ApplyJoystickState（JoystickSpecificMethod）
+     * @param x X AxisValue
+     * @param y Y AxisValue
+     * @param deadzone DeadZone
+     * @param smoothing 平滑系Number
      */
     applyJoystickState(
         x: number,
@@ -81,7 +81,7 @@ export class JoystickAdapter implements InputAdapter {
         deadzone: number;
         smoothing: number;
     } {
-        // JoystickExecutor 不暴露Inside部State，ReturnDefaultValue
+        // JoystickExecutor notExposeInsidePartState，ReturnDefaultValue
         return { x: 0, y: 0, deadzone: 0, smoothing: 0 };
     }
 }

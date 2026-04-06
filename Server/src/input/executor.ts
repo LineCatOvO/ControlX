@@ -23,7 +23,7 @@
  * 【Key design】
  * - Adapter pattern: polymorphism through InputAdapter interface，encapsulate calling logic of concrete executors
  * - Manager pattern: DefaultInputExecutorManager unified management of all adapters
- * - ModeSwitch：Control adapter type through environment variables（生产/Test/DryRun）
+ * - ModeSwitch：Control adapter type through environment variables（Production/Test/DryRun）
  * - Architecture consistency: use adapter interface instead of direct executor calls
  *
  * 【Notes】
@@ -151,7 +151,7 @@ if (isDryRunMode) {
     const mouseAdapter = new MouseAdapter(mouseExecutor);
     const joystickAdapter = new JoystickAdapter(joystickExecutor);
 
-    // Create游戏GamepadAdapter（use GamepadXInputAdapter）
+    // CreateGameGamepadAdapter（use GamepadXInputAdapter）
     const gamepadXInputAdapter = new GamepadXInputAdapter();
     const gamepadAdapter = new GamepadAdapter(gamepadXInputAdapter);
     gamepadAdapter.initialize();
@@ -228,7 +228,7 @@ function executeInput() {
     // Get metrics collector
     const metricsCollector = getMetricsCollector();
     
-    // Checkinput state变izeandrecordmetric
+    // Checkinput stateChangeizeandrecordmetric
     const state = inputState as any;
     
     // Record keyboard events
@@ -262,7 +262,7 @@ function executeInput() {
         metricsCollector.recordInputEvent('joystick');
     }
     
-    // ApplyCurrentinput state到AllExecutor
+    // ApplyCurrentinput statetoAllExecutor
     executorManager.applyState(inputState);
 
     // Record valid state time（applyTimeprovided by ApplyScheduler）

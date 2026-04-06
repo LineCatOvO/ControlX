@@ -737,7 +737,7 @@ export class InputValidator {
   }
 
   /**
-   * Validatesequence number（public method，Used forOutside部call）
+   * Validatesequence number（public method，Used forOutsidePartcall）
    * @param newSeq New sequence number
    * @param lastSeq Old sequence number
    * @returns Is monotonically increasing
@@ -754,7 +754,7 @@ export class InputValidator {
       return true;
     }
 
-    // Allowsequence numberSameor更大（Handle重传和重newConnectOfcase）
+    // Allowsequence numberSameorLarger（HandleReTransferandRenewConnectOfcase）
     return newSeq >= lastSeq;
   }
 

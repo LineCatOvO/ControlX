@@ -189,14 +189,14 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
 
     /**
      * SwitchMode
-     * @param mode 目标Mode
+     * @param mode ItemMarkMode
      */
     switchMode(mode: 'executor' | 'router' | 'shadow'): void {
         this.shadowManager.switchMode(mode);
     }
 
     /**
-     * Get影子ModestatisticsInfo
+     * GetShadowModestatisticsInfo
      * @returns statisticsInfo
      */
     getShadowStats() {
@@ -204,8 +204,8 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * Get影子Mode一致ity报告
-     * @returns 一致ity报告
+     * GetShadowModeConsistentityReport
+     * @returns ConsistentityReport
      */
     getConsistencyReport() {
         return this.shadowManager.getConsistencyReport();
@@ -221,12 +221,12 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
 }
 
 /**
- * Create影子ModeExecutor manager工厂Function
+ * CreateShadowModeExecutor managerFactoryFunction
  *
  * @param executorManager Executor manager
  * @param router Input router
  * @param shadowModeEnabled Whether shadow mode is enabled
- * @returns 影子ModeExecutor manager
+ * @returns ShadowModeExecutor manager
  */
 export function createShadowModeExecutorManager(
     executorManager: InputExecutorManager,

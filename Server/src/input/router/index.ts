@@ -1,5 +1,5 @@
 /**
- * InputRouterManagerModule统一Export
+ * InputRouterManagerModuleUnifiedExport
  */
 
 export { InputRouter } from './InputRouter';

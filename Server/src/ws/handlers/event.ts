@@ -54,7 +54,7 @@ export function handleEvent(ws: any, message: EventMessage) {
             return;
         }
 
-        // TODO: ApplyEventdelta变化
+        // TODO: ApplyEventdeltaChange化
         // Currently only confirm event, implement delta application logic later
         
         // Send success ACK message

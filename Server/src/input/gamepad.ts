@@ -4,25 +4,25 @@ import { GamepadAdapter } from "./adapters/GamepadAdapter";
 import { GamepadXInputAdapter } from "./adapters/GamepadXInputAdapter";
 
 /**
- * 游戏GamepadInputExecutor
- * 负责will游戏GamepadInputState转换For系统GamepadInput
+ * GameGamepadInputExecutor
+ * ResponsiblewillGameGamepadInputStateConvertForSystemGamepadInput
  * 
- * 降级策略：
- * - ViGEmBus Available：use虚拟 Xbox 360 Controller
- * - ViGEmBus 不Available：recordWarning，Disable游戏GamepadFunction，onlyuseKeyboard映射
+ * FallbackStrategy：
+ * - ViGEmBus Available：useVirtual Xbox 360 Controller
+ * - ViGEmBus notAvailable：recordWarning，DisableGameGamepadFunction，onlyuseKeyboardMap
  */
 export class GamepadExecutor implements InputExecutor {
     /** XInput Adapter */
     private xinputAdapter: GamepadXInputAdapter;
-    /** 游戏GamepadAdapter（封装 XInput） */
+    /** GameGamepadAdapter（Encapsulate XInput） */
     private gamepadAdapter: GamepadAdapter;
-    /** 是否已Initialize */
+    /** WhetherAlreadyInitialize */
     private isInitialized: boolean = false;
-    /** recordCurrent游戏GamepadState（用于Log） */
+    /** recordCurrentGameGamepadState（ForLog） */
     private currentGamepadState: Set<string> = new Set();
 
     /**
-     * 构造Function
+     * ConstructFunction
      */
     constructor() {
         console.log('🎮 GamepadExecutor: Initializing...');
@@ -30,10 +30,10 @@ export class GamepadExecutor implements InputExecutor {
         // Create XInput Adapter
         this.xinputAdapter = new GamepadXInputAdapter();
         
-        // Create游戏GamepadAdapter
+        // CreateGameGamepadAdapter
         this.gamepadAdapter = new GamepadAdapter(this.xinputAdapter);
         
-        // 尝试Initialize
+        // TryInitialize
         this.isInitialized = this.gamepadAdapter.initialize();
         
         if (this.isInitialized) {
@@ -54,28 +54,28 @@ export class GamepadExecutor implements InputExecutor {
      */
     async applyState(state: InputState): Promise<void> {
         if (!this.isInitialized) {
-            // ViGEmBus 不Available，跳过游戏GamepadExecute
+            // ViGEmBus notAvailable，SkipGameGamepadExecute
             return;
         }
 
         if (state.gamepad) {
-            // Update游戏GamepadState（用于Log）
+            // UpdateGameGamepadState（ForLog）
             this.updateGamepadState(state.gamepad);
             
-            // ApplyState到 XInput Adapter
+            // ApplyStateto XInput Adapter
             this.gamepadAdapter.applyState(state);
         }
     }
 
     /**
-     * ApplyInput增量
-     * @param delta Input增量
+     * ApplyInputDelta
+     * @param delta InputDelta
      */
     applyDelta(delta: InputDelta): void {
         if (!this.isInitialized) {
             return;
         }
-        // 游戏Gamepad不Support增量Mode，直接跳过
+        // GameGamepadnotSupportDeltaMode，DirectSkip
         console.log('GamepadEvent: Delta not supported, use full state instead');
     }
 
@@ -87,7 +87,7 @@ export class GamepadExecutor implements InputExecutor {
         if (!this.isInitialized) {
             return;
         }
-        // 游戏Gamepad不SupportEventMode，直接跳过
+        // GameGamepadnotSupportEventMode，DirectSkip
         console.log('GamepadEvent: Event not supported, use full state instead');
     }
 
@@ -99,7 +99,7 @@ export class GamepadExecutor implements InputExecutor {
             return;
         }
         
-        // Reset游戏GamepadState
+        // ResetGameGamepadState
         this.gamepadAdapter.reset();
         this.currentGamepadState.clear();
 
@@ -114,37 +114,37 @@ export class GamepadExecutor implements InputExecutor {
     }
 
     /**
-     * Update游戏GamepadState（用于Log）
-     * @param newState newOf游戏GamepadState
+     * UpdateGameGamepadState（ForLog）
+     * @param newState newOfGameGamepadState
      */
     private updateGamepadState(newState: Set<string>): void {
-        // 找出AddOfButton（需want按Under）
+        // FindAddOfButton（NeedwantPressUnder）
         const buttonsToPress = new Set(
             [...newState].filter(
                 (button) => !this.currentGamepadState.has(button)
             )
         );
 
-        // 找出RemoveOfButton（需wantrelease）
+        // FindRemoveOfButton（Needwantrelease）
         const buttonsToRelease = new Set(
             [...this.currentGamepadState].filter(
                 (button) => !newState.has(button)
             )
         );
 
-        // 只在State有变ize时recordLog
+        // OnlyInStateHasChangeizeTimerecordLog
         if (buttonsToPress.size > 0 || buttonsToRelease.size > 0) {
             console.log(
                 `🎮 Gamepad: Pressing: [${Array.from(buttonsToPress).join(', ')}], Releasing: [${Array.from(buttonsToRelease).join(', ')}]`
             );
 
-            // UpdateCurrent游戏GamepadState
+            // UpdateCurrentGameGamepadState
             this.currentGamepadState = newState;
         }
     }
 
     /**
-     * 清理资源
+     * Clear理资Source
      */
     cleanup(): void {
         if (this.isInitialized) {

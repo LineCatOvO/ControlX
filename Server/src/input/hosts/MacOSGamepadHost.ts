@@ -1,30 +1,30 @@
 /**
- * MacOS 游戏Gamepad宿主Implementation（待制作）
+ * MacOS GameGamepadHostImplementation（PendingMake）
  *
- * TODO: 使用 IOKit 或 GCController Implementation MacOS 游戏GamepadInput
+ * TODO: Use IOKit or GCController Implementation MacOS GameGamepadInput
  *
- * 技术选型：
- * - 方案 1：IOKit HID Interface（Underlying，灵活）
- * - 方案 2：GCController（Game Controller 框架，推荐）
- * - 库选择：node-gamepad 或 直接调用原生Module
+ * TechStack：
+ * - Solution 1：IOKit HID Interface（Underlying，Flexible）
+ * - Solution 2：GCController（Game Controller Framework，Recommend）
+ * - LibSelect：node-gamepad or DirectCallNativeModule
  *
- * 待ImplementationFunction：
- * - [ ] 加载 GCController 框架
- * - [ ] Connection/发现Controller
- * - [ ] ImplementationButton映射（XInput Standard）
- * - [ ] ImplementationJoystick轴Value转换
- * - [ ] Implementation扳机Value转换
- * - [ ] ImplementationCompleteState提交
- * - [ ] Implementation资源清理
+ * PendingImplementationFunction：
+ * - [ ] Load GCController Framework
+ * - [ ] Connection/DiscoverController
+ * - [ ] ImplementationButtonMap（XInput Standard）
+ * - [ ] ImplementationJoystickAxisValueConvert
+ * - [ ] ImplementationTriggerValueConvert
+ * - [ ] ImplementationCompleteStateSubmit
+ * - [ ] Implementation资SourceClear理
  *
- * 依赖安装：
+ * DepInstall：
  * ```bash
  * npm install node-gamepad
- * # 或
+ * # or
  * npm install gamepad
  * ```
  *
- * Button映射（XInput Standard）：
+ * ButtonMap（XInput Standard）：
  * - 0: A, 1: B, 2: X, 3: Y
  * - 4: LB, 5: RB
  * - 6: BACK, 7: START
@@ -32,15 +32,15 @@
  * - 10: GUIDE, 11: DPAD_UP
  * - 12: DPAD_DOWN, 13: DPAD_LEFT, 14: DPAD_RIGHT
  *
- * @todo Implementation MacOS 游戏GamepadInputSupport
- * @status TODO - 待制作
+ * @todo Implementation MacOS GameGamepadInputSupport
+ * @status TODO - PendingMake
  */
 
 import { InputHost } from './InputHost';
 import { InputDeviceType } from './types';
 
 /**
- * 游戏GamepadStateInterface
+ * GameGamepadStateInterface
  */
 export interface GamepadState {
     buttons: { [key: string]: boolean };
@@ -49,10 +49,10 @@ export interface GamepadState {
 }
 
 export class MacOSGamepadHost extends InputHost {
-    /** GCController 实例（待Implementation） */
+    /** GCController Instance（PendingImplementation） */
     private controller: any = null;
 
-    /** 最After提交OfState（待Implementation） */
+    /** MaxAfterSubmitOfState（PendingImplementation） */
     private lastState: GamepadState | null = null;
 
     constructor() {
@@ -60,26 +60,26 @@ export class MacOSGamepadHost extends InputHost {
     }
 
     /**
-     * Initialize：加载 GCController 框架并ConnectionController
-     * @returns 是否InitializeSuccess
+     * Initialize：Load GCController Framework并ConnectionController
+     * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
         // TODO: Implementation GCController Initialize
         console.warn('[MacOSGP] TODO: Implement GCController initialization');
 
         try {
-            // TODO: 动态Import GCController 框架
+            // TODO: DynamicImport GCController Framework
             // const { GCController } = require('gamecontroller');
 
-            // TODO: Connection第一个AvailableOfController
+            // TODO: ConnectionFirstOneAvailableOfController
             // this.controller = GCController.get(0);
 
-            // TODO: 或者监听ControllerConnection
+            // TODO: or者监听ControllerConnection
             // GCController.on('connected', (controller) => {
             //     this.controller = controller;
             // });
 
-            // TODO: 检查Controller是否SupportExtend布局（XInput Compatible）
+            // TODO: CheckControllerWhetherSupportExtendLayout（XInput Compatible）
             // if (!this.controller.extendedLayout) {
             //     console.warn('[MacOSGP] Controller does not support extended layout');
             // }
@@ -96,18 +96,18 @@ export class MacOSGamepadHost extends InputHost {
     }
 
     /**
-     * ApplyState：使用 GCController Send游戏GamepadEvent
-     * @param state 游戏GamepadState
+     * ApplyState：Use GCController SendGameGamepadEvent
+     * @param state GameGamepadState
      */
     applyState(state: GamepadState): void {
-        // TODO: ImplementationState提交
+        // TODO: ImplementationStateSubmit
         if (!this.isEnabled || !this.controller) {
             console.debug('[MacOSGP] TODO: Device not enabled');
             return;
         }
 
-        // TODO: ButtonState映射
-        // GCController Button映射
+        // TODO: ButtonStateMap
+        // GCController ButtonMap
         // const buttonMap = {
         //     'a': 'buttonA',
         //     'b': 'buttonB',
@@ -125,7 +125,7 @@ export class MacOSGamepadHost extends InputHost {
         //     'dpright': 'dpRight',
         // };
 
-        // TODO: 提交ButtonState
+        // TODO: SubmitButtonState
         // for (const [key, pressed] of Object.entries(state.buttons)) {
         //     const gcButton = buttonMap[key];
         //     if (gcButton && this.controller[gcButton]) {
@@ -133,7 +133,7 @@ export class MacOSGamepadHost extends InputHost {
         //     }
         // }
 
-        // TODO: Joystick轴Value转换（-1.0~1.0 → GCController Range）
+        // TODO: JoystickAxisValueConvert（-1.0~1.0 → GCController Range）
         // if (this.controller.leftThumbstick) {
         //     this.controller.leftThumbstick.xAxis.value = state.axes.leftX;
         //     this.controller.leftThumbstick.yAxis.value = state.axes.leftY;
@@ -143,7 +143,7 @@ export class MacOSGamepadHost extends InputHost {
         //     this.controller.rightThumbstick.yAxis.value = state.axes.rightY;
         // }
 
-        // TODO: 扳机Value转换（0.0~1.0 → GCController Range）
+        // TODO: TriggerValueConvert（0.0~1.0 → GCController Range）
         // if (this.controller.leftTrigger) {
         //     this.controller.leftTrigger.value = state.triggers.left;
         // }
@@ -151,25 +151,25 @@ export class MacOSGamepadHost extends InputHost {
         //     this.controller.rightTrigger.value = state.triggers.right;
         // }
 
-        // TODO: Update最AfterState
+        // TODO: UpdateMaxAfterState
         // this.lastState = state;
 
         console.debug('[MacOSGP] TODO: applyState stub called');
     }
 
     /**
-     * Reset：释放AllButton，Joystick归零
+     * Reset：ReleaseAllButton，JoystickResetToZero
      */
     reset(): void {
-        // TODO: ImplementationReset逻辑
+        // TODO: ImplementationResetLogic
         if (!this.isEnabled || !this.controller) {
             return;
         }
 
-        // TODO: 释放AllButton
-        // GCController 会自动处理Button释放
+        // TODO: ReleaseAllButton
+        // GCController WillAutoHandleButtonRelease
 
-        // TODO: Joystick归零
+        // TODO: JoystickResetToZero
         // if (this.controller.leftThumbstick) {
         //     this.controller.leftThumbstick.xAxis.value = 0;
         //     this.controller.leftThumbstick.yAxis.value = 0;
@@ -179,7 +179,7 @@ export class MacOSGamepadHost extends InputHost {
         //     this.controller.rightThumbstick.yAxis.value = 0;
         // }
 
-        // TODO: 扳机归零
+        // TODO: TriggerResetToZero
         // if (this.controller.leftTrigger) {
         //     this.controller.leftTrigger.value = 0;
         // }
@@ -187,20 +187,20 @@ export class MacOSGamepadHost extends InputHost {
         //     this.controller.rightTrigger.value = 0;
         // }
 
-        // TODO: 清NullState
+        // TODO: ClearNullState
         // this.lastState = null;
 
         console.debug('[MacOSGP] TODO: reset stub called');
     }
 
     /**
-     * Destroy：清理 GCController 资源
+     * Destroy：Clear理 GCController 资Source
      */
     destroy(): void {
-        // TODO: ImplementationDestroy逻辑
+        // TODO: ImplementationDestroyLogic
         this.reset();
 
-        // TODO: 断开ControllerConnection
+        // TODO: DisconnectControllerConnection
         // if (this.controller) {
         //     this.controller.disconnect();
         //     this.controller = null;

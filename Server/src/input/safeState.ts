@@ -1,9 +1,9 @@
 import { InputState } from "../types/ws";
 
-// SafeState（Client断开时回退到此State）
+// SafeState（ClientDisconnectTimeRollbacktoThisState）
 export const safeState: InputState = {
     keyboard: new Set<string>(),
-    gamepad: new Set<string>(), // 添加游戏GamepadSafeState
+    gamepad: new Set<string>(), // AddGameGamepadSafeState
     mouse: {
         x: 0,
         y: 0,

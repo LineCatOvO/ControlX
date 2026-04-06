@@ -67,8 +67,8 @@ interface ApplySchedulerConfig {
  * ============================================================================
  * time authorityDescription
  * ============================================================================
- * ApplyScheduler is the【unique time authority】，AllTimeRelatedOperation都必须use
- * ApplyScheduler provideOf tickTime，Prohibit其他Module自行call Date.now() GetTime。
+ * ApplyScheduler is the【unique time authority】，AllTimeRelatedOperationAllMustuse
+ * ApplyScheduler provideOf tickTime，ProhibitOtherModuleSelfcall Date.now() GetTime。
  * 
  * Design principles：
  * 1. Single time source: all timestamps generated and distributed by ApplyScheduler
@@ -219,7 +219,7 @@ export class ApplyScheduler {
           // Router-only mode: directly use Router
           executeInputRouterOnly();
         } else if (isShadowModeEnabled()) {
-          // shadow mode：双写到 Executor 和 Router
+          // shadow mode：DualWriteto Executor and Router
           executeInputWithShadow();
         } else {
           // Normal mode: only write to Executor
@@ -251,7 +251,7 @@ export class ApplyScheduler {
     } catch (error) {
       console.error('ApplyScheduler: Error applying state:', error);
 
-      // 发生Exception时triggersafe clearing
+      // OccurExceptionTimetriggersafe clearing
       const safetyController = getSafetyController();
       safetyController.triggerExceptionClear('ApplyScheduler error');
     }
@@ -263,8 +263,8 @@ export class ApplyScheduler {
    * @returns sequence number
    */
   private extractSequenceNumber(state: any): number {
-    // 这里假设 state In有 frameId FieldasForsequence number
-    // If没有，ThenuseTimestampasForsequence number
+    // HereAssume state InHas frameId FieldasForsequence number
+    // IfNoHas，ThenuseTimestampasForsequence number
     return state.frameId || Date.now();
   }
 

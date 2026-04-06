@@ -145,7 +145,7 @@ export class TerminalMonitor {
      * Check if two line arrays are equal
      * @param lines1 First line array
      * @param lines2 Second line array
-     * @returns 是否相等
+     * @returns Whether相Wait
      */
     private areLinesEqual(lines1: string[], lines2: string[]): boolean {
         if (lines1.length !== lines2.length) {

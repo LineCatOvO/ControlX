@@ -6,23 +6,23 @@ import { InputState } from "../types/ws";
  * HeartbeatConfig
  */
 interface HeartbeatConfig {
-    intervalMs: number; // HeartbeatInterval，Default30秒
-    timeoutMs: number; // HeartbeatTimeout时间，Default60秒
+    intervalMs: number; // HeartbeatInterval，Default30Second
+    timeoutMs: number; // HeartbeatTimeoutTime，Default60Second
 }
 
 /**
  * HeartbeatState
  */
 interface HeartbeatState {
-    lastSendTime: number; // mostAfterSendHeartbeat时间
-    lastReceiveTime: number; // mostAfterReceiveHeartbeat时间
-    consecutiveFailures: number; // 连续Failure次count
-    isAlive: boolean; // 是否存活
+    lastSendTime: number; // mostAfterSendHeartbeatTime
+    lastReceiveTime: number; // mostAfterReceiveHeartbeatTime
+    consecutiveFailures: number; // ContinuousFailureTimecount
+    isAlive: boolean; // WhetherStore活
 }
 
 /**
  * HeartbeatModule
- * 负责ClientHeartbeatDetection和Timeout处理
+ * ResponsibleClientHeartbeatDetectionandTimeoutHandle
  */
 export class HeartbeatModule {
     // Config
@@ -31,7 +31,7 @@ export class HeartbeatModule {
     // HeartbeatState
     private state: HeartbeatState;
 
-    // Heartbeat定时Manager
+    // HeartbeatFixedTimeManager
     private timer: NodeJS.Timeout | null = null;
 
     // HeartbeatCallback
@@ -40,17 +40,17 @@ export class HeartbeatModule {
     // Timeout计countManager
     private consecutiveTimeouts: number = 0;
 
-    // Maximum连续Timeout次count
+    // MaximumContinuousTimeoutTimecount
     private readonly maxConsecutiveTimeouts: number = 3;
 
     /**
-     * 构造Function
+     * ConstructFunction
      * @param config HeartbeatConfig
      */
     constructor(config?: Partial<HeartbeatConfig>) {
         this.config = {
-            intervalMs: 30000, // Default30秒
-            timeoutMs: 60000, // Default60秒
+            intervalMs: 30000, // Default30Second
+            timeoutMs: 60000, // Default60Second
             ...config,
         };
 
@@ -63,18 +63,18 @@ export class HeartbeatModule {
     }
 
     /**
-     * 启动HeartbeatModule
+     * StartHeartbeatModule
      */
     start(): void {
-        // 如果已经在Run，先Stop
+        // IfAlreadyThroughInRun，FirstStop
         if (this.timer) {
             clearInterval(this.timer);
         }
 
-        // Send第一个Heartbeat
+        // SendFirstOneHeartbeat
         this.sendHeartbeat();
 
-        // 启动Heartbeat定时Manager
+        // StartHeartbeatFixedTimeManager
         this.timer = setInterval(() => {
             this.sendHeartbeat();
         }, this.config.intervalMs);
@@ -102,7 +102,7 @@ export class HeartbeatModule {
     private sendHeartbeat(): void {
         const now = Date.now();
 
-        // UpdateSend时间
+        // UpdateSendTime
         this.state.lastSendTime = now;
 
         // SendHeartbeatMessage
@@ -112,26 +112,26 @@ export class HeartbeatModule {
     }
 
     /**
-     * 分发HeartbeatMessage（由WebSocketModule调用）
+     * DistributeHeartbeatMessage（ByWebSocketModuleCall）
      * @param timestamp HeartbeatTimestamp
      */
     dispatchHeartbeat(timestamp: number): void {
-        // 由WebSocketModuleImplementation，这里留Null
+        // ByWebSocketModuleImplementation，Here留Null
         // format: { type: 'ping', timestamp }
     }
 
     /**
-     * Handle heartbeat response（由WebSocketModule调用）
+     * Handle heartbeat response（ByWebSocketModuleCall）
      * @param timestamp ResponseTimestamp
      */
     handlePong(timestamp: number): void {
         const now = Date.now();
 
-        // UpdateReceive时间
+        // UpdateReceiveTime
         this.state.lastReceiveTime = now;
         this.state.isAlive = true;
 
-        // Reset连续Failure计count
+        // ResetContinuousFailure计count
         this.state.consecutiveFailures = 0;
         this.consecutiveTimeouts = 0;
 
@@ -141,15 +141,15 @@ export class HeartbeatModule {
         // recordHeartbeatResponse
         console.log(`Heartbeat: Received pong, RTT = ${rtt}ms`);
 
-        // 每10次HeartbeatOutput一次statistics
+        // Each10TimeHeartbeatOutputOncestatistics
         if (this.state.consecutiveFailures % 10 === 0) {
             console.log("Heartbeat Stats:", this.getStats());
         }
     }
 
     /**
-     * 检查HeartbeatTimeout
-     * @returns 是否Timeout
+     * CheckHeartbeatTimeout
+     * @returns WhetherTimeout
      */
     checkTimeout(): boolean {
         const now = Date.now();
@@ -162,12 +162,12 @@ export class HeartbeatModule {
                 `Heartbeat: Timeout detected, elapsed: ${elapsed}ms, consecutive timeouts: ${this.consecutiveTimeouts}`
             );
 
-            // 触发TimeoutCallback
+            // TriggerTimeoutCallback
             if (this.onTimeoutCallback) {
                 this.onTimeoutCallback();
             }
 
-            // 每 5 次连续TimeoutOutput一次Warning
+            // Each 5 TimeContinuousTimeoutOutputOnceWarning
             if (this.consecutiveTimeouts % 5 === 0) {
                 console.warn(
                     `Heartbeat: High consecutive timeouts (${this.consecutiveTimeouts}), triggering safety clear`
@@ -227,8 +227,8 @@ export class HeartbeatModule {
     }
 
     /**
-     * GetRTT（往返时间）
-     * @returns RTT，如果没有收到Response则Return-1
+     * GetRTT（往返Time）
+     * @returns RTT，IfNoHas收toResponseThenReturn-1
      */
     getRTT(): number {
         if (this.state.lastReceiveTime === 0 || this.state.lastSendTime === 0) {
@@ -246,8 +246,8 @@ export class HeartbeatModule {
     }
 
     /**
-     * GetHeartbeatTimeout时间
-     * @returns HeartbeatTimeout时间
+     * GetHeartbeatTimeoutTime
+     * @returns HeartbeatTimeoutTime
      */
     getTimeout(): number {
         return this.config.timeoutMs;

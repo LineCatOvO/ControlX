@@ -1,15 +1,15 @@
 /**
- * 影子ModeManageManager
+ * ShadowModeManageManager
  *
- * 职责：
- * 1. 双写Scheduler：同时call旧 Executor 和new Router
+ * Responsibility：
+ * 1. DualWriteScheduler：SameTimecallOld Executor andnew Router
  * 2. Logrecord：record两边OfExecuteResult
- * 3. 一致ity比对：Verify Executor 和 Router OfOutput一致ity
- * 4. 降级保护：Router Failure时自动回退到 Executor
+ * 3. ConsistentityCompare：Verify Executor and Router OfOutputConsistentity
+ * 4. FallbackProtect：Router FailureTimeAutoRollbackto Executor
  *
- * 设计Mode：装饰ManagerMode + 策略Mode
- * - 装饰现有 InputExecutorManager
- * - provide可SwitchOfExecute策略（Executor-only / Router-only / Shadow）
+ * DesignMode：DecorateManagerMode + StrategyMode
+ * - Decorate现Has InputExecutorManager
+ * - provideCanSwitchOfExecuteStrategy（Executor-only / Router-only / Shadow）
  */
 
 import { InputExecutorManager } from '../interfaces';
@@ -18,25 +18,25 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
 import { InputDeviceType } from '../hosts/types';
 
 /**
- * 影子ModeConfig
+ * ShadowModeConfig
  */
 export interface ShadowModeConfig {
-    /** WhetherEnable影子Mode */
+    /** WhetherEnableShadowMode */
     enabled: boolean;
     /** WhetherEnableDetailLog */
     verbose: boolean;
-    /** WhetherEnable一致ityCheck */
+    /** WhetherEnableConsistentityCheck */
     consistencyCheck: boolean;
-    /** Whetherrecord比对Difference */
+    /** WhetherrecordCompareDifference */
     logDifferences: boolean;
-    /** 自动降级：Router Failure时自动Switch到 Executor-only Mode */
+    /** AutoFallback：Router FailureTimeAutoSwitchto Executor-only Mode */
     autoFallback: boolean;
-    /** 连续FailureThreshold，达到Aftertrigger自动降级 */
+    /** ContinuousFailureThreshold，达toAftertriggerAutoFallback */
     failureThreshold: number;
 }
 
 /**
- * ExecuteLogitem目
+ * ExecuteLogitemItem
  */
 export interface ExecutionLogEntry {
     /** Timestamp */
@@ -47,71 +47,71 @@ export interface ExecutionLogEntry {
     executorType: 'executor' | 'router' | 'both';
     /** ExecuteResult */
     success: boolean;
-    /** Execute耗时（毫秒） */
+    /** ExecuteCostTime（MilliSecond） */
     duration: number;
-    /** errorInfo（If有） */
+    /** errorInfo（IfHas） */
     error?: string;
-    /** 设备Type */
+    /** DeviceType */
     deviceType?: InputDeviceType;
 }
 
 /**
- * 一致ity比对Result
+ * ConsistentityCompareResult
  */
 export interface ConsistencyResult {
-    /** Whether一致 */
+    /** WhetherConsistent */
     isConsistent: boolean;
     /** Differencedescription */
     differences: string[];
-    /** 比对Timestamp */
+    /** CompareTimestamp */
     timestamp: number;
 }
 
 /**
- * 影子ModestatisticsInfo
+ * ShadowModestatisticsInfo
  */
 export interface ShadowModeStats {
-    /** 总Execute次数 */
+    /** TotalExecuteCount */
     totalExecutions: number;
-    /** Executor Success次数 */
+    /** Executor SuccessCount */
     executorSuccesses: number;
-    /** Router Success次数 */
+    /** Router SuccessCount */
     routerSuccesses: number;
-    /** Executor Failure次数 */
+    /** Executor FailureCount */
     executorFailures: number;
-    /** Router Failure次数 */
+    /** Router FailureCount */
     routerFailures: number;
-    /** 一致ityCheck次数 */
+    /** ConsistentityCheckCount */
     consistencyChecks: number;
-    /** 一致ity通过次数 */
+    /** ConsistentityPassCount */
     consistencyPassed: number;
-    /** 一致ityFailure次数 */
+    /** ConsistentityFailureCount */
     consistencyFailed: number;
-    /** 连续Failure次数 */
+    /** ContinuousFailureCount */
     consecutiveFailures: number;
     /** mostAfterExecuteTime */
     lastExecutionTime: number;
-    /** 平均Execute耗时（毫秒） */
+    /** AverageExecuteCostTime（MilliSecond） */
     avgExecutionDuration: number;
 }
 
 /**
- * 影子ModeManageManager
+ * ShadowModeManageManager
  */
 export class ShadowModeManager {
     /** Config */
     private readonly config: ShadowModeConfig;
 
-    /** ExecutorManageManager引用 */
+    /** ExecutorManageManagerReference */
     private readonly executorManager: InputExecutorManager;
 
-    /** RouterManager引用 */
+    /** RouterManagerReference */
     private readonly router: InputRouter;
 
-    /** ExecuteLog（循环buffer） */
+    /** ExecuteLog（Cyclebuffer） */
     private executionLogs: ExecutionLogEntry[] = [];
 
-    /** LogMaximum长度 */
+    /** LogMaximumLength */
     private readonly maxLogLength = 1000;
 
     /** statisticsInfo */
@@ -132,10 +132,10 @@ export class ShadowModeManager {
     /** CurrentMode */
     private _currentMode: 'executor' | 'router' | 'shadow' = 'shadow';
 
-    /** sequence number计数Manager */
+    /** sequence number计NumberManager */
     private sequenceCounter = 0;
 
-    /** 总Execute耗时 */
+    /** TotalExecuteCostTime */
     private totalDuration = 0;
 
     /**
@@ -171,7 +171,7 @@ export class ShadowModeManager {
     }
 
     /**
-     * ApplyCompleteInputState（影子Mode双写）
+     * ApplyCompleteInputState（ShadowModeDualWrite）
      * @param state CompleteInputState
      * @param sequenceNumber sequence number（optional）
      */
@@ -187,12 +187,12 @@ export class ShadowModeManager {
         const duration = Date.now() - startTime;
         this.updateStats(executorResult, routerResult, duration);
 
-        // 一致ityCheck
+        // ConsistentityCheck
         if (this.config.consistencyCheck && this._currentMode === 'shadow') {
             this.checkConsistency(executorResult, routerResult, seq);
         }
 
-        // 自动降级Check
+        // AutoFallbackCheck
         if (this.config.autoFallback) {
             this.checkAutoFallback();
         }
@@ -268,7 +268,7 @@ export class ShadowModeManager {
     }
 
     /**
-     * 一致ityCheck
+     * ConsistentityCheck
      * @param executorResult ExecutorResult
      * @param routerResult RouterManagerResult
      * @param sequence sequence number
@@ -282,14 +282,14 @@ export class ShadowModeManager {
 
         const differences: string[] = [];
 
-        // CheckExecuteSuccess/Failure一致ity
+        // CheckExecuteSuccess/FailureConsistentity
         if (executorResult.success !== routerResult.success) {
             differences.push(
                 `Execution status mismatch: executor=${executorResult.success}, router=${routerResult.success}`
             );
         }
 
-        // CheckExecute耗时Difference（超过 50ms 认For有Difference）
+        // CheckExecuteCostTimeDifference（Exceed 50ms 认ForHasDifference）
         const durationDiff = Math.abs(executorResult.duration - routerResult.duration);
         if (durationDiff > 50) {
             differences.push(
@@ -320,17 +320,17 @@ export class ShadowModeManager {
     }
 
     /**
-     * 自动降级Check
+     * AutoFallbackCheck
      */
     private checkAutoFallback(): void {
-        // Check连续Failure
+        // CheckContinuousFailure
         if (this.stats.routerFailures > 0) {
             this.stats.consecutiveFailures++;
         } else {
             this.stats.consecutiveFailures = 0;
         }
 
-        // trigger自动降级
+        // triggerAutoFallback
         if (this.stats.consecutiveFailures >= this.config.failureThreshold) {
             console.error(
                 `[ShadowMode] Auto-fallback triggered: ${this.stats.consecutiveFailures} consecutive router failures`
@@ -344,7 +344,7 @@ export class ShadowModeManager {
      * UpdatestatisticsInfo
      * @param executorResult ExecutorResult
      * @param routerResult RouterManagerResult
-     * @param duration 总耗时
+     * @param duration TotalCostTime
      */
     private updateStats(
         executorResult: ExecutionLogEntry,
@@ -367,12 +367,12 @@ export class ShadowModeManager {
 
     /**
      * recordExecuteLog
-     * @param entry Logitem目
+     * @param entry LogitemItem
      */
     private logExecution(entry: ExecutionLogEntry): void {
         this.executionLogs.push(entry);
 
-        // 循环buffer
+        // Cyclebuffer
         if (this.executionLogs.length > this.maxLogLength) {
             this.executionLogs.shift();
         }
@@ -403,7 +403,7 @@ export class ShadowModeManager {
 
     /**
      * SwitchMode
-     * @param mode 目标Mode
+     * @param mode ItemMarkMode
      */
     switchMode(mode: 'executor' | 'router' | 'shadow'): void {
         if (this._currentMode === mode) {
@@ -414,7 +414,7 @@ export class ShadowModeManager {
         console.log(`[ShadowMode] Switching from ${this._currentMode} to ${mode} mode`);
         this._currentMode = mode;
 
-        // Reset连续Failure计数
+        // ResetContinuousFailure计Number
         if (mode === 'shadow' || mode === 'router') {
             this.stats.consecutiveFailures = 0;
         }
@@ -430,7 +430,7 @@ export class ShadowModeManager {
 
     /**
      * GetExecuteLog
-     * @param limit limit数量
+     * @param limit limitNumberAmount
      * @returns LogArray
      */
     getExecutionLogs(limit?: number): ExecutionLogEntry[] {
@@ -468,8 +468,8 @@ export class ShadowModeManager {
     }
 
     /**
-     * Get一致ity报告
-     * @returns 一致ity报告
+     * GetConsistentityReport
+     * @returns ConsistentityReport
      */
     getConsistencyReport(): {
         totalChecks: number;
@@ -490,7 +490,7 @@ export class ShadowModeManager {
     }
 
     /**
-     * Destroy影子ModeManageManager
+     * DestroyShadowModeManageManager
      */
     destroy(): void {
         console.log('[ShadowMode] Destroying ShadowModeManager');

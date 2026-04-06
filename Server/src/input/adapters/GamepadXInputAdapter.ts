@@ -65,7 +65,7 @@ export class GamepadXInputAdapter {
      */
     private initialize(): void {
         try {
-            // 尝试动态Load vigemclient
+            // TryDynamicLoad vigemclient
             this.vigemClient = require('vigemclient');
             console.log('🎮 GamepadXInputAdapter: ViGEmClient loaded successfully');
         } catch (error: any) {
@@ -90,7 +90,7 @@ export class GamepadXInputAdapter {
         }
 
         try {
-            // 尝试Create虚拟Controller来VerifyDriverWhether available
+            // TryCreateVirtualControllerComeVerifyDriverWhether available
             const testController = this.vigemClient.createX360Controller();
             if (!testController) {
                 return {
@@ -235,14 +235,14 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 限制Joystick axis valuesRange [-1.0, 1.0]
+     * LimitJoystick axis valuesRange [-1.0, 1.0]
      */
     private clampAxis(value: number): number {
         return Math.max(-1.0, Math.min(1.0, value));
     }
 
     /**
-     * 限制Trigger valuesRange [0.0, 1.0]
+     * LimitTrigger valuesRange [0.0, 1.0]
      */
     private clampTrigger(value: number): number {
         return Math.max(0.0, Math.min(1.0, value));
@@ -256,7 +256,7 @@ export class GamepadXInputAdapter {
             return;
         }
 
-        // 构建 XInput StateObject
+        // Build XInput StateObject
         const state: any = {
             wButtons: this.getButtonMask(),
             bLeftTrigger: this.floatToByte(this.currentState.lt),
@@ -267,7 +267,7 @@ export class GamepadXInputAdapter {
             sThumbRY: this.axisToShort(this.currentState.ry)
         };
 
-        // 提交State
+        // SubmitState
         this.controller.sendState(state);
     }
 
@@ -324,7 +324,7 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 将浮点Trigger valuesConvertFor byte [0, 255]
+     * WillFloatTrigger valuesConvertFor byte [0, 255]
      */
     private floatToByte(value: number): number {
         return Math.floor(value * 255);

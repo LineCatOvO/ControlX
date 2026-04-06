@@ -122,7 +122,7 @@ export interface InputStats {
 }
 
 /**
- * 系统资源statistics
+ * System资Sourcestatistics
  */
 export interface SystemResourceStats {
     cpuUsage: number;
@@ -137,7 +137,7 @@ export interface SystemResourceStats {
 }
 
 /**
- * metric收集ManagerClass
+ * metricCollectManagerClass
  * singletonMode，provideGlobalmetricManage
  */
 export class MetricsCollector {
@@ -154,7 +154,7 @@ export class MetricsCollector {
         lastEventTime: 0,
     };
     private inputEventHistory: { timestamp: number; count: number }[] = [];
-    private readonly historyWindowMs = 60000; // 1分钟窗口
+    private readonly historyWindowMs = 60000; // 1Divide钟窗Port
 
     private constructor() {}
 
@@ -266,7 +266,7 @@ export class MetricsCollector {
     // ==================== metricOperation ====================
 
     /**
-     * increment计数Manager
+     * increment计NumberManager
      * @param name metricName
      * @param value incrementValue（Default1）
      */
@@ -284,7 +284,7 @@ export class MetricsCollector {
     }
 
     /**
-     * decrement计数Manager（onlyUsed forSpecialscenario）
+     * decrement计NumberManager（onlyUsed forSpecialscenario）
      * @param name metricName
      * @param value decrementValue（Default1）
      */
@@ -298,12 +298,12 @@ export class MetricsCollector {
             console.warn(`Metric ${name} is not a counter`);
             return;
         }
-        // 计数ManagerAllowdecrement（Used forResetscenario）
+        // 计NumberManagerAllowdecrement（Used forResetscenario）
         metric.value -= value;
     }
 
     /**
-     * Set仪表盘Value
+     * SetDashboardValue
      * @param name metricName
      * @param value Value
      */
@@ -321,7 +321,7 @@ export class MetricsCollector {
     }
 
     /**
-     * increment仪表盘Value
+     * incrementDashboardValue
      * @param name metricName
      * @param value incrementValue（Default1）
      */
@@ -339,7 +339,7 @@ export class MetricsCollector {
     }
 
     /**
-     * decrement仪表盘Value
+     * decrementDashboardValue
      * @param name metricName
      * @param value decrementValue（Default1）
      */
@@ -357,9 +357,9 @@ export class MetricsCollector {
     }
 
     /**
-     * 观察histogramValue
+     * ObservehistogramValue
      * @param name metricName
-     * @param value 观察Value
+     * @param value ObserveValue
      */
     public observeHistogram(name: string, value: number): void {
         const metric = this.metrics.get(name);
@@ -375,7 +375,7 @@ export class MetricsCollector {
         metric.sum += value;
         metric.count++;
 
-        // Updatebucket计数
+        // Updatebucket计Number
         const buckets = metric.metadata.unit
             ? [0.1, 0.5, 1, 2.5, 5, 10] // Defaultbucket
             : [0.1, 0.5, 1, 2.5, 5, 10];
@@ -391,17 +391,17 @@ export class MetricsCollector {
             }
         }
 
-        // If超过Allbucket，放入 +Inf
+        // IfExceedAllbucket，PutInto +Inf
         if (!foundBucket) {
             const infCount = metric.buckets.get('le_+Inf') || 0;
             metric.buckets.set('le_+Inf', infCount + 1);
         }
     }
 
-    // ==================== ConnectionState监控 ====================
+    // ==================== ConnectionStateMonitor ====================
 
     /**
-     * recordConnection建立
+     * recordConnectionEstablish
      * @param clientId ClientID
      */
     public recordConnection(clientId: string): void {
@@ -417,7 +417,7 @@ export class MetricsCollector {
     }
 
     /**
-     * recordConnection断开
+     * recordConnectionDisconnect
      * @param clientId ClientID
      */
     public recordDisconnection(clientId: string): void {
@@ -466,7 +466,7 @@ export class MetricsCollector {
     }
 
     /**
-     * GetAll活跃Connection
+     * GetAllActiveConnection
      */
     public getActiveConnections(): ConnectionRecord[] {
         return Array.from(this.connectionRecords.values()).filter(
@@ -501,13 +501,13 @@ export class MetricsCollector {
         this.inputStats.totalEvents++;
         this.inputStats.lastEventTime = now;
 
-        // record到History
+        // recordtoHistory
         this.inputEventHistory.push({ timestamp: now, count: 1 });
 
-        // 清理过期History
+        // Clear理ExpireHistory
         this.cleanupInputHistory();
 
-        // calculate每秒Event数
+        // calculateEachSecondEventNumber
         this.calculateEventsPerSecond();
 
         // Updatemetric
@@ -516,7 +516,7 @@ export class MetricsCollector {
     }
 
     /**
-     * 清理过期OfInputHistory
+     * Clear理ExpireOfInputHistory
      */
     private cleanupInputHistory(): void {
         const cutoff = Date.now() - this.historyWindowMs;
@@ -526,7 +526,7 @@ export class MetricsCollector {
     }
 
     /**
-     * calculate每秒Event数
+     * calculateEachSecondEventNumber
      */
     private calculateEventsPerSecond(): void {
         if (this.inputEventHistory.length === 0) {
@@ -540,7 +540,7 @@ export class MetricsCollector {
             .filter((h) => h.timestamp >= windowStart)
             .reduce((sum, h) => sum + h.count, 0);
 
-        // calculate实际窗口大小（秒）
+        // calculateActual窗PortSize（Second）
         const oldestEvent = this.inputEventHistory[0]?.timestamp || now;
         const windowSize = Math.max((now - oldestEvent) / 1000, 1);
 
@@ -588,7 +588,7 @@ export class MetricsCollector {
     }
 
     /**
-     * GetAllmetric快照
+     * GetAllmetricSnapshot
      */
     public getSnapshot(): MetricSnapshot[] {
         const snapshots: MetricSnapshot[] = [];
@@ -666,7 +666,7 @@ export class MetricsCollector {
 
     /**
      * ExportFor Prometheus format
-     * format规范：https://prometheus.io/docs/instrumenting/exposition_formats/
+     * formatStandard：https://prometheus.io/docs/instrumenting/exposition_formats/
      */
     public toPrometheus(): string {
         const lines: string[] = [];
@@ -694,7 +694,7 @@ export class MetricsCollector {
                 // TYPE declare
                 lines.push(`# TYPE ${fullMetricName} histogram`);
 
-                // bucketValue（累积计数）
+                // bucketValue（累积计Number）
                 const bucketBoundaries = [0.1, 0.5, 1, 2.5, 5, 10, '+Inf'];
                 let cumulativeCount = 0;
 
@@ -706,12 +706,12 @@ export class MetricsCollector {
                     lines.push(`${fullMetricName}_bucket{le="${le}"} ${cumulativeCount}`);
                 });
 
-                // sum 和 count
+                // sum and count
                 lines.push(`${fullMetricName}_sum ${metric.sum}`);
                 lines.push(`${fullMetricName}_count ${metric.count}`);
             }
 
-            lines.push(''); // Null行分隔
+            lines.push(''); // NullLineDivide隔
         });
 
         return lines.join('\n');
@@ -791,13 +791,13 @@ export class MetricsCollector {
     }
 
     /**
-     * record RTT Latency（集成 latencyProbe）
-     * @param rttMs RTT Latency（毫秒）
+     * record RTT Latency（Integrate latencyProbe）
+     * @param rttMs RTT Latency（MilliSecond）
      */
     public recordRttLatency(rttMs: number): void {
         const rttSeconds = rttMs / 1000;
 
-        // record到Latencyhistogram
+        // recordtoLatencyhistogram
         this.observeHistogram('latency_rtt_seconds', rttSeconds);
 
         // UpdateCurrentLatency
@@ -827,14 +827,14 @@ export class MetricsCollector {
         // UpdateCurrentthroughput
         this.setGauge('input_events_per_second', currentEPS);
 
-        // record到History
+        // recordtoHistory
         this.throughputHistory.push({ timestamp: now, count: currentEPS });
 
-        // 清理过期History（keep 5 分钟）
+        // Clear理ExpireHistory（keep 5 Divide钟）
         const cutoff5m = now - 300000;
         this.throughputHistory = this.throughputHistory.filter(h => h.timestamp >= cutoff5m);
 
-        // calculate 1 分钟平均
+        // calculate 1 MinuteAvg
         const cutoff1m = now - 60000;
         const history1m = this.throughputHistory.filter(h => h.timestamp >= cutoff1m);
         const avg1m = history1m.length > 0
@@ -842,7 +842,7 @@ export class MetricsCollector {
             : 0;
         this.setGauge('input_events_per_second_1m', avg1m);
 
-        // calculate 5 分钟平均
+        // calculate 5 MinuteAvg
         const avg5m = this.throughputHistory.length > 0
             ? this.throughputHistory.reduce((sum, h) => sum + h.count, 0) / this.throughputHistory.length
             : 0;
@@ -850,8 +850,8 @@ export class MetricsCollector {
     }
 
     /**
-     * record分Classerror
-     * @param category error分Class
+     * recordDivideClasserror
+     * @param category errorDivideClass
      */
     public recordErrorByCategory(category: 'validation' | 'network' | 'system' | 'timeout'): void {
         const metricName = `errors_${category}_total`;
@@ -860,7 +860,7 @@ export class MetricsCollector {
 
     /**
      * Updateerrorrate
-     * @param errorsPerSecond 每秒error数
+     * @param errorsPerSecond EachSeconderrorNumber
      */
     public updateErrorRate(errorsPerSecond: number): void {
         this.setGauge('errors_rate_current', errorsPerSecond);

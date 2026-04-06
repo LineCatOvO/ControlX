@@ -66,7 +66,7 @@ export class RateLimiter {
     /**
      * Check if message is allowed
      * @param clientId Client ID
-     * @returns 速率限制Result
+     * @returns RateLimitResult
      */
     checkLimit(clientId: string): RateLimitResult {
         // If not enabled, allow directly
@@ -185,7 +185,7 @@ export class RateLimiter {
 
     /**
      * Get count of all limited clients
-     * @returns 被限制OfClient数量
+     * @returns BeLimitOfClientNumberAmount
      */
     getBlockedClientCount(): number {
         const now = Date.now();

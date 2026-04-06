@@ -49,7 +49,7 @@ export function startWebMonitor(): void {
         handleWsConnection(ws);
     });
 
-    // 启动HTTP server
+    // StartHTTP server
     httpServer.listen(WEB_PORT, () => {
         console.log(`🌐 Web Monitor Server started`);
         console.log(`📊 Dashboard: http://localhost:${WEB_PORT}`);

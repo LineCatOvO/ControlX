@@ -1,10 +1,10 @@
-// InputExecuteInterface定义
+// InputExecuteInterfaceDefine
 
 import { InputState, InputDelta, InputEvent } from '../types/ws';
 
 /**
  * InputExecutorInterface
- * 用于抽象DifferentInput设备OfExecute逻辑
+ * ForAbstractDifferentInputDeviceOfExecuteLogic
  */
 export interface InputExecutor {
   /**
@@ -14,8 +14,8 @@ export interface InputExecutor {
   applyState(state: InputState): void;
   
   /**
-   * ApplyInput增量
-   * @param delta Input增量
+   * ApplyInputDelta
+   * @param delta InputDelta
    */
   applyDelta(delta: InputDelta): void;
   
@@ -33,11 +33,11 @@ export interface InputExecutor {
 
 /**
  * InputExecutorManageManagerInterface
- * 用于Manage多个InputExecutor
+ * ForManage多OneInputExecutor
  */
 export interface InputExecutorManager {
   /**
-   * 添加InputExecutor
+   * AddInputExecutor
    * @param executor InputExecutor
    */
   addExecutor(executor: InputExecutor): void;
@@ -49,19 +49,19 @@ export interface InputExecutorManager {
   removeExecutor(executor: InputExecutor): void;
   
   /**
-   * ApplyCompleteInputState到AllExecutor
+   * ApplyCompleteInputStatetoAllExecutor
    * @param state InputState
    */
   applyState(state: InputState): void;
   
   /**
-   * ApplyInput增量到AllExecutor
-   * @param delta Input增量
+   * ApplyInputDeltatoAllExecutor
+   * @param delta InputDelta
    */
   applyDelta(delta: InputDelta): void;
   
   /**
-   * ApplyInputEvent到AllExecutor
+   * ApplyInputEventtoAllExecutor
    * @param event InputEvent
    */
   applyEvent(event: InputEvent): void;

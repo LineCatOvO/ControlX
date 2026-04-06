@@ -5,12 +5,12 @@ import { getExecutorManager } from '../../input/executor';
 import { formatInputEventMessageLog } from '../../utils/logInputData';
 
 /**
- * 处理InputEventMessage
+ * HandleInputEventMessage
  * @param ws WebSocket connection
  * @param message InputEventMessage
  */
 export function handleInputEvent(ws: any, message: InputEventMessage) {
-    // 检查Message数据
+    // CheckMessageNumber据
     if (!message.data) {
         console.error("InputEventHandlerError: Invalid message data");
         
@@ -32,10 +32,10 @@ export function handleInputEvent(ws: any, message: InputEventMessage) {
         // GetInputExecutorManageManager
         const executorManager = getExecutorManager();
 
-        // ApplyInputEvent到AllExecutor
+        // ApplyInputEventtoAllExecutor
         executorManager.applyEvent(message.data);
 
-        // 记录DetailOfInputEvent数据Log
+        // RecordDetailOfInputEventNumber据Log
         console.log(formatInputEventMessageLog(message));
         
         // Send ACK Message

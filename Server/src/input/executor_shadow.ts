@@ -1,7 +1,7 @@
 /**
- * 影子Mode集成Module
+ * ShadowModeIntegrateModule
  * 
- * 此Fileprovide影子Mode集成，Modify executeInput 逻辑以Support双写
+ * ThisFileprovideShadowModeIntegrate，Modify executeInput LogicWithSupportDualWrite
  */
 
 import { inputState } from "./state";
@@ -12,15 +12,15 @@ import { WindowsKeyboardHost } from "./hosts/WindowsKeyboardHost";
 import { WindowsGamepadHost } from "./hosts/WindowsGamepadHost";
 import { InputDeviceType } from "./hosts/types";
 
-// 影子ModeConfig
+// ShadowModeConfig
 const isShadowMode = process.env.SHADOW_MODE === "true";
 
-// 影子Mode实例
+// ShadowModeInstance
 let shadowModeManager: ShadowModeManager | null = null;
 let inputRouter: InputRouter | null = null;
 
 /**
- * Initialize影子Mode
+ * InitializeShadowMode
  */
 export function initShadowModeIntegration(): void {
     if (!isShadowMode) {
@@ -39,7 +39,7 @@ export function initShadowModeIntegration(): void {
     inputRouter.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
     inputRouter.registerHost(InputDeviceType.GAMEPAD, gamepadHost);
 
-    // Create影子ModeManageManager
+    // CreateShadowModeManageManager
     shadowModeManager = new ShadowModeManager(
         getExecutorManager(),
         inputRouter,
@@ -57,26 +57,26 @@ export function initShadowModeIntegration(): void {
 }
 
 /**
- * 影子ModeExecuteInput
+ * ShadowModeExecuteInput
  * 
- * 替代原有Of executeInput Function，Implementation双写逻辑
+ * ReplaceOriginalHasOf executeInput Function，ImplementationDualWriteLogic
  */
 export function executeInputWithShadow(): void {
     if (shadowModeManager && isShadowMode) {
-        // 影子Mode：双写到 Executor 和 Router
+        // ShadowMode：DualWriteto Executor and Router
         shadowModeManager.applyState(inputState);
     } else {
-        // 非影子Mode：只写 Executor
+        // NonShadowMode：OnlyWrite Executor
         getExecutorManager().applyState(inputState);
     }
 
-    // recordValidState时间
+    // recordValidStateTime
     const applyTime = Date.now();
     getSafetyController().recordValidState(inputState, applyTime);
 }
 
 /**
- * Get影子ModeManageManager
+ * GetShadowModeManageManager
  */
 export function getShadowModeManager(): ShadowModeManager | null {
     return shadowModeManager;
@@ -90,7 +90,7 @@ export function getInputRouter(): InputRouter | null {
 }
 
 /**
- * 检查是否For影子Mode
+ * CheckWhetherForShadowMode
  */
 export function isShadowModeEnabled(): boolean {
     return isShadowMode && shadowModeManager !== null;

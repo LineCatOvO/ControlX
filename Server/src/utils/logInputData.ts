@@ -1,5 +1,5 @@
 /**
- * 格式化Input数据以便于Log记录
+ * FormatInputNumber据WithConvenientForLogRecord
  */
 
 import {
@@ -9,14 +9,14 @@ import {
 } from "../types/ws";
 
 /**
- * 格式化InputMessageLog
+ * FormatInputMessageLog
  * @param message InputMessage
- * @returns 格式化OfLogString，如果没有有意义OfInput则Returnnull
+ * @returns FormatOfLogString，IfNoHasHasMeaningOfInputThenReturnnull
  */
 export function formatInputMessageLog(message: InputMessage): string | null {
     const { data, metadata } = message;
 
-    // 检查是否有实际OfInput变化，而非NullState
+    // CheckWhetherHasActualOfInputChange化，AndNonNullState
     const hasMeaningfulInput =
         (data.keyboard && data.keyboard.length > 0) ||
         (data.mouse &&
@@ -32,34 +32,34 @@ export function formatInputMessageLog(message: InputMessage): string | null {
                 (data.joystick.y !== undefined &&
                     Math.abs(data.joystick.y) > 0.01)));
 
-    // 如果没有有意义OfInput变化，Returnnull表示不应记录Log
+    // IfNoHasHasMeaningOfInputChange化，ReturnnullRepresentnotShouldRecordLog
     if (!hasMeaningfulInput) {
         return null;
     }
 
     const logParts: string[] = ["Input"];
 
-    // 添加ClientID和TimestampInfo
+    // AddClientIDandTimestampInfo
     if (metadata) {
         logParts.push(`[Client:${metadata.clientId}]`);
     }
 
-    // 添加帧ID
+    // AddFrameID
     if (data.frameId !== undefined) {
         logParts.push(`Frame:${data.frameId}`);
     }
 
-    // 添加Run时State
+    // AddRunTimeState
     if (data.runtimeStatus) {
         logParts.push(`Status:${data.runtimeStatus}`);
     }
 
-    // 添加KeyboardOperation
+    // AddKeyboardOperation
     if (data.keyboard && data.keyboard.length > 0) {
         logParts.push(`Keyboard:[${data.keyboard.join(", ")}]`);
     }
 
-    // 添加MouseOperation
+    // AddMouseOperation
     if (data.mouse) {
         const mouseOps: string[] = [];
         if (data.mouse.x !== undefined) mouseOps.push(`X:${data.mouse.x}`);
@@ -75,7 +75,7 @@ export function formatInputMessageLog(message: InputMessage): string | null {
         }
     }
 
-    // 添加GamepadOperation
+    // AddGamepadOperation
     if (data.joystick) {
         const joyOps: string[] = [];
         if (data.joystick.x !== undefined)
@@ -95,20 +95,20 @@ export function formatInputMessageLog(message: InputMessage): string | null {
 }
 
 /**
- * 格式化Input增量MessageLog
- * @param message Input增量Message
- * @returns 格式化OfLogString
+ * FormatInputDeltaMessageLog
+ * @param message InputDeltaMessage
+ * @returns FormatOfLogString
  */
 export function formatInputDeltaMessageLog(message: InputDeltaMessage): string {
     const { data, metadata } = message;
     const logParts: string[] = ["InputDelta"];
 
-    // 添加ClientID和TimestampInfo
+    // AddClientIDandTimestampInfo
     if (metadata) {
         logParts.push(`[Client:${metadata.clientId}]`);
     }
 
-    // 添加Keyboard增量Operation
+    // AddKeyboardDeltaOperation
     if (data.keyboard) {
         if (data.keyboard.pressed && data.keyboard.pressed.length > 0) {
             logParts.push(`KeyDown:[${data.keyboard.pressed.join(", ")}]`);
@@ -118,7 +118,7 @@ export function formatInputDeltaMessageLog(message: InputDeltaMessage): string {
         }
     }
 
-    // 添加MouseOperation
+    // AddMouseOperation
     if (data.mouse) {
         const mouseOps: string[] = [];
         if (data.mouse.x !== undefined) mouseOps.push(`X:${data.mouse.x}`);
@@ -134,7 +134,7 @@ export function formatInputDeltaMessageLog(message: InputDeltaMessage): string {
         }
     }
 
-    // 添加GamepadOperation
+    // AddGamepadOperation
     if (data.joystick) {
         const joyOps: string[] = [];
         if (data.joystick.x !== undefined)
@@ -150,9 +150,9 @@ export function formatInputDeltaMessageLog(message: InputDeltaMessage): string {
 }
 
 /**
- * 格式化InputEventMessageLog
+ * FormatInputEventMessageLog
  * @param message InputEventMessage
- * @returns 格式化OfLogString
+ * @returns FormatOfLogString
  */
 export function formatInputEventMessageLog(message: InputEventMessage): string {
     const { data } = message;
@@ -161,7 +161,7 @@ export function formatInputEventMessageLog(message: InputEventMessage): string {
     if (data) {
         logParts.push(`${data.type}`);
 
-        // 根据EventType添加具体数据
+        // AccordingToEventTypeAddSpecificNumber据
         switch (data.type) {
             case "key_down":
             case "key_up":

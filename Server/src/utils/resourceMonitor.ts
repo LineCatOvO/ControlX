@@ -12,7 +12,7 @@
  * 3. Process running time: record service running duration
  * 4. Resource statistics export: provide JSON format resource statistics
  *
- * 【使用示例】
+ * 【UseExample】
  * ```typescript
  * const monitor = ResourceMonitor.getInstance();
  * monitor.start();

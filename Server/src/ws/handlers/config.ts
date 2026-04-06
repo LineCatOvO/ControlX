@@ -4,7 +4,7 @@
  * Handle WebSocket ConfigRelatedMessage：
  * - config_get: GetCurrentConfig
  * - config_set: UpdateConfig
- * - config_save: SaveConfig到File
+ * - config_save: SaveConfigtoFile
  * - config_reset: ResetConfigForDefaultValue
  */
 
@@ -22,32 +22,32 @@ import { validateConfig } from "../../config/validate";
 import { authManager } from "../../auth/auth";
 
 /**
- * 敏感Config项List
- * 这些Config项不应该暴露给Client，防止敏感Info泄露
+ * SensitiveConfigItemList
+ * This些ConfigItemnotShouldExpose给Client，PreventSensitiveInfoLeak
  */
 const SENSITIVE_CONFIG_KEYS: string[] = [
-    'tokenSecret',          // Token 密钥
-    'tokenExpiry',          // Token 过期Time
-    'maxConnectionsPerToken', // Connection限制
-    'whitelist',            // IP 白名单
-    'blacklist',            // IP 黑名单
-    'defaultPort',          // DefaultEnd口（optional）
-    'portRange',            // End口Range（optional）
+    'tokenSecret',          // Token SecretKey
+    'tokenExpiry',          // Token ExpireTime
+    'maxConnectionsPerToken', // ConnectionLimit
+    'whitelist',            // IP Whitelist
+    'blacklist',            // IP Blacklist
+    'defaultPort',          // DefaultEndPort（optional）
+    'portRange',            // EndPortRange（optional）
 ];
 
 /**
- * 过滤敏感Config项
- * @param config 原始Config
- * @returns 过滤AfterOfSafeConfig（不包含敏感Info）
+ * FilterSensitiveConfigItem
+ * @param config OriginalConfig
+ * @returns FilterAfterOfSafeConfig（notIncludeSensitiveInfo）
  */
 function filterSensitiveConfig(config: Config): Partial<Config> {
     const filtered: Partial<Config> = {};
 
     for (const key of Object.keys(config) as (keyof Config)[]) {
-        // 只保留非敏感Config项
+        // OnlyKeepNonSensitiveConfigItem
         if (!SENSITIVE_CONFIG_KEYS.includes(key)) {
-            // 使用Type断言绕过 TypeScript Of严格TypeCheck
-            // 这是SafeOf，因For我们只是复制Config项，不改变其Type
+            // UseType断言绕过 TypeScript OfStrictTypeCheck
+            // ThisIsSafeOf，因ForWeOnlyIsCopyConfigItem，not改Change其Type
             (filtered as any)[key] = config[key];
         }
     }
@@ -62,7 +62,7 @@ type ConfigChangeCallback = (newConfig: Config, oldConfig: Config) => void;
 const configChangeCallbacks: ConfigChangeCallback[] = [];
 
 /**
- * 注册ConfigChangeCallback
+ * RegisterConfigChangeCallback
  * @param callback CallbackFunction
  */
 export function registerConfigChangeCallback(callback: ConfigChangeCallback): void {
@@ -70,7 +70,7 @@ export function registerConfigChangeCallback(callback: ConfigChangeCallback): vo
 }
 
 /**
- * 注销ConfigChangeCallback
+ * LogoutConfigChangeCallback
  * @param callback CallbackFunction
  */
 export function unregisterConfigChangeCallback(callback: ConfigChangeCallback): void {
@@ -82,8 +82,8 @@ export function unregisterConfigChangeCallback(callback: ConfigChangeCallback): 
 
 /**
  * NotifyConfigChange
- * @param newConfig 新Config
- * @param oldConfig 旧Config
+ * @param newConfig NewConfig
+ * @param oldConfig OldConfig
  */
 function notifyConfigChange(newConfig: Config, oldConfig: Config): void {
     for (const callback of configChangeCallbacks) {
@@ -96,7 +96,7 @@ function notifyConfigChange(newConfig: Config, oldConfig: Config): void {
 }
 
 /**
- * SendConfigMessage到Client
+ * SendConfigMessagetoClient
  * @param ws WebSocket connection
  * @param message MessageObject
  */
@@ -117,10 +117,10 @@ export function handleConfigGet(ws: any, message: ConfigGetMessage): void {
     // GetCurrentConfig
     const currentConfig = configManager.getConfig();
 
-    // 过滤敏感Config项，防止敏感Info泄露
+    // FilterSensitiveConfigItem，PreventSensitiveInfoLeak
     const safeConfig = filterSensitiveConfig(currentConfig);
 
-    // SendSafeConfigMessage（不包含敏感Info）
+    // SendSafeConfigMessage（notIncludeSensitiveInfo）
     const configMsg: ConfigMessage = {
         type: "config",
         data: safeConfig as Config
@@ -134,9 +134,9 @@ export function handleConfigGet(ws: any, message: ConfigGetMessage): void {
  * HandleConfigSetMessage
  *
  * SafeDescription：
- * - DefaultProhibitRemoteConfigModify，防止Safe风险
- * - Require通过环境Variable ALLOW_REMOTE_CONFIG_MODIFICATION=true 明确Enable
- * - EnableAfter仍RequireAuthentication和 config_write Permission
+ * - DefaultProhibitRemoteConfigModify，PreventSafeRisk
+ * - RequirePassEnvVariable ALLOW_REMOTE_CONFIG_MODIFICATION=true ClearEnable
+ * - EnableAfter仍RequireAuthenticationand config_write Permission
  *
  * @param ws WebSocket connection
  * @param message ConfigSetMessage
@@ -154,8 +154,8 @@ export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
         return;
     }
 
-    // SafeCheck二：CheckWhetherAllowRemoteConfigModify
-    // DefaultProhibit，生产环境强烈建议保持DisableState
+    // SafeCheckTwo：CheckWhetherAllowRemoteConfigModify
+    // DefaultProhibit，ProductionEnv强烈建议保HoldDisableState
     const ALLOW_REMOTE_CONFIG_MODIFICATION = process.env.ALLOW_REMOTE_CONFIG_MODIFICATION === 'true';
 
     if (!ALLOW_REMOTE_CONFIG_MODIFICATION) {
@@ -169,7 +169,7 @@ export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
         return;
     }
 
-    // SafeCheck三：CheckPermission
+    // SafeCheckThree：CheckPermission
     if (!authManager.hasPermission(ws.authToken, 'config_write')) {
         const errorMsg: ConfigErrorMessage = {
             type: "config_error",
@@ -183,11 +183,11 @@ export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
 
     const oldConfig = configManager.getConfig();
 
-    // Execute热Update
+    // ExecuteHotUpdate
     const result = configManager.hotUpdate(message.data);
 
     if (result.success) {
-        // Send确认Message
+        // SendConfirmMessage
         const ackMsg: ConfigAckMessage = {
             type: "config_ack",
             message: "Config updated successfully",
@@ -201,7 +201,7 @@ export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
         // NotifyConfigChangeCallback
         notifyConfigChange(result.newConfig, result.oldConfig);
 
-        // 同步UpdateGlobalConfigObject（保持向AfterCompatible）
+        // SameStepUpdateGlobalConfigObject（保HoldToAfterCompatible）
         Object.assign(config, result.newConfig);
     } else {
         // SenderrorMessage
@@ -251,7 +251,7 @@ export function handleConfigReset(ws: any, message: { type: "config_reset" }): v
     configManager.reset();
     const newConfig = configManager.getConfig();
     
-    // 同步UpdateGlobalConfigObject
+    // SameStepUpdateGlobalConfigObject
     Object.assign(config, newConfig);
     
     const ackMsg: ConfigAckMessage = {
@@ -284,5 +284,5 @@ export function handleConfigValidate(ws: any, message: { type: "config_validate"
     ws.send(JSON.stringify(response));
 }
 
-// ExportCompatible旧VersionOfHandler
+// ExportCompatibleOldVersionOfHandler
 export { configManager };

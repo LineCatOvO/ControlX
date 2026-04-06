@@ -1,30 +1,30 @@
 /**
- * Input宿主抽象基Class
+ * InputHostAbstractBaseClass
  * 
- * 职责：屏蔽UnderlyingDriverDifference，提供统一Of lifecycle 和 execution Interface
+ * Responsibility：ShieldUnderlyingDriverDifference，ProvideUnifiedOf lifecycle and execution Interface
  * 
- * Design pattern：策略Mode (Strategy Pattern)
- * - 定义一族算法（Different平台OfInputImplementation）
- * - 封装每个算法（每个具体 Host Class）
- * - 使它们可以互换（通过统一Interface）
+ * Design pattern：StrategyMode (Strategy Pattern)
+ * - Define一族Algorithm（DifferentPlatformOfInputImplementation）
+ * - EncapsulateEachOneAlgorithm（EachOneSpecific Host Class）
+ * - 使It们CanWith互换（PassUnifiedInterface）
  */
 
 import { InputDeviceType, HostStatus, PlatformType, detectPlatform } from './types';
 
 /**
- * Input宿主抽象基Class
+ * InputHostAbstractBaseClass
  */
 export abstract class InputHost {
     /** Device type */
     protected readonly deviceType: InputDeviceType;
     
-    /** Run平台 */
+    /** RunPlatform */
     protected readonly platform: PlatformType;
     
-    /** 是否已Enable */
+    /** WhetherAlreadyEnable */
     protected isEnabled: boolean = false;
     
-    /** 最AftererrorInfo */
+    /** MaxAftererrorInfo */
     protected lastError?: string;
 
     /**
@@ -37,31 +37,31 @@ export abstract class InputHost {
     }
 
     /**
-     * Initialize：加载Driver/库
-     * 异步Execute，避免阻塞启动流程
-     * @returns 是否InitializeSuccess
+     * Initialize：LoadDriver/Lib
+     * AsyncExecute，AvoidBlockStartProcess
+     * @returns WhetherInitializeSuccess
      */
     abstract initialize(): Promise<boolean>;
 
     /**
-     * Apply state：核心Execute逻辑
+     * Apply state：Core心ExecuteLogic
      * @param state Input state
      */
     abstract applyState(state: any): void;
 
     /**
-     * Reset：释放AllKey/Joystick归零
+     * Reset：ReleaseAllKey/JoystickResetToZero
      */
     abstract reset(): void;
 
     /**
-     * Destroy：清理资源
+     * Destroy：Clear理资Source
      */
     abstract destroy(): void;
 
     /**
-     * Get宿主State
-     * @returns 宿主State
+     * GetHostState
+     * @returns HostState
      */
     getStatus(): HostStatus {
         return {
@@ -81,15 +81,15 @@ export abstract class InputHost {
     }
 
     /**
-     * 检查是否已Enable
-     * @returns 是否已Enable
+     * CheckWhetherAlreadyEnable
+     * @returns WhetherAlreadyEnable
      */
     isHostEnabled(): boolean {
         return this.isEnabled;
     }
 
     /**
-     * Get最AftererrorInfo
+     * GetMaxAftererrorInfo
      * @returns errorInfo
      */
     getLastError(): string | undefined {
