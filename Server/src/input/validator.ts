@@ -8,7 +8,7 @@
  * 
  * [Core Functions]
  * 1. State validation: validate legality of keyboard, mouse, joystick, gamepad states
- * 2. Range check: validate numeric ranges（joystick value[-1,1]、trigger value[0,1]等）
+ * 2. Range check: validate numeric ranges（joystick value[-1,1]、trigger value[0,1]etc）
  * 3. Sequence validation: validate monotonic increment of frameId
  * 4. Error reporting: provide detailed validation errors and warnings
  * 
@@ -295,7 +295,7 @@ export class InputValidator {
    * @returns Validation result
    * 
    * Supported formats：
-   * 1. Set<string> 或 string[] - Simplified button set
+   * 1. Set<string> or string[] - Simplified button set
    * 2. { buttons: Set<string>|string[], axes?: ..., triggers?: ... } - Full format
    */
   private validateGamepadState(gamepadState: any): ValidationResult {
@@ -306,7 +306,7 @@ export class InputValidator {
       return { valid: false, errors, warnings };
     }
 
-    // Support simplified format：Set<string> 或 string[]
+    // Support simplified format：Set<string> or string[]
     if (gamepadState instanceof Set || Array.isArray(gamepadState)) {
       const buttons = gamepadState instanceof Set 
         ? [...gamepadState] 
@@ -737,14 +737,14 @@ export class InputValidator {
   }
 
   /**
-   * Validatesequence number（public method，用于Outside部调用）
+   * Validatesequence number（public method，Used forOutside部call）
    * @param newSeq New sequence number
    * @param lastSeq Old sequence number
    * @returns Is monotonically increasing
-   * @deprecated 使用 validateSequenceNumberMonotonicity 代替
+   * @deprecated use validateSequenceNumberMonotonicity replace
    */
   validateSequenceNumber(newSeq: number, lastSeq: number): boolean {
-    // If sequence number is not a number，使用CurrentTimestamp作Forsequence number
+    // If sequence number is not a number，useCurrentTimestampasForsequence number
     if (isNaN(newSeq)) {
       return true;
     }
@@ -754,14 +754,14 @@ export class InputValidator {
       return true;
     }
 
-    // Allowsequence numberSame或更大（Handle重传和重新ConnectOf情况）
+    // Allowsequence numberSameor更大（Handle重传和重newConnectOfcase）
     return newSeq >= lastSeq;
   }
 
   /**
    * Extract sequence number
    * @param state State object
-   * @returns sequence number，如果 frameId 不是Number则Return NaN
+   * @returns sequence number，If frameId notNumberThenReturn NaN
    */
   extractSequenceNumber(state: any): number {
     const frameId = state?.frameId;

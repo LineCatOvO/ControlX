@@ -5,12 +5,12 @@ const keySender = require("node-key-sender");
 
 // LogConfig
 const LOG_CONFIG = {
-    enabled: true,           // 是否EnableLog
-    verbose: false,          // 是否EnableDetailLog
+    enabled: true,           // WhetherEnableLog
+    verbose: false,          // WhetherEnableDetailLog
     statsInterval: 100,      // 每多少次OperationOutput一次统计
 };
 
-// Keyboard映射统计
+// KeyboardMap统计
 const keyboardStats = {
     totalUpdates: 0,
     totalPresses: 0,
@@ -71,17 +71,17 @@ export function setKeyboardLogConfig(config: Partial<typeof LOG_CONFIG>) {
 
 /**
  * KeyboardInputExecutor
- * 负责将KeyboardInputState转换For系统KeyboardEvent
+ * 负责将KeyboardInputStateConvertFor系统KeyboardEvent
  * Implementation差集计算、幂等性保证、正确OfKey顺序
  */
 export class KeyboardExecutor implements InputExecutor {
     // 记录CurrentKeyboardState
     private currentKeyboardState: Set<string> = new Set();
-    // 记录All已Send过OfKey（用于幂等性保证）
+    // 记录All已Send过OfKey（Used for幂等性保证）
     private sentKeys: Set<string> = new Set();
     // 记录KeyOfSend顺序
     private keyOrder: string[] = [];
-    // 记录On一次OfKeyboardState（用于计算Difference）
+    // 记录On一次OfKeyboardState（Used for计算Difference）
     private previousKeyboardState: Set<string> = new Set();
 
     /**
@@ -103,7 +103,7 @@ export class KeyboardExecutor implements InputExecutor {
         // UpdateCurrentKeyboardStateForOn一次State
         this.previousKeyboardState = new Set(this.currentKeyboardState);
 
-        // UpdateCurrentKeyboardState（在 updateKeyboardState In处理 sentKeys）
+        // UpdateCurrentKeyboardState（在 updateKeyboardState InHandle sentKeys）
         this.updateKeyboardState(newState, keysToRelease, keysToPress);
     }
 
@@ -116,12 +116,12 @@ export class KeyboardExecutor implements InputExecutor {
             // Create新OfKeyboardState副本
             const newState = new Set(this.currentKeyboardState);
 
-            // 处理按UnderOf键
+            // Handle按UnderOf键
             if (delta.keyboard.pressed) {
                 delta.keyboard.pressed.forEach((key) => newState.add(key));
             }
 
-            // 处理释放Of键
+            // Handle释放Of键
             if (delta.keyboard.released) {
                 delta.keyboard.released.forEach((key) => newState.delete(key));
             }
@@ -155,15 +155,15 @@ export class KeyboardExecutor implements InputExecutor {
     /**
      * UpdateKeyboardState
      * @param newState 新OfKeyboardState
-     * @param keysToRelease 需要释放Of键
-     * @param keysToPress 需要按UnderOf键
+     * @param keysToRelease Require释放Of键
+     * @param keysToPress Require按UnderOf键
      */
     private updateKeyboardState(
         newState: Set<string>,
         keysToRelease?: Set<string>,
         keysToPress?: Set<string>
     ): void {
-        // 如果没有提供DifferenceInfo，则重新计算
+        // If没有提供DifferenceInfo，Then重新计算
         if (!keysToRelease || !keysToPress) {
             keysToRelease = new Set(
                 [...this.previousKeyboardState].filter((key) => !newState.has(key))
@@ -189,7 +189,7 @@ export class KeyboardExecutor implements InputExecutor {
                 `🎹 KeyboardEvent: State change - Pressing: [${Array.from(keysToPress).join(', ')}], Releasing: [${Array.from(keysToRelease).join(', ')}]`
             );
 
-            // 先释放不需要Of键（正确OfKey顺序）
+            // 先释放不RequireOf键（正确OfKey顺序）
             if (keysToRelease.size > 0) {
                 try {
                     keySender.sendKey(Array.from(keysToRelease));
@@ -198,7 +198,7 @@ export class KeyboardExecutor implements InputExecutor {
                 } catch (error) {
                     console.error("❌ KeyboardError: Error releasing keys:", error);
                     updateStats('error', 1);
-                    // 抛出error，让调用者知道OperationFailure
+                    // Throwserror，让调用者知道OperationFailure
                     throw new Error(`Failed to release keys: ${Array.from(keysToRelease).join(', ')}`);
                 }
             }
@@ -218,7 +218,7 @@ export class KeyboardExecutor implements InputExecutor {
             }
 
             if (newKeysToPress.size > 0) {
-                // 将新Key添加到已SendSet和顺序列表
+                // 将新KeyAdd到已SendSet和顺序List
                 newKeysToPress.forEach((key) => {
                     this.sentKeys.add(key);
                     this.keyOrder.push(key);
@@ -236,7 +236,7 @@ export class KeyboardExecutor implements InputExecutor {
                 } catch (error) {
                     console.error("❌ KeyboardError: Error pressing keys:", error);
                     updateStats('error', 1);
-                    // 抛出error，让调用者知道OperationFailure
+                    // Throwserror，让调用者知道OperationFailure
                     throw new Error(`Failed to press keys: ${Array.from(newKeysToPress).join(', ')}`);
                 }
             }

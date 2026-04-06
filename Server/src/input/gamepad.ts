@@ -5,11 +5,11 @@ import { GamepadXInputAdapter } from "./adapters/GamepadXInputAdapter";
 
 /**
  * 游戏GamepadInputExecutor
- * 负责将游戏GamepadInputState转换For系统GamepadInput
+ * 负责will游戏GamepadInputState转换For系统GamepadInput
  * 
  * 降级策略：
- * - ViGEmBus Available：使用虚拟 Xbox 360 Controller
- * - ViGEmBus 不Available：记录Warning，Disable游戏GamepadFunction，仅使用Keyboard映射
+ * - ViGEmBus Available：use虚拟 Xbox 360 Controller
+ * - ViGEmBus 不Available：recordWarning，Disable游戏GamepadFunction，onlyuseKeyboard映射
  */
 export class GamepadExecutor implements InputExecutor {
     /** XInput Adapter */
@@ -18,7 +18,7 @@ export class GamepadExecutor implements InputExecutor {
     private gamepadAdapter: GamepadAdapter;
     /** 是否已Initialize */
     private isInitialized: boolean = false;
-    /** 记录Current游戏GamepadState（用于Log） */
+    /** recordCurrent游戏GamepadState（用于Log） */
     private currentGamepadState: Set<string> = new Set();
 
     /**
@@ -115,24 +115,24 @@ export class GamepadExecutor implements InputExecutor {
 
     /**
      * Update游戏GamepadState（用于Log）
-     * @param newState 新Of游戏GamepadState
+     * @param newState newOf游戏GamepadState
      */
     private updateGamepadState(newState: Set<string>): void {
-        // 找出AddOfButton（需要按Under）
+        // 找出AddOfButton（需want按Under）
         const buttonsToPress = new Set(
             [...newState].filter(
                 (button) => !this.currentGamepadState.has(button)
             )
         );
 
-        // 找出RemoveOfButton（需要释放）
+        // 找出RemoveOfButton（需wantrelease）
         const buttonsToRelease = new Set(
             [...this.currentGamepadState].filter(
                 (button) => !newState.has(button)
             )
         );
 
-        // 只在State有变化时记录Log
+        // 只在State有变ize时recordLog
         if (buttonsToPress.size > 0 || buttonsToRelease.size > 0) {
             console.log(
                 `🎮 Gamepad: Pressing: [${Array.from(buttonsToPress).join(', ')}], Releasing: [${Array.from(buttonsToRelease).join(', ')}]`

@@ -65,7 +65,7 @@ export class GamepadXInputAdapter {
      */
     private initialize(): void {
         try {
-            // 尝试动态加载 vigemclient
+            // 尝试动态Load vigemclient
             this.vigemClient = require('vigemclient');
             console.log('🎮 GamepadXInputAdapter: ViGEmClient loaded successfully');
         } catch (error: any) {
@@ -112,7 +112,7 @@ export class GamepadXInputAdapter {
 
     /**
      * Connect virtual controller
-     * @returns 是否ConnectionSuccess
+     * @returns WhetherConnectionSuccess
      */
     public connect(): boolean {
         if (!this.vigemClient) {
@@ -324,7 +324,7 @@ export class GamepadXInputAdapter {
     }
 
     /**
-     * 将浮点Trigger values转换For byte [0, 255]
+     * 将浮点Trigger valuesConvertFor byte [0, 255]
      */
     private floatToByte(value: number): number {
         return Math.floor(value * 255);

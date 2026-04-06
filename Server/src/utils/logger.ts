@@ -12,7 +12,7 @@
  * 3. LogOnUnder文：Support requestId、clientId 等OnUnder文Info
  * 4. 格式化Output：Support JSON 和人Class可读两种格式
  *
- * 【使用示例】
+ * 【使用Example】
  * ```typescript
  * const logger = Logger.getInstance();
  * logger.info('Server started', { port: 3000 });
@@ -85,7 +85,7 @@ const DEFAULT_CONFIG: LoggerConfig = {
 };
 
 /**
- * 从环境Variable读取Log级别
+ * 从环境VariableReadLog级别
  */
 function getLogLevelFromEnv(): LogLevel {
     const envLevel = process.env.LOG_LEVEL?.toUpperCase();
@@ -104,7 +104,7 @@ function getLogLevelFromEnv(): LogLevel {
 }
 
 /**
- * 从环境Variable读取Log格式
+ * 从环境VariableReadLog格式
  */
 function getLogFormatFromEnv(): LogFormat {
     const envFormat = process.env.LOG_FORMAT?.toLowerCase();
@@ -132,7 +132,7 @@ export class Logger {
     }
 
     /**
-     * Get单例实例
+     * Get单例Instance
      */
     public static getInstance(): Logger {
         if (!Logger.instance) {
@@ -142,7 +142,7 @@ export class Logger {
     }
 
     /**
-     * Reset单例（仅用于Test）
+     * Reset单例（仅Used forTest）
      */
     public static resetInstance(): void {
         Logger.instance = null;
@@ -321,7 +321,7 @@ export class ModuleLogger {
 }
 
 /**
- * GetLogManager实例
+ * GetLogManagerInstance
  */
 export function getLogger(): Logger {
     return Logger.getInstance();

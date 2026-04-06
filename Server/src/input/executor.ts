@@ -151,7 +151,7 @@ if (isDryRunMode) {
     const mouseAdapter = new MouseAdapter(mouseExecutor);
     const joystickAdapter = new JoystickAdapter(joystickExecutor);
 
-    // Create游戏GamepadAdapter（使用 GamepadXInputAdapter）
+    // Create游戏GamepadAdapter（use GamepadXInputAdapter）
     const gamepadXInputAdapter = new GamepadXInputAdapter();
     const gamepadAdapter = new GamepadAdapter(gamepadXInputAdapter);
     gamepadAdapter.initialize();
@@ -217,7 +217,7 @@ export function stopInputExecutor() {
         console.log("Input executor stopped");
     }
 
-    // StopSafeControllerOfTimeout检查并Destroy
+    // StopSafeControllerOfTimeoutCheckandDestroy
     safetyController.destroy();
 }
 
@@ -228,7 +228,7 @@ function executeInput() {
     // Get metrics collector
     const metricsCollector = getMetricsCollector();
     
-    // 检查input state变化并记录指标
+    // Checkinput state变izeandrecordmetric
     const state = inputState as any;
     
     // Record keyboard events
@@ -340,7 +340,7 @@ export function getTestLogs(): any[] {
 
 /**
  * GetDry Run executor instance
- * @returns Dry Run executor instance或null
+ * @returns Dry Run executor instanceornull
  */
 export function getDryRunExecutor(): DryRunExecutor | null {
     return dryRunExecutor;

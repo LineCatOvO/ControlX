@@ -1,7 +1,7 @@
 /**
  * 影子Mode集成Module
  * 
- * 此File提供影子Mode集成，Modify executeInput 逻辑以Support双写
+ * 此Fileprovide影子Mode集成，Modify executeInput 逻辑以Support双写
  */
 
 import { inputState } from "./state";
@@ -33,7 +33,7 @@ export function initShadowModeIntegration(): void {
     // CreateRouterManager
     inputRouter = new InputRouter();
 
-    // 注册 Host
+    // register Host
     const keyboardHost = new WindowsKeyboardHost();
     const gamepadHost = new WindowsGamepadHost();
     inputRouter.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
@@ -70,7 +70,7 @@ export function executeInputWithShadow(): void {
         getExecutorManager().applyState(inputState);
     }
 
-    // 记录ValidState时间
+    // recordValidState时间
     const applyTime = Date.now();
     getSafetyController().recordValidState(inputState, applyTime);
 }

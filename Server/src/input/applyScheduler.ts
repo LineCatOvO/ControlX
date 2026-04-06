@@ -67,8 +67,8 @@ interface ApplySchedulerConfig {
  * ============================================================================
  * time authorityDescription
  * ============================================================================
- * ApplyScheduler is the【unique time authority】，All时间RelatedOperation都必须使用
- * ApplyScheduler 提供Of tickTime，Prohibit其他Module自行调用 Date.now() Get时间。
+ * ApplyScheduler is the【unique time authority】，AllTimeRelatedOperation都必须use
+ * ApplyScheduler provideOf tickTime，Prohibit其他Module自行call Date.now() GetTime。
  * 
  * Design principles：
  * 1. Single time source: all timestamps generated and distributed by ApplyScheduler
@@ -127,7 +127,7 @@ export class ApplyScheduler {
     this.executorManager = executorManager;
     this.stateStore = stateStore;
     this.config = {
-      applyIntervalMs: 8, // Default 8ms，对应 125Hz
+      applyIntervalMs: 8, // Default 8ms，correspond to 125Hz
       ...config
     };
   }
@@ -251,7 +251,7 @@ export class ApplyScheduler {
     } catch (error) {
       console.error('ApplyScheduler: Error applying state:', error);
 
-      // 发生Exception时触发safe clearing
+      // 发生Exception时triggersafe clearing
       const safetyController = getSafetyController();
       safetyController.triggerExceptionClear('ApplyScheduler error');
     }
@@ -263,14 +263,14 @@ export class ApplyScheduler {
    * @returns sequence number
    */
   private extractSequenceNumber(state: any): number {
-    // 这里假设 state In有 frameId Field作Forsequence number
-    // 如果没有，则使用Timestamp作Forsequence number
+    // 这里假设 state In有 frameId FieldasForsequence number
+    // If没有，ThenuseTimestampasForsequence number
     return state.frameId || Date.now();
   }
 
   /**
    * GetRunning status
-   * @returns 是否RunIn
+   * @returns WhetherRunIn
    */
   isRunning(): boolean {
     return this._isRunning;

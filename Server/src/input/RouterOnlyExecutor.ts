@@ -227,7 +227,7 @@ export function initRouterOnlyMode(): void {
     // CreateRouterManager
     inputRouter = new InputRouter();
 
-    // 注册 Host
+    // register Host
     const { WindowsKeyboardHost } = require('./hosts/WindowsKeyboardHost');
     const { WindowsGamepadHost } = require('./hosts/WindowsGamepadHost');
     const { InputDeviceType } = require('./hosts/types');
@@ -254,7 +254,7 @@ export function executeInputRouterOnly(): void {
         getExecutorManager().applyState(inputState);
     }
 
-    // 记录ValidState时间
+    // recordValidState时间
     const applyTime = Date.now();
     getSafetyController().recordValidState(inputState, applyTime);
 }

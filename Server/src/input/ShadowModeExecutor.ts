@@ -196,16 +196,16 @@ export class ShadowModeInputExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * Get影子Mode统计Info
-     * @returns 统计Info
+     * Get影子ModestatisticsInfo
+     * @returns statisticsInfo
      */
     getShadowStats() {
         return this.shadowManager.getStats();
     }
 
     /**
-     * Get影子Mode一致性报告
-     * @returns 一致性报告
+     * Get影子Mode一致ity报告
+     * @returns 一致ity报告
      */
     getConsistencyReport() {
         return this.shadowManager.getConsistencyReport();

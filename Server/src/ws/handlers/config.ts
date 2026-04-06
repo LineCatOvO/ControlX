@@ -1,10 +1,10 @@
 /**
  * ConfigMessageHandler
  * 
- * 处理 WebSocket ConfigRelatedMessage：
+ * Handle WebSocket ConfigRelatedMessage：
  * - config_get: GetCurrentConfig
  * - config_set: UpdateConfig
- * - config_save: 保存Config到File
+ * - config_save: SaveConfig到File
  * - config_reset: ResetConfigForDefaultValue
  */
 
@@ -22,12 +22,12 @@ import { validateConfig } from "../../config/validate";
 import { authManager } from "../../auth/auth";
 
 /**
- * 敏感Config项列表
+ * 敏感Config项List
  * 这些Config项不应该暴露给Client，防止敏感Info泄露
  */
 const SENSITIVE_CONFIG_KEYS: string[] = [
     'tokenSecret',          // Token 密钥
-    'tokenExpiry',          // Token 过期时间
+    'tokenExpiry',          // Token 过期Time
     'maxConnectionsPerToken', // Connection限制
     'whitelist',            // IP 白名单
     'blacklist',            // IP 黑名单
@@ -46,7 +46,7 @@ function filterSensitiveConfig(config: Config): Partial<Config> {
     for (const key of Object.keys(config) as (keyof Config)[]) {
         // 只保留非敏感Config项
         if (!SENSITIVE_CONFIG_KEYS.includes(key)) {
-            // 使用Type断言绕过 TypeScript Of严格Type检查
+            // 使用Type断言绕过 TypeScript Of严格TypeCheck
             // 这是SafeOf，因For我们只是复制Config项，不改变其Type
             (filtered as any)[key] = config[key];
         }
@@ -58,7 +58,7 @@ function filterSensitiveConfig(config: Config): Partial<Config> {
 // ConfigChangeCallbackType
 type ConfigChangeCallback = (newConfig: Config, oldConfig: Config) => void;
 
-// ConfigChangeCallback列表
+// ConfigChangeCallbackList
 const configChangeCallbacks: ConfigChangeCallback[] = [];
 
 /**
@@ -109,7 +109,7 @@ function sendMessage(ws: any, message: ConfigMessage | ConfigAckMessage | Config
 }
 
 /**
- * 处理ConfigGetMessage
+ * HandleConfigGetMessage
  * @param ws WebSocket connection
  * @param message ConfigGetMessage
  */
@@ -131,18 +131,18 @@ export function handleConfigGet(ws: any, message: ConfigGetMessage): void {
 }
 
 /**
- * 处理ConfigSetMessage
+ * HandleConfigSetMessage
  *
  * SafeDescription：
  * - DefaultProhibitRemoteConfigModify，防止Safe风险
- * - 需要通过环境Variable ALLOW_REMOTE_CONFIG_MODIFICATION=true 明确Enable
- * - EnableAfter仍需要认证和 config_write 权限
+ * - Require通过环境Variable ALLOW_REMOTE_CONFIG_MODIFICATION=true 明确Enable
+ * - EnableAfter仍RequireAuthentication和 config_write Permission
  *
  * @param ws WebSocket connection
  * @param message ConfigSetMessage
  */
 export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
-    // Safe检查一：检查认证State
+    // SafeCheck一：CheckAuthenticationState
     if (!ws.authToken) {
         const errorMsg: ConfigErrorMessage = {
             type: "config_error",
@@ -154,7 +154,7 @@ export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
         return;
     }
 
-    // Safe检查二：检查是否AllowRemoteConfigModify
+    // SafeCheck二：CheckWhetherAllowRemoteConfigModify
     // DefaultProhibit，生产环境强烈建议保持DisableState
     const ALLOW_REMOTE_CONFIG_MODIFICATION = process.env.ALLOW_REMOTE_CONFIG_MODIFICATION === 'true';
 
@@ -169,7 +169,7 @@ export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
         return;
     }
 
-    // Safe检查三：检查权限
+    // SafeCheck三：CheckPermission
     if (!authManager.hasPermission(ws.authToken, 'config_write')) {
         const errorMsg: ConfigErrorMessage = {
             type: "config_error",
@@ -217,9 +217,9 @@ export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
 }
 
 /**
- * 处理Config保存Message
+ * HandleConfigSaveMessage
  * @param ws WebSocket connection
- * @param message Config保存Message
+ * @param message ConfigSaveMessage
  */
 export function handleConfigSave(ws: any, message: { type: "config_save"; path?: string }): void {
     const success = configManager.saveToFile(message.path);
@@ -242,7 +242,7 @@ export function handleConfigSave(ws: any, message: { type: "config_save"; path?:
 }
 
 /**
- * 处理ConfigResetMessage
+ * HandleConfigResetMessage
  * @param ws WebSocket connection
  * @param message ConfigResetMessage
  */
@@ -268,7 +268,7 @@ export function handleConfigReset(ws: any, message: { type: "config_reset" }): v
 }
 
 /**
- * 处理ConfigVerifyMessage
+ * HandleConfigVerifyMessage
  * @param ws WebSocket connection
  * @param message ConfigVerifyMessage
  */

@@ -80,16 +80,16 @@ export class StateStore {
     private readonly config: StateStoreConfig;
 
     /**
-     * 构造Function
+     * ConstructorFunction
      * @param config State store configuration
      */
     constructor(config?: Partial<StateStoreConfig>) {
         this.config = {
-            maxHistorySize: 100, // Default保留100条History记录
+            maxHistorySize: 100, // Defaultkeep100itemHistoryrecord
             ...config,
         };
 
-        // 预分配History记录Array，避免动态扩容
+        // preallocateHistoryrecordArray，avoiddynamicexpansion
         this.stateHistory = new Array(this.config.maxHistorySize);
         for (let i = 0; i < this.config.maxHistorySize; i++) {
             this.stateHistory[i] = {
@@ -102,20 +102,20 @@ export class StateStore {
     }
 
     /**
-     * Store新State
-     * @param state 新State
-     * @returns 是否SuccessStore
+     * StorenewState
+     * @param state newState
+     * @returns WhetherSuccessStore
      */
     storeState(state: InputState): boolean {
-        // 转换ArrayForSet（处理ClientSendOfArrayType）
+        // ConvertArrayForSet（HandleClientSendOfArrayType）
         const normalizedState = this.normalizeState(state);
         
-        // VerifyStateComplete性
+        // VerifyStateCompleteity
         if (!this.isValidState(normalizedState)) {
             return false;
         }
 
-        // Verifysequence number单调性
+        // Verifysequence number单调ity
         const sequenceNumber = this.extractSequenceNumber(normalizedState);
         if (!this.isValidSequenceNumber(sequenceNumber)) {
             return false;
@@ -130,7 +130,7 @@ export class StateStore {
             this.lastAppliedSequenceNumber = sequenceNumber;
         }
 
-        // 使用环形缓冲区添加History记录
+        // use环形bufferAddHistoryrecord
         this.addToHistoryRingBuffer({
             state: normalizedState,
             receivedTime,
@@ -138,13 +138,13 @@ export class StateStore {
             sequenceNumber,
         });
 
-        // 只记录关键StateInfo，不重复打印CompleteState
+        // 只recordkeyStateInfo，non-duplicateprintCompleteState
         return true;
     }
 
     /**
-     * 使用环形缓冲区添加History记录
-     * @param entry History记录条目
+     * use环形bufferAddHistoryrecord
+     * @param entry Historyrecorditem目
      */
     private addToHistoryRingBuffer(entry: {
         state: InputState;
@@ -152,41 +152,41 @@ export class StateStore {
         appliedTime: number | null;
         sequenceNumber: number;
     }): void {
-        // 写入Current位置
+        // WriteCurrentPosition
         this.stateHistory[this.historyHead] = entry;
 
-        // 移动Write position
+        // moveWrite position
         this.historyHead = (this.historyHead + 1) % this.config.maxHistorySize;
 
-        // 如果缓冲区已满，移动Read position
+        // Ifbufferfull，moveRead position
         if (this.historyFull) {
             this.historyTail = (this.historyTail + 1) % this.config.maxHistorySize;
         }
 
-        // 检查Whether buffer is full
+        // CheckWhether buffer is full
         if (this.historyHead === this.historyTail) {
             this.historyFull = true;
         }
     }
     /**
-     * Standard化State，将Array转换ForSet，并For缺少OfField添加DefaultValue
-     * @param state 原始State
-     * @returns Standard化AfterOfState
+     * StandardizeState，willArrayConvertForSet，andFormissingOfFieldAddDefaultValue
+     * @param state originalState
+     * @returns StandardizeAfterOfState
      */
     private normalizeState(state: any): InputState {
         const normalized = { ...state };
         
-        // 确保keyboard存在，DefaultNullArray
+        // ensurekeyboardexist，DefaultNullArray
         if (!normalized.keyboard) {
             normalized.keyboard = [];
         }
         
-        // 将keyboardArray转换ForSet
+        // willkeyboardArrayConvertForSet
         if (Array.isArray(normalized.keyboard)) {
             normalized.keyboard = new Set(normalized.keyboard);
         }
         
-        // 确保mouse存在，添加DefaultValue
+        // ensuremouseexist，AddDefaultValue
         if (!normalized.mouse) {
             normalized.mouse = {
                 x: 0,
@@ -197,7 +197,7 @@ export class StateStore {
             };
         }
         
-        // 确保joystick存在，添加DefaultValue
+        // ensurejoystickexist，AddDefaultValue
         if (!normalized.joystick) {
             normalized.joystick = {
                 x: 0,
@@ -206,17 +206,17 @@ export class StateStore {
                 smoothing: 0.5
             };
         } else {
-            // 确保joystickOf必填Field存在
+            // ensurejoystickOfrequiredFieldexist
             normalized.joystick.deadzone = normalized.joystick.deadzone || 0.1;
             normalized.joystick.smoothing = normalized.joystick.smoothing || 0.5;
         }
         
-        // 确保gamepad存在，DefaultNullArray
+        // ensuregamepadexist，DefaultNullArray
         if (!normalized.gamepad) {
             normalized.gamepad = [];
         }
         
-        // 将gamepadArray转换ForSet（如果存在）
+        // willgamepadArrayConvertForSet（Ifexist）
         if (Array.isArray(normalized.gamepad)) {
             normalized.gamepad = new Set(normalized.gamepad);
         }
@@ -233,7 +233,7 @@ export class StateStore {
     }
 
     /**
-     * 记录StateApply时间
+     * recordStateApplyTime
      * @param sequenceNumber sequence number
      * @param applyTime ApplyTimestamp（optional）
      */
@@ -241,13 +241,13 @@ export class StateStore {
         // UpdateLast applied sequence number
         this.lastAppliedSequenceNumber = sequenceNumber;
 
-        // 在环形缓冲区In查找对应OfHistory记录
+        // 在环形bufferIn查找correspond toOfHistoryrecord
         if (!this.historyFull && this.historyHead === this.historyTail) {
-            // 缓冲区ForNull，无需查找
+            // bufferForNull，无需查找
             return;
         }
 
-        // 从Read positionStart，遍历AllValid记录
+        // fromRead positionStart，遍历AllValidrecord
         let current = this.historyTail;
         const end = this.historyFull ? this.historyTail : this.historyHead;
 
@@ -262,20 +262,20 @@ export class StateStore {
     }
 
     /**
-     * VerifyStateComplete性
-     * @param state 要VerifyOfState
+     * VerifyStateCompleteity
+     * @param state wantVerifyOfState
      * @returns Is valid
      */
     private isValidState(state: InputState): boolean {
-        // 基本Verify：StateObject必须存在
+        // 基本Verify：StateObject必须exist
         if (!state) return false;
 
-        // VerifyKeyboardField（AllowArray，将在normalizeStateIn转换ForSet）
+        // VerifyKeyboardField（AllowArray，will在normalizeStateInConvertForSet）
         if (!state.keyboard) {
             return false;
         }
 
-        // VerifyMouseField（如果不存在，使用DefaultValue）
+        // VerifyMouseField（If不exist，useDefaultValue）
         if (!state.mouse) {
             return false;
         }
@@ -285,7 +285,7 @@ export class StateStore {
             return false;
         }
 
-        // VerifyoptionalField（如果存在，必须是Set或Array）
+        // VerifyoptionalField（Ifexist，必须是SetorArray）
         if (state.gamepad && !(state.gamepad instanceof Set) && !Array.isArray(state.gamepad)) {
             return false;
         }
@@ -298,39 +298,39 @@ export class StateStore {
     /**
      * 提取sequence number
      * @param state StateObject
-     * @returns sequence number，如果frameId不是Number则ReturnNaN
+     * @returns sequence number，IfframeIdnotNumberThenReturnNaN
      */
     private extractSequenceNumber(state: InputState): number {
-        // 只接受NumberframeId作Forsequence number
-        // 如果frameId不是Number，则ReturnNaN
+        // 只接受NumberframeIdasForsequence number
+        // IfframeIdnotNumber，ThenReturnNaN
         const frameId = (state as any).frameId;
         return typeof frameId === "number" ? frameId : NaN;
     }
 
     /**
-     * Verifysequence number单调性
-     * @param sequenceNumber 要VerifyOfsequence number
+     * Verifysequence number单调ity
+     * @param sequenceNumber wantVerifyOfsequence number
      * @returns Is valid
      */
     private isValidSequenceNumber(sequenceNumber: number): boolean {
-        // 如果sequence number不是Number，使用CurrentTimestamp作Forsequence number
+        // Ifsequence numbernotNumber，useCurrentTimestampasForsequence number
         if (isNaN(sequenceNumber)) {
             return true;
         }
 
-        // 如果没有State被Store过，任何sequence number都Valid
+        // If没有State被Store过，anysequence number都Valid
         if (this.lastAppliedSequenceNumber === 0) {
             return true;
         }
 
-        // Allowsequence numberSame或更大（处理重传和重新ConnectionOf情况）
-        // 注意：使用 lastAppliedSequenceNumber 而不是 latestState Ofsequence number
+        // Allowsequence numberSameor更大（Handle重传和重newConnectionOfcase）
+        // Note：use lastAppliedSequenceNumber 而not latestState Ofsequence number
         return sequenceNumber >= this.lastAppliedSequenceNumber;
     }
 
     /**
-     * GetStateHistory记录（从环形缓冲区读取）
-     * @returns StateHistory记录
+     * GetStateHistoryrecord（from环形bufferRead）
+     * @returns StateHistoryrecord
      */
     getStateHistory(): Array<{
         state: InputState;
@@ -346,11 +346,11 @@ export class StateStore {
         }> = [];
 
         if (!this.historyFull && this.historyHead === this.historyTail) {
-            // 缓冲区ForNull
+            // bufferForNull
             return result;
         }
 
-        // 从Read positionStart，按顺序读取AllValid记录
+        // fromRead positionStart，按顺序ReadAllValidrecord
         let current = this.historyTail;
         const end = this.historyFull ? this.historyTail : this.historyHead;
 
@@ -374,8 +374,8 @@ export class StateStore {
     }
 
     /**
-     * Get最AfterReceive时间
-     * @returns 最AfterReceive时间
+     * GetmostAfterReceiveTime
+     * @returns mostAfterReceiveTime
      */
     getLastReceivedTime(): number {
         return this.latestState ? Date.now() : 0;
@@ -392,7 +392,7 @@ export class StateStore {
         this.historyTail = 0;
         this.historyFull = false;
 
-        // 重新Initialize预分配Array
+        // 重newInitializepreallocateArray
         for (let i = 0; i < this.config.maxHistorySize; i++) {
             this.stateHistory[i] = {
                 state: null as any,

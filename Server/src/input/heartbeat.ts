@@ -14,9 +14,9 @@ interface HeartbeatConfig {
  * HeartbeatState
  */
 interface HeartbeatState {
-    lastSendTime: number; // 最AfterSendHeartbeat时间
-    lastReceiveTime: number; // 最AfterReceiveHeartbeat时间
-    consecutiveFailures: number; // 连续Failure次数
+    lastSendTime: number; // mostAfterSendHeartbeat时间
+    lastReceiveTime: number; // mostAfterReceiveHeartbeat时间
+    consecutiveFailures: number; // 连续Failure次count
     isAlive: boolean; // 是否存活
 }
 
@@ -37,10 +37,10 @@ export class HeartbeatModule {
     // HeartbeatCallback
     private onTimeoutCallback: (() => void) | null = null;
 
-    // Timeout计数Manager
+    // Timeout计countManager
     private consecutiveTimeouts: number = 0;
 
-    // Maximum连续Timeout次数
+    // Maximum连续Timeout次count
     private readonly maxConsecutiveTimeouts: number = 3;
 
     /**
@@ -117,7 +117,7 @@ export class HeartbeatModule {
      */
     dispatchHeartbeat(timestamp: number): void {
         // 由WebSocketModuleImplementation，这里留Null
-        // 格式: { type: 'ping', timestamp }
+        // format: { type: 'ping', timestamp }
     }
 
     /**
@@ -131,17 +131,17 @@ export class HeartbeatModule {
         this.state.lastReceiveTime = now;
         this.state.isAlive = true;
 
-        // Reset连续Failure计数
+        // Reset连续Failure计count
         this.state.consecutiveFailures = 0;
         this.consecutiveTimeouts = 0;
 
-        // 计算RTT
+        // calculateRTT
         const rtt = now - timestamp;
 
-        // 记录HeartbeatResponse
+        // recordHeartbeatResponse
         console.log(`Heartbeat: Received pong, RTT = ${rtt}ms`);
 
-        // 每10次HeartbeatOutput一次统计
+        // 每10次HeartbeatOutput一次statistics
         if (this.state.consecutiveFailures % 10 === 0) {
             console.log("Heartbeat Stats:", this.getStats());
         }
@@ -197,8 +197,8 @@ export class HeartbeatModule {
     }
 
     /**
-     * GetHeartbeat统计
-     * @returns Heartbeat统计
+     * GetHeartbeatstatistics
+     * @returns Heartbeatstatistics
      */
     getStats() {
         return {

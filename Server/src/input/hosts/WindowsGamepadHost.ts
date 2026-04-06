@@ -5,10 +5,10 @@
  * 
  * 降级策略：
  * - ViGEmBus Driver未安装：记录error，Disable宿主
- * - Module加载Failure：记录error，Disable宿主
+ * - ModuleLoadFailure：记录error，Disable宿主
  * - ExecuteFailure：记录error，不影响其他宿主
  * 
- * XInput Button映射：
+ * XInput ButtonMap：
  * - A: 0x0001, B: 0x0002, X: 0x0004, Y: 0x0008
  * - LB: 0x0100, RB: 0x0200
  * - Start: 0x0010, Back: 0x0020, Guide: 0x0400
@@ -90,8 +90,8 @@ export class WindowsGamepadHost extends InputHost {
     }
 
     /**
-     * Initialize：加载 ViGEmClient Driver
-     * @returns 是否InitializeSuccess
+     * Initialize：Load ViGEmClient Driver
+     * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
         try {
@@ -290,7 +290,7 @@ export class WindowsGamepadHost extends InputHost {
 
     /**
      * Get current active button list
-     * @returns 活动Button列表
+     * @returns 活动ButtonList
      */
     getActiveButtons(): string[] {
         return [...this.activeButtons];
