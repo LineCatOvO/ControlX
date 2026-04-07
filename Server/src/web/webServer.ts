@@ -5,6 +5,11 @@ import { createServer } from 'http';
 import { readFileSync, existsSync } from 'fs';
 import { join, extname } from 'path';
 import { inputState } from '../input/state';
+import {
+    initializeHttpMetrics,
+    requestMetricsMiddleware,
+    createMetricsEndpoint,
+} from '../metrics/middleware';
 
 // Use require to import ws module (consistent with other files in project)
 const WebSocket = require('ws');
@@ -38,9 +43,15 @@ let statusInterval: ReturnType<typeof setInterval> | null = null;
  * Start web monitoring server
  */
 export function startWebMonitor(): void {
+    // Initialize HTTP metrics (register metrics with collector)
+    initializeHttpMetrics();
+
     // CreateHTTP server
     httpServer = createServer((req, res) => {
-        handleHttpRequest(req, res);
+        // Apply request metrics middleware
+        requestMetricsMiddleware(req, res, () => {
+            handleHttpRequest(req, res);
+        });
     });
 
     // Create WebSocket server
@@ -87,6 +98,13 @@ export function stopWebMonitor(): void {
  */
 function handleHttpRequest(req: any, res: any): void {
     const url = req.url === '/' ? '/index.html' : req.url;
+
+    // Prometheus metrics endpoint
+    if (url === '/metrics/prometheus') {
+        const metricsHandler = createMetricsEndpoint();
+        metricsHandler(req, res);
+        return;
+    }
 
     // Health check endpoint for Docker/load balancer
     if (url === '/health') {
