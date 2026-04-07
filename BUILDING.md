@@ -387,10 +387,115 @@ sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
 | 问题 | 解决方案 |
 |------|----------|
-| SDK 未找到 | 检查 ANDROID_HOME |
+| SDK 未找到 | 检查 ANDROID_HOME 和 local.properties |
 | JDK 版本不匹配 | 使用 JDK 11+ |
 | 签名失败 | 检查 signing-config.properties |
 | ProGuard 错误 | 检查 keep rules |
+| 构建超时 | 增加 JVM 内存（gradle.properties） |
+| Gradle 守护进程问题 | 使用 `--no-daemon` 选项 |
+
+---
+
+## 自动化构建脚本
+
+### Android 构建脚本
+
+项目提供统一的 Android 构建脚本 `scripts/build-android.sh`：
+
+```bash
+# 构建 Debug APK
+./scripts/build-android.sh debug
+
+# 构建 Release APK
+./scripts/build-android.sh release
+
+# 运行单元测试
+./scripts/build-android.sh test
+
+# 代码检查
+./scripts/build-android.sh lint
+
+# 完整构建（清理 + 测试 + Debug）
+./scripts/build-android.sh all
+
+# CI 构建（lint + 测试 + Debug + Release）
+./scripts/build-android.sh ci --no-daemon
+```
+
+### SDK 安装脚本
+
+使用 `scripts/install-android-sdk.sh` 自动安装 Android SDK：
+
+```bash
+# 默认安装（API 34）
+./scripts/install-android-sdk.sh
+
+# 安装指定 API 版本
+./scripts/install-android-sdk.sh --api 35
+
+# 安装带 NDK
+./scripts/install-android-sdk.sh --ndk 26.1.10909125
+
+# 安装带模拟器
+./scripts/install-android-sdk.sh --emulator
+
+# 安装到指定路径
+./scripts/install-android-sdk.sh --path /opt/android-sdk
+```
+
+### Docker 构建
+
+使用 Dockerfile.android 创建一致的构建环境：
+
+```bash
+# 构建 Docker 镜像
+docker build -f Dockerfile.android -t controlx-android-builder .
+
+# 运行构建
+docker run --rm -v $(pwd):/workspace controlx-android-builder debug
+
+# 交互式 Shell
+docker run -it --rm -v $(pwd):/workspace controlx-android-builder bash
+```
+
+---
+
+## CI/CD 集成
+
+### GitHub Actions
+
+项目包含 `.github/workflows/android-build.yml` 工作流：
+
+- **触发条件**: push 到 main/develop 分支或 PR
+- **构建任务**: Debug APK、Release APK（main 分支）
+- **测试任务**: 单元测试、Lint 检查
+- **产物上传**: APK 文件、测试报告、Lint 报告
+
+### 配置签名密钥
+
+在 GitHub Secrets 中配置以下变量：
+
+| Secret | 说明 |
+|--------|------|
+| `KEYSTORE_BASE64` | Base64 编码的 keystore 文件 |
+| `KEYSTORE_PASSWORD` | Keystore 密码 |
+| `KEY_ALIAS` | 密钥别名 |
+| `KEY_PASSWORD` | 密钥密码 |
+
+生成 Base64 keystore：
+```bash
+base64 -w 0 release.keystore > keystore.b64
+```
+
+### 本地 CI 测试
+
+在本地测试 CI 构建：
+
+```bash
+# 模拟 CI 环境
+export CI=true
+./scripts/build-android.sh ci --no-daemon
+```
 
 ---
 

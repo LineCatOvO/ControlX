@@ -1,0 +1,60 @@
+# ControlX Android SDK Local Configuration Template
+#
+# This file should be copied to 'local.properties' and configured with
+# your actual Android SDK installation path.
+#
+# WARNING: local.properties contains machine-specific paths.
+#          Do NOT commit this file to the repository!
+#          It is already added to .gitignore by default.
+#
+# Instructions:
+# 1. Copy this file: cp local.properties.template local.properties
+# 2. Update the sdk.dir path below to match your Android SDK installation
+# 3. Save and build
+
+# ==================== Android SDK Path ====================
+
+# Android SDK installation directory
+# Examples:
+#   Linux/macOS: sdk.dir=/home/username/Android/Sdk
+#   macOS:       sdk.dir=/Users/username/Library/Android/sdk
+#   Windows:     sdk.dir=C\\:\\Users\\\username\\\AppData\\\Local\\\Android\\\Sdk
+sdk.dir=YOUR_ANDROID_SDK_PATH_HERE
+
+# ==================== NDK Configuration (Optional) ====================
+
+# NDK installation directory (if not using SDK manager)
+# Examples:
+#   sdk.dir=/home/username/Android/Sdk/ndk/version
+ndk.dir=YOUR_NDK_PATH_HERE
+
+# ==================== CMake Configuration (Optional) ====================
+
+# CMake installation directory (if using native builds)
+# Examples:
+#   cmake.dir=/home/username/Android/Sdk/cmake/version
+cmake.dir=YOUR_CMAKE_PATH_HERE
+
+# ==================== Environment Verification ====================
+
+# Verify your SDK installation by running:
+#   $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed
+#
+# Verify platform-tools by running:
+#   adb --version
+#
+# Verify build-tools by running:
+#   aapt version
+
+# ==================== CI/CD Notes ====================
+
+# For CI/CD environments, you can also set ANDROID_HOME environment variable
+# instead of creating local.properties. The build will use ANDROID_HOME if
+# local.properties is not present.
+#
+# Example GitHub Actions:
+#   - name: Set up Android SDK
+#     uses: android-actions/setup-android@v3
+#     with:
+#       api-level: 34
+#       build-tools: 34.0.0

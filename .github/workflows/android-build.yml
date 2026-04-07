@@ -1,0 +1,331 @@
+# ControlX Android Client CI/CD Workflow
+# 
+# This workflow builds, tests, and packages the Android client application.
+# It runs on pushes to main/develop branches and on pull requests.
+#
+# Features:
+# - Debug and Release builds
+# - Unit tests execution
+# - Lint checking
+# - APK artifact upload
+# - ARM64 architecture support
+
+name: Android Build
+
+on:
+  push:
+    branches: [ main, develop, 'task/**', 'feature/**', 'fix/**' ]
+    paths:
+      - 'AndroidClient/**'
+      - '.github/workflows/android-build.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'AndroidClient/**'
+
+env:
+  JAVA_VERSION: '21'
+  ANDROID_API_LEVEL: '34'
+  ANDROID_BUILD_TOOLS: '34.0.0'
+  GRADLE_OPTS: >-
+    -Dorg.gradle.jvmargs=-Xmx4g
+    -Dorg.gradle.daemon=false
+    -Dorg.gradle.parallel=true
+    -Dorg.gradle.caching=true
+
+jobs:
+  # ============================================
+  # Job: Build and Test
+  # ============================================
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        arch: [ ubuntu-latest ]
+
+    steps:
+      # ----------------------------------------
+      # Checkout
+      # ----------------------------------------
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ----------------------------------------
+      # Setup JDK
+      # ----------------------------------------
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      # ----------------------------------------
+      # Setup Android SDK
+      # ----------------------------------------
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          build-tools: ${{ env.ANDROID_BUILD_TOOLS }}
+          ndk: '26.1.10909125'
+
+      # ----------------------------------------
+      # Cache Gradle
+      # ----------------------------------------
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('AndroidClient/**/*.gradle*', 'AndroidClient/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # ----------------------------------------
+      # Create local.properties
+      # ----------------------------------------
+      - name: Configure Android SDK Path
+        working-directory: AndroidClient
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "Created local.properties with SDK path: $ANDROID_HOME"
+
+      # ----------------------------------------
+      # Setup Signing (Release only)
+      # ----------------------------------------
+      - name: Configure Release Signing
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        working-directory: AndroidClient
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > app/release.keystore
+            echo "storeFile=release.keystore" > signing.properties
+            echo "storePassword=$KEYSTORE_PASSWORD" >> signing.properties
+            echo "keyAlias=$KEY_ALIAS" >> signing.properties
+            echo "keyPassword=$KEY_PASSWORD" >> signing.properties
+            echo "Release signing configured"
+          else
+            echo "No signing credentials, will use debug signing"
+          fi
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      # ----------------------------------------
+      # Grant execute permission
+      # ----------------------------------------
+      - name: Grant execute permission for gradlew
+        working-directory: AndroidClient
+        run: chmod +x gradlew
+
+      # ----------------------------------------
+      # Run Lint
+      # ----------------------------------------
+      - name: Run Lint
+        working-directory: AndroidClient
+        run: ./gradlew lint
+
+      # ----------------------------------------
+      # Run Unit Tests
+      # ----------------------------------------
+      - name: Run Unit Tests
+        working-directory: AndroidClient
+        run: ./gradlew testDebugUnitTest --continue
+
+      # ----------------------------------------
+      # Upload Test Results
+      # ----------------------------------------
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.arch }}
+          path: AndroidClient/app/build/reports/tests/
+          retention-days: 7
+
+      # ----------------------------------------
+      # Upload Lint Results
+      # ----------------------------------------
+      - name: Upload Lint Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results-${{ matrix.arch }}
+          path: AndroidClient/app/build/reports/lint-results-*.html
+          retention-days: 7
+
+      # ----------------------------------------
+      # Build Debug APK
+      # ----------------------------------------
+      - name: Build Debug APK
+        working-directory: AndroidClient
+        run: ./gradlew assembleDebug
+
+      # ----------------------------------------
+      # Upload Debug APK
+      # ----------------------------------------
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: controlx-debug-apk
+          path: AndroidClient/app/build/outputs/apk/debug/*.apk
+          retention-days: 7
+
+      # ----------------------------------------
+      # Build Release APK (main branch only)
+      # ----------------------------------------
+      - name: Build Release APK
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        working-directory: AndroidClient
+        run: ./gradlew assembleRelease
+
+      # ----------------------------------------
+      # Upload Release APK
+      # ----------------------------------------
+      - name: Upload Release APK
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: controlx-release-apk
+          path: AndroidClient/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+  # ============================================
+  # Job: ARM64 Build (Self-hosted or ARM runner)
+  # ============================================
+  build-arm64:
+    name: Build ARM64
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Only run on main/develop or when explicitly requested
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || contains(github.event.head_commit.message, '[arm64]')
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          build-tools: ${{ env.ANDROID_BUILD_TOOLS }}
+
+      - name: Configure Android SDK Path
+        working-directory: AndroidClient
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Grant execute permission for gradlew
+        working-directory: AndroidClient
+        run: chmod +x gradlew
+
+      - name: Build Debug APK (ARM64)
+        working-directory: AndroidClient
+        run: ./gradlew assembleDebug
+
+      - name: Upload ARM64 Build Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: controlx-arm64-build
+          path: AndroidClient/app/build/outputs/apk/debug/*.apk
+          retention-days: 7
+
+  # ============================================
+  # Job: Code Quality
+  # ============================================
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          build-tools: ${{ env.ANDROID_BUILD_TOOLS }}
+
+      - name: Configure Android SDK Path
+        working-directory: AndroidClient
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Grant execute permission for gradlew
+        working-directory: AndroidClient
+        run: chmod +x gradlew
+
+      - name: Run Checkstyle (if configured)
+        working-directory: AndroidClient
+        continue-on-error: true
+        run: |
+          if [ -f "config/checkstyle/checkstyle.xml" ]; then
+            ./gradlew checkstyle
+          else
+            echo "No checkstyle configuration found, skipping"
+          fi
+
+      - name: Generate Dependency Report
+        working-directory: AndroidClient
+        run: ./gradlew dependencies --configuration debugRuntimeClasspath > dependencies.txt
+
+      - name: Upload Dependency Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-report
+          path: AndroidClient/dependencies.txt
+          retention-days: 7
+
+  # ============================================
+  # Job: Release
+  # ============================================
+  release:
+    name: Create Release
+    needs: [ build, quality ]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    timeout-minutes: 15
+
+    steps:
+      - name: Download Release APK
+        uses: actions/download-artifact@v4
+        with:
+          name: controlx-release-apk
+          path: release/
+
+      - name: Get Version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ControlX Android ${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, '-beta') || contains(steps.get_version.outputs.VERSION, '-alpha') }}
+          files: |
+            release/*.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

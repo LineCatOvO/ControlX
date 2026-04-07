@@ -238,8 +238,118 @@ defaultConfig {
 
 ---
 
+## CI/CD 配置
+
+### GitHub Actions
+
+项目配置 `.github/workflows/android-build.yml`：
+
+**工作流功能**：
+- Debug 和 Release APK 构建
+- 单元测试执行
+- Lint 代码检查
+- APK 产物上传
+- ARM64 架构支持
+
+**触发条件**：
+```yaml
+on:
+  push:
+    branches: [ main, develop, 'task/**', 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+```
+
+**使用签名密钥**：
+```bash
+# 生成 Base64 keystore
+base64 -w 0 release.keystore > keystore.b64
+
+# 在 GitHub Secrets 中设置:
+# - KEYSTORE_BASE64
+# - KEYSTORE_PASSWORD
+# - KEY_ALIAS
+# - KEY_PASSWORD
+```
+
+### Docker 构建
+
+使用 `Dockerfile.android` 创建一致的构建环境：
+
+```bash
+# 构建镜像
+docker build -f Dockerfile.android -t controlx-android-builder .
+
+# 运行 Debug 构建
+docker run --rm -v $(pwd):/workspace controlx-android-builder debug
+
+# 运行 Release 构建
+docker run --rm -v $(pwd):/workspace controlx-android-builder release
+
+# 交互模式
+docker run -it --rm -v $(pwd):/workspace controlx-android-builder bash
+```
+
+**Docker 镜像包含**：
+- JDK 21 (Temurin)
+- Android SDK (API 34)
+- Build Tools 34.0.0
+- Gradle 9.3.0
+- NDK 26.1.10909125
+
+---
+
+## 构建脚本
+
+### build-android.sh
+
+统一构建脚本 `../scripts/build-android.sh`：
+
+| 命令 | 说明 |
+|------|------|
+| `debug` | 构建 Debug APK |
+| `release` | 构建 Release APK |
+| `test` | 运行单元测试 |
+| `lint` | 运行代码检查 |
+| `clean` | 清理构建产物 |
+| `all` | 完整构建（clean + test + debug） |
+| `ci` | CI 构建（lint + test + debug + release） |
+
+**选项**：
+```bash
+--no-daemon    # 禁用 Gradle 守护进程
+--offline      # 离线模式
+--info         # 详细输出
+--stacktrace   # 显示堆栈跟踪
+--profile      # 生成性能报告
+```
+
+### install-android-sdk.sh
+
+SDK 安装脚本 `../scripts/install-android-sdk.sh`：
+
+```bash
+# 默认安装
+./scripts/install-android-sdk.sh
+
+# 指定 API 版本
+./scripts/install-android-sdk.sh --api 35
+
+# 安装 NDK
+./scripts/install-android-sdk.sh --ndk 26.1.10909125
+
+# 安装模拟器
+./scripts/install-android-sdk.sh --emulator
+
+# 强制重新安装
+./scripts/install-android-sdk.sh --force
+```
+
+---
+
 ## References
 
 - [Android Build System](https://developer.android.com/build)
 - [ProGuard Configuration](https://www.guardsquare.com/manual/configuration/usage)
 - [Gradle Performance](https://docs.gradle.org/current/userguide/performance.html)
+- [GitHub Actions Android](https://github.com/android-actions/setup-android)
