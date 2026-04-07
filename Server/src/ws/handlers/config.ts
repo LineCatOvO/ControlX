@@ -134,137 +134,65 @@ export function handleConfigGet(ws: any, message: ConfigGetMessage): void {
  * HandleConfigSetMessage
  *
  * SafeDescription：
- * - DefaultProhibitRemoteConfigModify，PreventSafeRisk
- * - RequirePassEnvVariable ALLOW_REMOTE_CONFIG_MODIFICATION=true ClearEnable
- * - EnableAfter仍RequireAuthenticationand config_write Permission
+ * - ConfigIsInReadOnlyMode，RemoteConfigModificationHasBeenCompletelyDisabled
+ * - ThisIsAPermanentSecurityMeasure，NotControlledByEnvironmentVariables
+ * - AllConfigurationChangesMustBeMadeThroughLocalConfigurationFiles
  *
  * @param ws WebSocket connection
  * @param message ConfigSetMessage
  */
 export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
-    // SafeCheck一：CheckAuthenticationState
-    if (!ws.authToken) {
-        const errorMsg: ConfigErrorMessage = {
-            type: "config_error",
-            code: "AUTH_REQUIRED",
-            message: "Authentication required for config modification"
-        };
-        sendMessage(ws, errorMsg);
-        console.warn("[Security] Config update rejected: authentication required");
-        return;
-    }
-
-    // SafeCheckTwo：CheckWhetherAllowRemoteConfigModify
-    // DefaultProhibit，ProductionEnv强烈建议保HoldDisableState
-    const ALLOW_REMOTE_CONFIG_MODIFICATION = process.env.ALLOW_REMOTE_CONFIG_MODIFICATION === 'true';
-
-    if (!ALLOW_REMOTE_CONFIG_MODIFICATION) {
-        const errorMsg: ConfigErrorMessage = {
-            type: "config_error",
-            code: "FORBIDDEN",
-            message: "Remote configuration modification is disabled by default for security. Set ALLOW_REMOTE_CONFIG_MODIFICATION=true to enable."
-        };
-        sendMessage(ws, errorMsg);
-        console.warn("[Security] Config update rejected: remote modification disabled");
-        return;
-    }
-
-    // SafeCheckThree：CheckPermission
-    if (!authManager.hasPermission(ws.authToken, 'config_write')) {
-        const errorMsg: ConfigErrorMessage = {
-            type: "config_error",
-            code: "PERMISSION_DENIED",
-            message: "Permission denied for config modification. Required permission: config_write"
-        };
-        sendMessage(ws, errorMsg);
-        console.warn("[Security] Config update rejected: permission denied (config_write required)");
-        return;
-    }
-
-    const oldConfig = configManager.getConfig();
-
-    // ExecuteHotUpdate
-    const result = configManager.hotUpdate(message.data);
-
-    if (result.success) {
-        // SendConfirmMessage
-        const ackMsg: ConfigAckMessage = {
-            type: "config_ack",
-            message: "Config updated successfully",
-            data: result.newConfig
-        };
-
-        console.log("Config updated successfully");
-        console.log("Changes:", result.changes.join(", "));
-        sendMessage(ws, ackMsg);
-
-        // NotifyConfigChangeCallback
-        notifyConfigChange(result.newConfig, result.oldConfig);
-
-        // SameStepUpdateGlobalConfigObject（保HoldToAfterCompatible）
-        Object.assign(config, result.newConfig);
-    } else {
-        // SenderrorMessage
-        const errorMsg: ConfigErrorMessage = {
-            type: "config_error",
-            code: "INVALID_CONFIG",
-            message: "Invalid configuration values provided"
-        };
-
-        console.warn("Config update rejected: invalid configuration");
-        sendMessage(ws, errorMsg);
-    }
+    // ConfigInReadOnlyMode，RejectAllRemoteConfigModificationRequests
+    const errorMsg: ConfigErrorMessage = {
+        type: "config_error",
+        code: "READONLY_MODE",
+        message: "Configuration is in read-only mode. Remote configuration modification has been permanently disabled for security. Please modify the configuration file directly."
+    };
+    sendMessage(ws, errorMsg);
+    console.warn("[Security] Config update rejected: configuration is in read-only mode");
+    return;
 }
 
 /**
  * HandleConfigSaveMessage
+ *
+ * SafeDescription：
+ * - ConfigSaveDisabledInReadOnlyMode
+ * - AllConfigurationChangesMustBeMadeThroughLocalConfigurationFiles
+ *
  * @param ws WebSocket connection
  * @param message ConfigSaveMessage
  */
 export function handleConfigSave(ws: any, message: { type: "config_save"; path?: string }): void {
-    const success = configManager.saveToFile(message.path);
-    
-    if (success) {
-        const ackMsg: ConfigAckMessage = {
-            type: "config_ack",
-            message: "Config saved successfully",
-            data: configManager.getConfig()
-        };
-        sendMessage(ws, ackMsg);
-    } else {
-        const errorMsg: ConfigErrorMessage = {
-            type: "config_error",
-            code: "SAVE_FAILED",
-            message: "Failed to save configuration to file"
-        };
-        sendMessage(ws, errorMsg);
-    }
+    // ConfigInReadOnlyMode，RejectAllConfigSaveRequests
+    const errorMsg: ConfigErrorMessage = {
+        type: "config_error",
+        code: "READONLY_MODE",
+        message: "Configuration save is disabled. The server is running in read-only mode for security."
+    };
+    sendMessage(ws, errorMsg);
+    console.warn("[Security] Config save rejected: configuration is in read-only mode");
 }
 
 /**
  * HandleConfigResetMessage
+ *
+ * SafeDescription：
+ * - ConfigResetDisabledInReadOnlyMode
+ * - ConfigurationResetMustBePerformedManuallyThroughLocalConfigurationFiles
+ *
  * @param ws WebSocket connection
  * @param message ConfigResetMessage
  */
 export function handleConfigReset(ws: any, message: { type: "config_reset" }): void {
-    const oldConfig = configManager.getConfig();
-    configManager.reset();
-    const newConfig = configManager.getConfig();
-    
-    // SameStepUpdateGlobalConfigObject
-    Object.assign(config, newConfig);
-    
-    const ackMsg: ConfigAckMessage = {
-        type: "config_ack",
-        message: "Config reset to defaults",
-        data: newConfig
+    // ConfigInReadOnlyMode，RejectAllConfigResetRequests
+    const errorMsg: ConfigErrorMessage = {
+        type: "config_error",
+        code: "READONLY_MODE",
+        message: "Configuration reset is disabled. The server is running in read-only mode for security. Please modify the configuration file directly."
     };
-    
-    console.log("Config reset to defaults");
-    sendMessage(ws, ackMsg);
-    
-    // NotifyConfigChangeCallback
-    notifyConfigChange(newConfig, oldConfig);
+    sendMessage(ws, errorMsg);
+    console.warn("[Security] Config reset rejected: configuration is in read-only mode");
 }
 
 /**
@@ -274,14 +202,18 @@ export function handleConfigReset(ws: any, message: { type: "config_reset" }): v
  */
 export function handleConfigValidate(ws: any, message: { type: "config_validate"; data: Partial<Config> }): void {
     const isValid = validateConfig(message.data);
-    
+
     const response = {
         type: "config_validate_result",
         valid: isValid,
         data: message.data
     };
-    
-    ws.send(JSON.stringify(response));
+
+    try {
+        ws.send(JSON.stringify(response));
+    } catch (error) {
+        console.error('Error sending config validate message:', error);
+    }
 }
 
 // ExportCompatibleOldVersionOfHandler

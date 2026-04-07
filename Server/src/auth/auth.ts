@@ -42,7 +42,7 @@ export interface TokenInfo {
  * Default auth config
  * Can be loaded from environment variablesor config file
  */
-const DEFAULT_CONFIG: AuthConfig = {
+export const DEFAULT_CONFIG: AuthConfig = {
     enabled: process.env.AUTH_ENABLED !== 'false', // Default enabled
     tokenSecret: process.env.AUTH_TOKEN_SECRET || 'controlx-secret-key-change-in-production',
     tokenExpiry: parseInt(process.env.AUTH_TOKEN_EXPIRY || '3600000', 10), // Default 1 hour

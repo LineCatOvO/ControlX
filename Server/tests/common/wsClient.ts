@@ -23,34 +23,67 @@ export class WsClient {
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
+        this.cleanup();
         reject(new Error('WebSocket connection timeout'));
       }, this.timeout);
+
+      let isResolved = false;
+      let isOpen = false;
 
       this.ws = new WebSocket(this.url);
 
       this.ws.on('open', () => {
-        clearTimeout(timeoutId);
-        resolve();
+        if (!isResolved) {
+          isOpen = true;
+          isResolved = true;
+          clearTimeout(timeoutId);
+          resolve();
+        }
       });
 
       this.ws.on('message', (data: any) => {
-        const message = JSON.parse(data.toString());
-        // First store the message
-        this.pendingMessages.push(message);
-        // Then call handlers
-        this.messageHandlers.forEach(handler => handler(message));
+        try {
+          const message = JSON.parse(data.toString());
+          // First store the message
+          this.pendingMessages.push(message);
+          // Then call handlers
+          this.messageHandlers.forEach(handler => handler(message));
+        } catch (e) {
+          // Ignore parse errors
+        }
       });
 
-      this.ws.on('close', () => {
+      this.ws.on('close', (code: number, reason: Buffer) => {
+        // Only reject if connection was closed before being opened
+        if (!isResolved) {
+          isResolved = true;
+          clearTimeout(timeoutId);
+          const reasonStr = reason?.toString() || 'Connection closed';
+          reject(new Error(`WebSocket closed: ${reasonStr} (code: ${code})`));
+        }
         this.closeHandlers.forEach(handler => handler());
       });
 
       this.ws.on('error', (error: Error) => {
-        clearTimeout(timeoutId);
-        this.errorHandlers.forEach(handler => handler(error));
-        reject(error);
+        if (!isResolved) {
+          isResolved = true;
+          clearTimeout(timeoutId);
+          this.errorHandlers.forEach(handler => handler(error));
+          reject(error);
+        }
       });
     });
+  }
+
+  private cleanup(): void {
+    if (this.ws) {
+      try {
+        this.ws.terminate();
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+      this.ws = null;
+    }
   }
 
   send(message: any): Promise<void> {

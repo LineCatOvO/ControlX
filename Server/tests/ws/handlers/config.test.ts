@@ -20,23 +20,26 @@ import {
     handleConfigValidate,
     registerConfigChangeCallback,
     unregisterConfigChangeCallback
-} from '../../src/ws/handlers/config';
+} from '../../../src/ws/handlers/config';
 
 // Mock ConfigManager
-jest.mock('../../src/config/configManager', () => ({
+jest.mock('../../../src/config/configManager', () => ({
     configManager: {
         getConfig: jest.fn().mockReturnValue({
-            serverPort: 3000,
-            maxConnections: 10,
-            tokenSecret: 'secret-key',
-            tokenExpiry: 3600,
-            whitelist: ['127.0.0.1'],
+            inputUpdateInterval: 16,
+            heartbeatInterval: 1000,
+            pingInterval: 5000,
+            safeStateTimeout: 30000,
+            enableLogging: true,
+            defaultPort: 8080,
+            portRange: 100,
+            isTestMode: false
         }),
         hotUpdate: jest.fn().mockReturnValue({
             success: true,
-            newConfig: { serverPort: 4000 },
-            oldConfig: { serverPort: 3000 },
-            changes: ['serverPort']
+            newConfig: { defaultPort: 9000 },
+            oldConfig: { defaultPort: 8080 },
+            changes: ['defaultPort']
         }),
         saveToFile: jest.fn().mockReturnValue(true),
         reset: jest.fn()
@@ -44,20 +47,23 @@ jest.mock('../../src/config/configManager', () => ({
 }));
 
 // Mock ConfigManager class
-jest.mock('../../src/config/configManager', () => {
+jest.mock('../../../src/config/configManager', () => {
     const mockConfigManager = {
         getConfig: jest.fn().mockReturnValue({
-            serverPort: 3000,
-            maxConnections: 10,
-            tokenSecret: 'secret-key',
-            tokenExpiry: 3600,
-            whitelist: ['127.0.0.1'],
+            inputUpdateInterval: 16,
+            heartbeatInterval: 1000,
+            pingInterval: 5000,
+            safeStateTimeout: 30000,
+            enableLogging: true,
+            defaultPort: 8080,
+            portRange: 100,
+            isTestMode: false
         }),
         hotUpdate: jest.fn().mockReturnValue({
             success: true,
-            newConfig: { serverPort: 4000 },
-            oldConfig: { serverPort: 3000 },
-            changes: ['serverPort']
+            newConfig: { defaultPort: 9000 },
+            oldConfig: { defaultPort: 8080 },
+            changes: ['defaultPort']
         }),
         saveToFile: jest.fn().mockReturnValue(true),
         reset: jest.fn()
@@ -69,21 +75,28 @@ jest.mock('../../src/config/configManager', () => {
 });
 
 // Mock authManager
-jest.mock('../../src/auth/auth', () => ({
+jest.mock('../../../src/auth/auth', () => ({
     authManager: {
         hasPermission: jest.fn().mockReturnValue(true)
     }
 }));
 
 // Mock config
-jest.mock('../../src/config/config', () => ({
+jest.mock('../../../src/config/config', () => ({
     config: {
-        serverPort: 3000
+        inputUpdateInterval: 16,
+        heartbeatInterval: 1000,
+        pingInterval: 5000,
+        safeStateTimeout: 30000,
+        enableLogging: true,
+        defaultPort: 8080,
+        portRange: 100,
+        isTestMode: false
     }
 }));
 
 // Mock validateConfig
-jest.mock('../../src/config/validate', () => ({
+jest.mock('../../../src/config/validate', () => ({
     validateConfig: jest.fn().mockReturnValue(true)
 }));
 
@@ -157,8 +170,10 @@ describe('Config Handler Tests', () => {
             handleConfigGet(ws, { type: 'config_get' });
 
             const response = ws.getLastMessage();
-            expect(response.data.serverPort).toBe(3000);
-            expect(response.data.maxConnections).toBe(10);
+            // defaultPort is filtered as sensitive, so test non-sensitive properties
+            expect(response.data.inputUpdateInterval).toBe(16);
+            expect(response.data.heartbeatInterval).toBe(1000);
+            expect(response.data.pingInterval).toBe(5000);
         });
     });
 
@@ -166,107 +181,37 @@ describe('Config Handler Tests', () => {
     // handleConfigSet Tests
     // ========================================
     describe('handleConfigSet', () => {
-        test('should reject config modification without authentication', () => {
+        test('should reject all config modifications in read-only mode', () => {
+            handleConfigSet(ws, { type: 'config_set', data: { defaultPort: 9000 } });
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
+            expect(response.message).toContain('read-only mode');
+        });
+
+        test('should reject config modification even with authentication', () => {
+            // Even with auth token, should still reject
+            ws.authToken = 'valid-token';
+
+            handleConfigSet(ws, { type: 'config_set', data: { defaultPort: 9000 } });
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
+        });
+
+        test('should reject config modification even without authentication', () => {
             ws.authToken = undefined;
 
-            handleConfigSet(ws, { type: 'config_set', data: { serverPort: 4000 } });
+            handleConfigSet(ws, { type: 'config_set', data: { defaultPort: 9000 } });
 
             const response = ws.getLastMessage();
             expect(response.type).toBe('config_error');
-            expect(response.code).toBe('AUTH_REQUIRED');
-        });
-
-        test('should reject config modification when remote modification disabled', () => {
-            // Set environment variable to disable remote modification
-            process.env.ALLOW_REMOTE_CONFIG_MODIFICATION = 'false';
-
-            handleConfigSet(ws, { type: 'config_set', data: { serverPort: 4000 } });
-
-            const response = ws.getLastMessage();
-            expect(response.type).toBe('config_error');
-            expect(response.code).toBe('FORBIDDEN');
-
-            // Restore
-            delete process.env.ALLOW_REMOTE_CONFIG_MODIFICATION;
-        });
-
-        test('should accept config modification when enabled and authenticated', () => {
-            process.env.ALLOW_REMOTE_CONFIG_MODIFICATION = 'true';
-
-            handleConfigSet(ws, { type: 'config_set', data: { serverPort: 4000 } });
-
-            const response = ws.getLastMessage();
-            expect(response.type).toBe('config_ack');
-
-            // Restore
-            delete process.env.ALLOW_REMOTE_CONFIG_MODIFICATION;
-        });
-
-        test('should reject when permission denied', () => {
-            process.env.ALLOW_REMOTE_CONFIG_MODIFICATION = 'true';
-
-            // Mock authManager to deny permission
-            const authManager = require('../../src/auth/auth').authManager;
-            authManager.hasPermission.mockReturnValue(false);
-
-            handleConfigSet(ws, { type: 'config_set', data: { serverPort: 4000 } });
-
-            const response = ws.getLastMessage();
-            expect(response.type).toBe('config_error');
-            expect(response.code).toBe('PERMISSION_DENIED');
-
-            // Restore
-            delete process.env.ALLOW_REMOTE_CONFIG_MODIFICATION;
-            authManager.hasPermission.mockReturnValue(true);
-        });
-
-        test('should handle failed hot update', () => {
-            process.env.ALLOW_REMOTE_CONFIG_MODIFICATION = 'true';
-
-            // Mock hotUpdate to fail
-            const configManager = require('../../src/config/configManager').configManager;
-            configManager.hotUpdate.mockReturnValue({
-                success: false,
-                newConfig: null,
-                oldConfig: { serverPort: 3000 },
-                changes: []
-            });
-
-            handleConfigSet(ws, { type: 'config_set', data: { serverPort: 4000 } });
-
-            const response = ws.getLastMessage();
-            expect(response.type).toBe('config_error');
-            expect(response.code).toBe('INVALID_CONFIG');
-
-            // Restore
-            delete process.env.ALLOW_REMOTE_CONFIG_MODIFICATION;
-            configManager.hotUpdate.mockReturnValue({
-                success: true,
-                newConfig: { serverPort: 4000 },
-                oldConfig: { serverPort: 3000 },
-                changes: ['serverPort']
-            });
-        });
-
-        test('should notify config change callbacks', () => {
-            process.env.ALLOW_REMOTE_CONFIG_MODIFICATION = 'true';
-
-            const callback = jest.fn();
-            registerConfigChangeCallback(callback);
-
-            handleConfigSet(ws, { type: 'config_set', data: { serverPort: 4000 } });
-
-            expect(callback).toHaveBeenCalled();
-
-            unregisterConfigChangeCallback(callback);
-
-            // Restore
-            delete process.env.ALLOW_REMOTE_CONFIG_MODIFICATION;
+            expect(response.code).toBe('READONLY_MODE');
         });
 
         test('should handle WebSocket send error', () => {
-            process.env.ALLOW_REMOTE_CONFIG_MODIFICATION = 'true';
-
             const errorWs = {
                 authToken: 'valid-token',
                 send: jest.fn().mockImplementation(() => {
@@ -274,12 +219,18 @@ describe('Config Handler Tests', () => {
                 })
             };
 
-            handleConfigSet(errorWs, { type: 'config_set', data: { serverPort: 4000 } });
+            handleConfigSet(errorWs, { type: 'config_set', data: { defaultPort: 9000 } });
 
             expect(consoleErrorSpy).toHaveBeenCalled();
+        });
 
-            // Restore
-            delete process.env.ALLOW_REMOTE_CONFIG_MODIFICATION;
+        test('should not call hotUpdate in read-only mode', () => {
+            const configManager = require('../../../src/config/configManager').configManager;
+
+            handleConfigSet(ws, { type: 'config_set', data: { defaultPort: 9000 } });
+
+            // hotUpdate should not be called in read-only mode
+            expect(configManager.hotUpdate).not.toHaveBeenCalled();
         });
     });
 
@@ -287,33 +238,30 @@ describe('Config Handler Tests', () => {
     // handleConfigSave Tests
     // ========================================
     describe('handleConfigSave', () => {
-        test('should save config successfully', () => {
-            handleConfigSave(ws, { type: 'config_save' });
-
-            const response = ws.getLastMessage();
-            expect(response.type).toBe('config_ack');
-            expect(response.message).toBe('Config saved successfully');
-        });
-
-        test('should save config to specified path', () => {
-            handleConfigSave(ws, { type: 'config_save', path: '/custom/path' });
-
-            const response = ws.getLastMessage();
-            expect(response.type).toBe('config_ack');
-        });
-
-        test('should handle save failure', () => {
-            const configManager = require('../../src/config/configManager').configManager;
-            configManager.saveToFile.mockReturnValue(false);
-
+        test('should reject config save in read-only mode', () => {
             handleConfigSave(ws, { type: 'config_save' });
 
             const response = ws.getLastMessage();
             expect(response.type).toBe('config_error');
-            expect(response.code).toBe('SAVE_FAILED');
+            expect(response.code).toBe('READONLY_MODE');
+            expect(response.message).toContain('read-only mode');
+        });
 
-            // Restore
-            configManager.saveToFile.mockReturnValue(true);
+        test('should reject config save to specified path in read-only mode', () => {
+            handleConfigSave(ws, { type: 'config_save', path: '/custom/path' });
+
+            const response = ws.getLastMessage();
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
+        });
+
+        test('should not call saveToFile in read-only mode', () => {
+            const configManager = require('../../../src/config/configManager').configManager;
+
+            handleConfigSave(ws, { type: 'config_save' });
+
+            // saveToFile should not be called in read-only mode
+            expect(configManager.saveToFile).not.toHaveBeenCalled();
         });
 
         test('should handle WebSocket send error', () => {
@@ -334,21 +282,32 @@ describe('Config Handler Tests', () => {
     // handleConfigReset Tests
     // ========================================
     describe('handleConfigReset', () => {
-        test('should reset config to defaults', () => {
+        test('should reject config reset in read-only mode', () => {
             handleConfigReset(ws, { type: 'config_reset' });
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('config_ack');
-            expect(response.message).toBe('Config reset to defaults');
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
+            expect(response.message).toContain('read-only mode');
         });
 
-        test('should notify config change callbacks on reset', () => {
+        test('should not call reset in read-only mode', () => {
+            const configManager = require('../../../src/config/configManager').configManager;
+
+            handleConfigReset(ws, { type: 'config_reset' });
+
+            // reset should not be called in read-only mode
+            expect(configManager.reset).not.toHaveBeenCalled();
+        });
+
+        test('should not notify config change callbacks in read-only mode', () => {
             const callback = jest.fn();
             registerConfigChangeCallback(callback);
 
             handleConfigReset(ws, { type: 'config_reset' });
 
-            expect(callback).toHaveBeenCalled();
+            // Callback should not be called in read-only mode
+            expect(callback).not.toHaveBeenCalled();
 
             unregisterConfigChangeCallback(callback);
         });
@@ -372,7 +331,7 @@ describe('Config Handler Tests', () => {
     // ========================================
     describe('handleConfigValidate', () => {
         test('should validate config successfully', () => {
-            handleConfigValidate(ws, { type: 'config_validate', data: { serverPort: 3000 } });
+            handleConfigValidate(ws, { type: 'config_validate', data: { defaultPort: 8080 } });
 
             const response = ws.getLastMessage();
             expect(response.type).toBe('config_validate_result');
@@ -380,10 +339,10 @@ describe('Config Handler Tests', () => {
         });
 
         test('should handle invalid config', () => {
-            const validateConfig = require('../../src/config/validate').validateConfig;
+            const validateConfig = require('../../../src/config/validate').validateConfig;
             validateConfig.mockReturnValue(false);
 
-            handleConfigValidate(ws, { type: 'config_validate', data: { serverPort: -1 } });
+            handleConfigValidate(ws, { type: 'config_validate', data: { defaultPort: -1 } });
 
             const response = ws.getLastMessage();
             expect(response.type).toBe('config_validate_result');
@@ -418,33 +377,31 @@ describe('Config Handler Tests', () => {
             registerConfigChangeCallback(callback);
             unregisterConfigChangeCallback(callback);
 
-            // Callback should not be called after unregistration
-            process.env.ALLOW_REMOTE_CONFIG_MODIFICATION = 'true';
+            // In read-only mode, callback should not be called by handleConfigSet
             handleConfigSet(ws, { type: 'config_set', data: {} });
 
             expect(callback).not.toHaveBeenCalled();
-
-            delete process.env.ALLOW_REMOTE_CONFIG_MODIFICATION;
         });
 
-        test('should handle callback error', () => {
-            process.env.ALLOW_REMOTE_CONFIG_MODIFICATION = 'true';
-
+        test('should not trigger callback error in read-only mode', () => {
             const errorCallback = jest.fn().mockImplementation(() => {
                 throw new Error('Callback error');
             });
 
             registerConfigChangeCallback(errorCallback);
 
+            // In read-only mode, callback should not be called
             handleConfigSet(ws, { type: 'config_set', data: {} });
 
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
+            // Callback should not be called in read-only mode
+            expect(errorCallback).not.toHaveBeenCalled();
+            // Therefore no error should be logged
+            expect(consoleErrorSpy).not.toHaveBeenCalledWith(
                 'Error in config change callback:',
                 expect.any(Error)
             );
 
             unregisterConfigChangeCallback(errorCallback);
-            delete process.env.ALLOW_REMOTE_CONFIG_MODIFICATION;
         });
     });
 
@@ -452,18 +409,40 @@ describe('Config Handler Tests', () => {
     // Integration Tests
     // ========================================
     describe('Integration', () => {
-        test('should handle complete config workflow', () => {
-            // Get config
+        test('should handle complete config workflow in read-only mode', () => {
+            // Get config - should work in read-only mode
             handleConfigGet(ws, { type: 'config_get' });
             expect(ws.getLastMessage().type).toBe('config');
 
-            // Validate config
+            // Validate config - should work in read-only mode
             handleConfigValidate(ws, { type: 'config_validate', data: {} });
             expect(ws.getLastMessage().type).toBe('config_validate_result');
 
-            // Save config
+            // Save config - should be rejected in read-only mode
             handleConfigSave(ws, { type: 'config_save' });
-            expect(ws.getLastMessage().type).toBe('config_ack');
+            expect(ws.getLastMessage().type).toBe('config_error');
+            expect(ws.getLastMessage().code).toBe('READONLY_MODE');
+        });
+
+        test('should reject all modification operations in read-only mode', () => {
+            // Set operation
+            handleConfigSet(ws, { type: 'config_set', data: { defaultPort: 9000 } });
+            expect(ws.getLastMessage().type).toBe('config_error');
+            expect(ws.getLastMessage().code).toBe('READONLY_MODE');
+
+            ws.clearMessages();
+
+            // Reset operation
+            handleConfigReset(ws, { type: 'config_reset' });
+            expect(ws.getLastMessage().type).toBe('config_error');
+            expect(ws.getLastMessage().code).toBe('READONLY_MODE');
+
+            ws.clearMessages();
+
+            // Save operation
+            handleConfigSave(ws, { type: 'config_save' });
+            expect(ws.getLastMessage().type).toBe('config_error');
+            expect(ws.getLastMessage().code).toBe('READONLY_MODE');
         });
     });
 });

@@ -174,11 +174,16 @@ export function startWsServer(): Promise<number> {
                     // Handle connection close
                     ws.on('close', () => {
                         clients.delete(clientId);
-                        
+
+                        // Decrement connection count for token
+                        if (ws.authToken) {
+                            authManager.decrementConnectionCount(ws.authToken);
+                        }
+
                         // Record disconnection metrics
                         metricsCollector.recordDisconnection(clientId);
                         console.log(`Client disconnected: ${clientId}, total: ${clients.size}`);
-                        
+
                         // Notify connection manager
                         handleConnection(ws, 'close');
                     });

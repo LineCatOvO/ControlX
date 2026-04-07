@@ -6,17 +6,24 @@ import {
 } from "../../src/ws/server";
 import { inputState } from "../../src/input/state";
 import { safeState } from "../../src/input/safeState";
+import { authManager } from "../../src/auth/auth";
 
 describe("WebSocket Connection Tests", () => {
     let client: WsClient;
     let serverPort: number;
+    let originalAuthEnabled: boolean;
 
     beforeAll(async () => {
+        // Disable authentication for these basic connection tests
+        originalAuthEnabled = authManager.getConfig().enabled;
+        authManager.updateConfig({ enabled: false });
         serverPort = await startWsServer();
     });
 
     afterAll(async () => {
         await stopWsServer();
+        // Restore original auth config
+        authManager.updateConfig({ enabled: originalAuthEnabled });
     });
 
     afterEach(() => {
