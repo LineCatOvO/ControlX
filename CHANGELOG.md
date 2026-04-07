@@ -2,20 +2,39 @@
 
 ## [Unreleased]
 
-### Added (P2 Metrics Documentation)
-- **指标模块文档**: 创建完整的指标模块使用文档
-  - 新增 `Server/src/metrics/README.md` 文档（280+ 行）
-  - 模块概述和功能说明
-  - 支持的指标类型详解（Counter/Gauge/Histogram）
-  - 内置指标列表及详细说明
-    - connections_total / active_connections - 连接相关指标
-    - input_events_total / input_keyboard_events_total - 输入事件指标
-    - http_requests_total / http_request_duration_seconds - HTTP 请求指标
-    - messages_received_total / websocket_messages_total - WebSocket 消息指标
-    - connection_duration_seconds / input_execution_duration_seconds - 执行时间指标
-  - 完整的使用示例代码（注册、记录、标签、中间件）
-  - Prometheus 集成配置示例和 Grafana 查询示例
-  - API 参考文档，包含所有方法说明
+### Added (P2 Metrics Observability)
+- **指标模块重构与实现**: 完整的可观测性指标系统
+  - **MetricsCollector 迁移**: 将 `Server/src/utils/metrics.ts` (872行) 重构为专门的指标模块
+    - 创建 `Server/src/metrics/collector.ts` - 核心指标收集器实现 (1018行)
+    - 创建 `Server/src/metrics/index.ts` - 模块统一导出入口 (84行)
+    - `Server/src/utils/metrics.ts` 改为兼容层，保持向后兼容
+  - **HTTP 指标中间件**: 创建 `Server/src/metrics/middleware.ts` (395行)
+    - 实现 `requestMetricsMiddleware` - HTTP 请求指标收集中间件
+    - 实现 `initializeHttpMetrics` - 初始化 HTTP 相关指标
+    - 实现 `createMetricsEndpoint` - Prometheus 指标端点处理器
+    - 支持请求计数、响应时间直方图、路径和状态码标签
+  - **业务指标埋点实现**:
+    - **WebSocket 连接指标**: `ws/server.ts` 中集成连接/断开连接/消息/错误埋点
+      - `recordConnection()` / `recordDisconnection()` - 连接生命周期跟踪
+      - `recordMessage()` / `recordError()` - 消息和错误统计
+      - `incrementCounterWithLabels('websocket_messages_total')` - 按类型统计消息
+    - **输入执行指标**: `input/executor.ts` 中集成输入事件埋点
+      - `recordInputEvent()` - 键盘/鼠标/手柄/摇杆事件统计
+      - `observeHistogramWithLabels('input_execution_duration_seconds')` - 执行时长直方图
+    - **HTTP 请求指标**: `web/webServer.ts` 中集成请求指标中间件
+      - `initializeHttpMetrics()` - 初始化 HTTP 指标
+      - `requestMetricsMiddleware` - 收集所有 HTTP 请求指标
+  - **Prometheus 格式导出**: `MetricsCollector.toPrometheus()` 方法
+    - 标准 Prometheus exposition format 支持
+    - 支持带标签的指标导出
+    - 完整的 HELP 和 TYPE 声明
+  - **指标模块文档**: 创建完整的 `Server/src/metrics/README.md` (399行)
+    - 模块概述和功能说明
+    - 三种指标类型详解（Counter/Gauge/Histogram）
+    - 所有内置指标列表及说明
+    - 完整的使用示例代码
+    - Prometheus 集成配置和 Grafana 查询示例
+    - 完整的 API 参考文档
 
 ### Changed (P1 Module Boundary Refactoring)
 - **模块边界重构**: 解耦输入系统模块，提取统一接口层
