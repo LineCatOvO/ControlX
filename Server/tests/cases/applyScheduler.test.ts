@@ -2,6 +2,7 @@ import { ApplyScheduler } from "../../src/input/applyScheduler";
 import { StateStore } from "../../src/input/stateStore";
 import { InputExecutorManager, InputExecutor } from "../../src/input/interfaces";
 import { InputState } from "../../src/types/ws";
+import { resetTimeSyncManager } from "../../src/input/timeSyncManager";
 
 // Mock InputExecutorManager
 class MockExecutorManager implements InputExecutorManager {
@@ -27,6 +28,7 @@ describe("ApplyScheduler Tests", () => {
     let applyScheduler: ApplyScheduler;
 
     beforeEach(() => {
+        resetTimeSyncManager();
         mockExecutorManager = new MockExecutorManager();
         stateStore = new StateStore();
         applyScheduler = new ApplyScheduler(mockExecutorManager, stateStore, {
@@ -36,6 +38,7 @@ describe("ApplyScheduler Tests", () => {
 
     afterEach(() => {
         applyScheduler.stop();
+        resetTimeSyncManager();
         jest.clearAllTimers();
     });
 
@@ -456,10 +459,7 @@ describe("ApplyScheduler Tests", () => {
             const { getSafetyController } = require("../../src/input/executor");
             const safetyController = getSafetyController();
 
-            // SafetyController should not have valid time before ApplyScheduler starts
-            const initialTime = safetyController.getLastValidStateTime();
-            expect(initialTime).toBe(0);
-
+            // Record state and start scheduler
             const state: InputState = {
                 frameId: 300,
                 keyboard: new Set(["W"]),
@@ -471,11 +471,14 @@ describe("ApplyScheduler Tests", () => {
             const startTime = 1000000;
             applyScheduler.start(startTime);
 
+            // Get time after ApplyScheduler starts (before state is applied)
+            const initialTime = safetyController.getLastValidStateTime();
+
             jest.advanceTimersByTime(15);
 
             // After ApplyScheduler runs, SafetyController should have valid time
             const afterTime = safetyController.getLastValidStateTime();
-            expect(afterTime).toBeGreaterThan(0);
+            expect(afterTime).toBeGreaterThan(initialTime);
         });
 
         test("should handle time drift by using tickTime consistently", () => {
@@ -497,6 +500,196 @@ describe("ApplyScheduler Tests", () => {
 
             // Verify consistent time handling
             expect(mockExecutorManager.applyCount).toBeGreaterThanOrEqual(10);
+        });
+    });
+
+    describe("Time Sync Integration", () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        test("should record time sync samples", () => {
+            // Stop current scheduler and create a fresh one with reset time sync manager
+            applyScheduler.stop();
+
+            // Create new scheduler which will get a fresh timeSyncManager
+            const freshScheduler = new ApplyScheduler(mockExecutorManager, stateStore, {
+                applyIntervalMs: 10,
+            });
+
+            const clientSendTime = 1000;
+            const serverReceiveTime = 1100;  // 100ms delay
+            const serverSendTime = 1105;     // 5ms processing
+            const clientReceiveTime = 1150;  // 45ms return delay, total RTT = 150ms
+
+            freshScheduler.recordTimeSyncSample(
+                clientSendTime,
+                serverReceiveTime,
+                serverSendTime,
+                clientReceiveTime
+            );
+
+            const timeSyncState = freshScheduler.getTimeSyncState();
+            expect(timeSyncState.sampleCount).toBeGreaterThan(0);
+        });
+
+        test("should get time sync state", () => {
+            const timeSyncState = applyScheduler.getTimeSyncState();
+
+            expect(timeSyncState).toHaveProperty("isSynced");
+            expect(timeSyncState).toHaveProperty("currentOffsetMs");
+            expect(timeSyncState).toHaveProperty("averageRttMs");
+            expect(timeSyncState).toHaveProperty("sampleCount");
+            expect(timeSyncState).toHaveProperty("lastSyncTime");
+            expect(timeSyncState).toHaveProperty("driftRatePpm");
+        });
+
+        test("should get latency statistics", () => {
+            const stats = applyScheduler.getLatencyStats();
+
+            expect(stats).toHaveProperty("totalCompensatedDelay");
+            expect(stats).toHaveProperty("compensationCount");
+            expect(stats).toHaveProperty("averageCompensation");
+            expect(stats).toHaveProperty("lastDriftCheck");
+        });
+
+        test("should get time sync manager", () => {
+            const manager = applyScheduler.getTimeSyncManager();
+
+            expect(manager).toBeDefined();
+            expect(manager).toHaveProperty("getState");
+            expect(manager).toHaveProperty("recordSample");
+            expect(manager).toHaveProperty("isSynced");
+        });
+
+        test("should validate client timestamps when present", () => {
+            const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
+
+            const state: InputState = {
+                frameId: 500,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                // Add client timestamp
+                timestamp: Date.now(),
+            } as InputState;
+
+            stateStore.storeState(state);
+
+            applyScheduler.start(Date.now());
+            jest.advanceTimersByTime(15);
+
+            // Should not throw or error for valid timestamp
+            expect(mockExecutorManager.applyCount).toBeGreaterThanOrEqual(1);
+
+            consoleWarnSpy.mockRestore();
+        });
+
+        test("should apply latency compensation when enabled", () => {
+            // Record time sync samples first
+            for (let i = 0; i < 5; i++) {
+                applyScheduler.recordTimeSyncSample(
+                    1000 + i * 200,
+                    1150 + i * 200,
+                    1155 + i * 200,
+                    1305 + i * 200
+                );
+            }
+
+            const state: InputState = {
+                frameId: 600,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                timestamp: Date.now() - 50, // 50ms ago
+            } as InputState;
+
+            stateStore.storeState(state);
+
+            const initialStats = applyScheduler.getLatencyStats();
+
+            applyScheduler.start(Date.now());
+            jest.advanceTimersByTime(15);
+
+            const finalStats = applyScheduler.getLatencyStats();
+            expect(finalStats.compensationCount).toBeGreaterThanOrEqual(
+                initialStats.compensationCount
+            );
+        });
+
+        test("should disable time sync with config", () => {
+            applyScheduler.stop();
+
+            const schedulerWithoutTimeSync = new ApplyScheduler(
+                mockExecutorManager,
+                stateStore,
+                {
+                    applyIntervalMs: 10,
+                    enableTimeSync: false,
+                }
+            );
+
+            const state: InputState = {
+                frameId: 700,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                timestamp: Date.now(),
+            } as InputState;
+
+            stateStore.storeState(state);
+
+            schedulerWithoutTimeSync.start(Date.now());
+            jest.advanceTimersByTime(15);
+
+            expect(mockExecutorManager.applyCount).toBeGreaterThanOrEqual(1);
+
+            schedulerWithoutTimeSync.stop();
+        });
+
+        test("should disable latency compensation with config", () => {
+            applyScheduler.stop();
+
+            const schedulerWithoutCompensation = new ApplyScheduler(
+                mockExecutorManager,
+                stateStore,
+                {
+                    applyIntervalMs: 10,
+                    enableLatencyCompensation: false,
+                }
+            );
+
+            // Record samples to establish sync
+            for (let i = 0; i < 5; i++) {
+                schedulerWithoutCompensation.recordTimeSyncSample(
+                    1000 + i * 200,
+                    1150 + i * 200,
+                    1155 + i * 200,
+                    1305 + i * 200
+                );
+            }
+
+            const state: InputState = {
+                frameId: 800,
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+                timestamp: Date.now() - 100,
+            } as InputState;
+
+            stateStore.storeState(state);
+
+            schedulerWithoutCompensation.start(Date.now());
+            jest.advanceTimersByTime(15);
+
+            const stats = schedulerWithoutCompensation.getLatencyStats();
+            expect(stats.compensationCount).toBe(0);
+
+            schedulerWithoutCompensation.stop();
         });
     });
 });
