@@ -220,6 +220,15 @@ export function startWsServer(): Promise<number> {
                     ws.on('message', (data: any) => {
                         try {
                             const message = JSON.parse(data.toString());
+
+                            // Record message metrics by type
+                            if (message && message.type) {
+                                metricsCollector.incrementCounterWithLabels(
+                                    'websocket_messages_total',
+                                    { type: message.type }
+                                );
+                            }
+
                             handleMessage(ws, message);
                         } catch (error) {
                             console.error(`Message parse error: \${clientId}`, error);

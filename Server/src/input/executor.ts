@@ -234,9 +234,15 @@ export function stopInputExecutor() {
  * Execute input
  */
 function executeInput() {
+    // Start timing for execution duration
+    const startTime = performance.now();
+
     // Get metrics collector
     const metricsCollector = getMetricsCollector();
-    
+
+    // Track input types for this execution
+    const activeInputTypes: string[] = [];
+
     // Checkinput stateChangeizeandrecordmetric
     const state = inputState as any;
     
@@ -247,32 +253,43 @@ function executeInput() {
             for (let i = 0; i < keyCount; i++) {
                 metricsCollector.recordInputEvent('keyboard');
             }
+            activeInputTypes.push('keyboard');
         }
     }
-    
+
     // Record mouse events
     if (state.mouse && (state.mouse.x !== 0 || state.mouse.y !== 0 || state.mouse.buttons)) {
         metricsCollector.recordInputEvent('mouse');
+        activeInputTypes.push('mouse');
     }
-    
+
     // Record gamepad events
     if (state.gamepad && (state.gamepad.buttons || state.gamepad.axes)) {
-        const hasButtonPress = state.gamepad.buttons && 
+        const hasButtonPress = state.gamepad.buttons &&
             Object.values(state.gamepad.buttons).some((v: any) => v > 0);
-        const hasAxisMove = state.gamepad.axes && 
+        const hasAxisMove = state.gamepad.axes &&
             Object.values(state.gamepad.axes).some((v: any) => Math.abs(v) > 0.1);
         if (hasButtonPress || hasAxisMove) {
             metricsCollector.recordInputEvent('gamepad');
+            activeInputTypes.push('gamepad');
         }
     }
-    
+
     // Record joystick events
     if (state.joystick && (state.joystick.x !== 0 || state.joystick.y !== 0)) {
         metricsCollector.recordInputEvent('joystick');
+        activeInputTypes.push('joystick');
     }
-    
+
     // ApplyCurrentinput statetoAllExecutor
     executorManager.applyState(inputState);
+
+    // Calculate and record execution duration for each active input type
+    const endTime = performance.now();
+    const durationSeconds = (endTime - startTime) / 1000;
+    activeInputTypes.forEach((type) => {
+        metricsCollector.observeHistogramWithLabels('input_execution_duration_seconds', durationSeconds, { type });
+    });
 
     // Record valid state time（applyTimeprovided by ApplyScheduler）
     const applyTime = Date.now();

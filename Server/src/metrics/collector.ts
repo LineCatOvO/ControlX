@@ -174,8 +174,9 @@ export class MetricsCollector {
      * @param name Metric name
      * @param description Description
      * @param unit Unit (optional)
+     * @param labels Label names (optional)
      */
-    public registerCounter(name: string, description: string, unit?: string): void {
+    public registerCounter(name: string, description: string, unit?: string, labels?: string[]): void {
         if (this.metrics.has(name)) {
             console.warn(`Metric ${name} already registered, skipping`);
             return;
@@ -189,6 +190,7 @@ export class MetricsCollector {
                 type: MetricType.COUNTER,
                 description,
                 unit,
+                labels,
             },
         });
     }
@@ -223,12 +225,14 @@ export class MetricsCollector {
      * @param description Description
      * @param buckets Bucket boundaries
      * @param unit Unit (optional)
+     * @param labels Label names (optional)
      */
     public registerHistogram(
         name: string,
         description: string,
         buckets: number[] = [0.1, 0.5, 1, 2.5, 5, 10],
-        unit?: string
+        unit?: string,
+        labels?: string[]
     ): void {
         if (this.metrics.has(name)) {
             console.warn(`Metric ${name} already registered, skipping`);
@@ -251,6 +255,7 @@ export class MetricsCollector {
                 type: MetricType.HISTOGRAM,
                 description,
                 unit,
+                labels,
             },
         });
     }
@@ -272,6 +277,42 @@ export class MetricsCollector {
             console.warn(`Metric ${name} is not a counter`);
             return;
         }
+        metric.value += value;
+    }
+
+    /**
+     * Increment counter with labels
+     * @param name Metric name
+     * @param labels Label key-value pairs
+     * @param value Increment value (default 1)
+     */
+    public incrementCounterWithLabels(name: string, labels: Record<string, string>, value: number = 1): void {
+        const metric = this.metrics.get(name);
+        if (!metric) {
+            console.warn(`Counter ${name} not registered`);
+            return;
+        }
+        if (metric.type !== MetricType.COUNTER) {
+            console.warn(`Metric ${name} is not a counter`);
+            return;
+        }
+
+        // Create label key from labels object
+        const labelKey = Object.entries(labels)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([k, v]) => `${k}="${v}"`)
+            .join(',');
+
+        // Use labeledCounters map if not exists
+        if (!(metric as any).labeledCounters) {
+            (metric as any).labeledCounters = new Map<string, number>();
+        }
+
+        const labeledCounters = (metric as any).labeledCounters as Map<string, number>;
+        const currentValue = labeledCounters.get(labelKey) || 0;
+        labeledCounters.set(labelKey, currentValue + value);
+
+        // Also increment total
         metric.value += value;
     }
 
@@ -388,6 +429,75 @@ export class MetricsCollector {
             const infCount = metric.buckets.get('le_+Inf') || 0;
             metric.buckets.set('le_+Inf', infCount + 1);
         }
+    }
+
+    /**
+     * Observe histogram value with labels
+     * @param name Metric name
+     * @param value Observe value
+     * @param labels Label key-value pairs
+     */
+    public observeHistogramWithLabels(name: string, value: number, labels: Record<string, string>): void {
+        const metric = this.metrics.get(name);
+        if (!metric) {
+            console.warn(`Histogram ${name} not registered`);
+            return;
+        }
+        if (metric.type !== MetricType.HISTOGRAM) {
+            console.warn(`Metric ${name} is not a histogram`);
+            return;
+        }
+
+        // Create label key from labels object
+        const labelKey = Object.entries(labels)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([k, v]) => `${k}="${v}"`)
+            .join(',');
+
+        // Use labeledHistograms map if not exists
+        if (!(metric as any).labeledHistograms) {
+            (metric as any).labeledHistograms = new Map<string, { sum: number; count: number; buckets: Map<string, number> }>();
+        }
+
+        const labeledHistograms = (metric as any).labeledHistograms as Map<string, { sum: number; count: number; buckets: Map<string, number> }>;
+
+        let labeledData = labeledHistograms.get(labelKey);
+        if (!labeledData) {
+            // Initialize labeled histogram data
+            const bucketMap = new Map<string, number>();
+            const buckets = [0.1, 0.5, 1, 2.5, 5, 10];
+            buckets.forEach((b) => {
+                bucketMap.set(`le_${b}`, 0);
+            });
+            bucketMap.set('le_+Inf', 0);
+            labeledData = { sum: 0, count: 0, buckets: bucketMap };
+            labeledHistograms.set(labelKey, labeledData);
+        }
+
+        // Update labeled data
+        labeledData.sum += value;
+        labeledData.count++;
+
+        // Update bucket counter
+        let foundBucket = false;
+        for (const bucket of [0.1, 0.5, 1, 2.5, 5, 10]) {
+            if (value <= bucket) {
+                const bucketKey = `le_${bucket}`;
+                const currentCount = labeledData.buckets.get(bucketKey) || 0;
+                labeledData.buckets.set(bucketKey, currentCount + 1);
+                foundBucket = true;
+                break;
+            }
+        }
+
+        // If exceed all buckets, put into +Inf
+        if (!foundBucket) {
+            const infCount = labeledData.buckets.get('le_+Inf') || 0;
+            labeledData.buckets.set('le_+Inf', infCount + 1);
+        }
+
+        // Also update main histogram
+        this.observeHistogram(name, value);
     }
 
     // ==================== Connection State Monitor ====================
@@ -675,8 +785,17 @@ export class MetricsCollector {
             if (metric.type === MetricType.COUNTER) {
                 // TYPE declaration
                 lines.push(`# TYPE ${fullMetricName} counter`);
-                // Metric value
-                lines.push(`${fullMetricName} ${metric.value}`);
+
+                // Output labeled counters if exists
+                const labeledCounters = (metric as any).labeledCounters as Map<string, number> | undefined;
+                if (labeledCounters && labeledCounters.size > 0) {
+                    labeledCounters.forEach((value, labelKey) => {
+                        lines.push(`${fullMetricName}{${labelKey}} ${value}`);
+                    });
+                }
+
+                // Metric total value
+                lines.push(`${fullMetricName}_total ${metric.value}`);
             } else if (metric.type === MetricType.GAUGE) {
                 // TYPE declaration
                 lines.push(`# TYPE ${fullMetricName} gauge`);
@@ -686,7 +805,29 @@ export class MetricsCollector {
                 // TYPE declaration
                 lines.push(`# TYPE ${fullMetricName} histogram`);
 
-                // CBucket value (accumulated count)
+                // Output labeled histograms if exists
+                const labeledHistograms = (metric as any).labeledHistograms as Map<string, { sum: number; count: number; buckets: Map<string, number> }> | undefined;
+                if (labeledHistograms && labeledHistograms.size > 0) {
+                    labeledHistograms.forEach((data, labelKey) => {
+                        // Bucket values for labeled histogram
+                        const bucketBoundaries = [0.001, 0.005, 0.010, 0.025, 0.050, 0.100, 0.250, 0.500, 1, 2.5, 5, 10, '+Inf'];
+                        let cumulativeCount = 0;
+
+                        bucketBoundaries.forEach((boundary) => {
+                            const bucketKey = `le_${boundary}`;
+                            const count = data.buckets.get(bucketKey) || 0;
+                            cumulativeCount += count;
+                            const le = boundary === '+Inf' ? '+Inf' : boundary;
+                            lines.push(`${fullMetricName}_bucket{${labelKey},le="${le}"} ${cumulativeCount}`);
+                        });
+
+                        // Sum and count for labeled histogram
+                        lines.push(`${fullMetricName}_sum{${labelKey}} ${data.sum}`);
+                        lines.push(`${fullMetricName}_count{${labelKey}} ${data.count}`);
+                    });
+                }
+
+                // Main histogram buckets
                 const bucketBoundaries = [0.1, 0.5, 1, 2.5, 5, 10, '+Inf'];
                 let cumulativeCount = 0;
 
@@ -742,12 +883,24 @@ export class MetricsCollector {
         this.registerCounter('errors_total', 'Total number of errors');
         this.registerGauge('active_connections', 'Number of active connections');
 
+        // WebSocket messages total with type label
+        this.registerCounter('websocket_messages_total', 'Total number of WebSocket messages', undefined, ['type']);
+
         // Input related metrics
         this.registerCounter('input_events_total', 'Total number of input events');
         this.registerCounter('input_keyboard_events_total', 'Total number of keyboard events');
         this.registerCounter('input_mouse_events_total', 'Total number of mouse events');
         this.registerCounter('input_gamepad_events_total', 'Total number of gamepad events');
         this.registerCounter('input_joystick_events_total', 'Total number of joystick events');
+
+        // Input execution duration histogram with type label
+        this.registerHistogram(
+            'input_execution_duration_seconds',
+            'Input execution duration in seconds',
+            [0.001, 0.005, 0.010, 0.025, 0.050, 0.100, 0.250, 0.500, 1, 2.5, 5, 10],
+            'seconds',
+            ['type']
+        );
 
         // Connection duration time histogram
         this.registerHistogram(
