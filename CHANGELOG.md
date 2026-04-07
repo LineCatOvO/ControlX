@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Changed (P1 Module Boundary Refactoring)
+- **模块边界重构**: 解耦输入系统模块，提取统一接口层
+  - 创建 `Server/src/interfaces/` 目录作为接口定义中心
+  - 提取 `IInputAdapter` 接口，支持键盘、鼠标、手柄、摇杆适配器
+    - 定义基础适配器接口 `IInputAdapter`
+    - 定义专用适配器接口 `IKeyboardAdapter`、`IGamepadAdapter`、`IMouseAdapter`、`IJoystickAdapter`
+  - 提取 `IInputHost` 接口，支持跨平台输入主机抽象
+    - 定义基础主机接口 `IInputHost`
+    - 定义专用主机接口 `IKeyboardHost`、`IGamepadHost`
+    - 定义工厂接口 `IInputHostFactory` 和主机管理接口 `IInputHostManager`
+  - 提取 `IInputExecutor` 接口，支持执行器管理
+    - 定义执行器接口 `IInputExecutor`
+    - 定义执行器管理接口 `IInputExecutorManager`
+    - 定义事件驱动管理接口 `IEventEmittingExecutorManager`
+    - 定义统计感知执行器接口 `IStatisticsAwareExecutor`
+  - 重构 `SafetyController` 减少耦合
+    - 改为依赖 `IInputExecutorManager` 接口而非具体实现
+    - 添加事件驱动架构，支持安全事件订阅
+    - 添加事件类型：clear_triggered、timeout_detected、emergency_triggered、token_created、token_revoked
+  - 更新所有适配器实现新接口
+    - `KeyboardAdapter` 实现 `IKeyboardAdapter`
+    - `MouseAdapter` 实现 `IMouseAdapter`
+    - `JoystickAdapter` 实现 `IJoystickAdapter`
+    - `GamepadAdapter` 实现 `IGamepadAdapter`
+  - 保持向后兼容性
+    - 原有接口文件保留并重新导出新接口
+    - 添加弃用警告，引导代码迁移
+    - 所有现有代码无需修改即可继续工作
+  - 48 个 SafetyController 单元测试全部通过
+
 ### Added (P0 Server Build Config)
 - **服务端构建配置**: 完整的构建和部署配置
   - 创建 `Dockerfile` 支持多阶段构建，支持 Linux x64/ARM64 多平台
