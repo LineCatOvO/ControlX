@@ -37,7 +37,7 @@ export class WindowsKeyboardHost extends InputHost {
     }
 
     /**
-     * Initialize：Load node-key-sender Driver
+     * Initialize: Load node-key-sender Driver
      * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {

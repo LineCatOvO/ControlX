@@ -19,7 +19,7 @@ export interface ShadowModeInitConfig {
     enabled: boolean;
     /** WhetherEnableDetailLog */
     verbose?: boolean;
-    /** WhetherEnableConsistent性Check */
+    /** Whether to enable consistency check */
     consistencyCheck?: boolean;
     /** AutoFallbackThreshold */
     failureThreshold?: number;
@@ -28,7 +28,7 @@ export interface ShadowModeInitConfig {
 /**
  * Initialize shadow mode
  *
- * @param executorManager 现HasExecutorManageManager
+ * @param executorManager Existing executor manager
  * @param config Config
  * @returns ShadowModeExecutorManageManager
  */

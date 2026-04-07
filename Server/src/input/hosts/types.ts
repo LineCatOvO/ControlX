@@ -45,13 +45,13 @@ export type PlatformType = 'windows' | 'linux' | 'macos';
  * @returns PlatformType
  */
 export function detectPlatform(nodePlatform: NodeJS.Platform): PlatformType {
-    const platformMap: Record<string, PlatformType> = {
+    const platformmapping: Record<string, PlatformType> = {
         win32: 'windows',
         linux: 'linux',
         darwin: 'macos'
     };
     
-    const platform = platformMap[nodePlatform];
+    const platform = platformmapping[nodePlatform];
     if (!platform) {
         throw new Error(`Unsupported platform: ${nodePlatform}`);
     }

@@ -6,15 +6,15 @@
  * TechStack：
  * - Quartz Event Services: MacOS NativeEventInject API
  * - LibSelect：node-key-sender（AlreadySupportCrossPlatform）or robotjs
- * - 备选：DirectCall CGEvent 系列Function
+ * - Alternative：Directly call CGEvent functions
  *
  * PendingImplementationFunction：
  * - [ ] Load Quartz EventLib
- * - [ ] ImplementationKeyCodeMap（MacOS KeyCode）
+ * - [ ] ImplementationKeyCodemapping（MacOS KeyCode）
  * - [ ] ImplementationKeyPressUnder/ReleaseEvent
  * - [ ] ImplementationDiffAlgorithm（Same WindowsKeyboardHost）
  * - [ ] ImplementationResetFunction
- * - [ ] Implementation资SourceClear理
+ * - [ ] ImplementationresourcesCleanup
  *
  * DepInstall：
  * ```bash
@@ -23,11 +23,11 @@
  * npm install @libuio/node-uio
  * ```
  *
- * PermissionConfig（MacOS 10.15+）：
- * - Need要InSystemSetIn授予"AuxiliaryFunction"Permission
+ *  permissionConfig（MacOS 10.15+）：
+ * - Need to in system settingsgrant"AuxiliaryFunction" permission
  * - System Preferences → Security & Privacy → Privacy → Accessibility
  *
- * KeyCodeMapReference：
+ * KeyCodemappingReference：
  * - https://gist.github.com/utilitymac/345e1c911c10126093e3
  *
  * @todo Implementation MacOS KeyboardInputSupport
@@ -49,7 +49,7 @@ export class macOS keyboard host extends InputHost {
     }
 
     /**
-     * Initialize：Load Quartz Event Services
+     * Initialize: Load Quartz Event Services
      * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
@@ -63,9 +63,9 @@ export class macOS keyboard host extends InputHost {
             // TODO: CreateEventSource
             // this.eventSource = CGEventSource.create('hid');
 
-            // TODO: CheckAuxiliaryFunctionPermission
-            // const hasPermission = CGEventSource.checkAccessibility();
-            // if (!hasPermission) {
+            // TODO: CheckAuxiliaryFunction permission
+            // const has permission = CGEventSource.checkAccessibility();
+            // if (!has permission) {
             //     throw new Error('Accessibility permission not granted');
             // }
 
@@ -95,8 +95,8 @@ export class macOS keyboard host extends InputHost {
         // const toRelease = [...this.activeKeys].filter(k => !pressedKeys.has(k));
         // const toPress = [...pressedKeys].filter(k => !this.activeKeys.has(k));
 
-        // TODO: MacOS KeyCodeMap
-        // const keyCodeMap: Record<string, number> = {
+        // TODO: MacOS KeyCodemapping
+        // const keyCodemapping: Record<string, number> = {
         //     'a': 0, 'b': 11, 'c': 8, 'd': 2, 'e': 14,
         //     'f': 3, 'g': 5, 'h': 4, 'i': 34, 'j': 38,
         //     'k': 40, 'l': 37, 'm': 46, 'n': 45, 'o': 31,
@@ -111,7 +111,7 @@ export class macOS keyboard host extends InputHost {
         // TODO: ReleaseKey
         // if (toRelease.length) {
         //     for (const key of toRelease) {
-        //         const keyCode = keyCodeMap[key];
+        //         const keyCode = keyCodemapping[key];
         //         const event = CGEvent.keyboardEvent(this.eventSource, false, keyCode);
         //         event.post('hid');
         //     }
@@ -120,7 +120,7 @@ export class macOS keyboard host extends InputHost {
         // TODO: PressUnderKey
         // if (toPress.length) {
         //     for (const key of toPress) {
-        //         const keyCode = keyCodeMap[key];
+        //         const keyCode = keyCodemapping[key];
         //         const event = CGEvent.keyboardEvent(this.eventSource, true, keyCode);
         //         event.post('hid');
         //     }
@@ -143,9 +143,9 @@ export class macOS keyboard host extends InputHost {
 
         // TODO: ReleaseAllPressUnderOfKey
         // if (this.activeKeys.size > 0) {
-        //     const keyCodeMap: Record<string, number> = { /* ... */ };
+        //     const keyCodemapping: Record<string, number> = { /* ... */ };
         //     for (const key of this.activeKeys) {
-        //         const keyCode = keyCodeMap[key];
+        //         const keyCode = keyCodemapping[key];
         //         const event = CGEvent.keyboardEvent(this.eventSource, false, keyCode);
         //         event.post('hid');
         //     }
@@ -156,7 +156,7 @@ export class macOS keyboard host extends InputHost {
     }
 
     /**
-     * Destroy：Clear理 Quartz EventSource
+     * Destroy：Cleanup Quartz EventSource
      */
     destroy(): void {
         // TODO: ImplementationDestroyLogic

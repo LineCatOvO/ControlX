@@ -5,17 +5,17 @@
  *
  * TechStack：
  * - uinput: Linux InsideCoreModule，CreateVirtualInputDevice
- * - LibSelect：node-uinput or DirectCall evdev
- * - MockDevice：Xbox 360 Controller（Compatible性好）
+ * - LibSelect：node-uinput or Directly call evdev
+ * - Mock device：Xbox 360 Controller（Good compatibility）
  *
  * PendingImplementationFunction：
- * - [ ] Load uinput Driver
- * - [ ] CreateVirtualGameGamepadDevice
- * - [ ] ImplementationButtonMap（14 OneButton）
+ * - [ ] Load uinput driver
+ * - [ ] create virtual gamepadDevice
+ * - [ ] ImplementationButtonmapping（14 OneButton）
  * - [ ] ImplementationJoystickAxisValueConvert（-1~1 → -32768~32767）
  * - [ ] ImplementationTriggerValueConvert（0~1 → 0~255）
  * - [ ] ImplementationCompleteStateSubmit
- * - [ ] Implementation资SourceClear理
+ * - [ ] ImplementationresourcesCleanup
  *
  * DepInstall：
  * ```bash
@@ -24,12 +24,12 @@
  * sudo dnf install uinput
  * ```
  *
- * PermissionConfig：
+ *  permissionConfig：
  * ```bash
  * sudo usermod -a -G uinput $USER
  * ```
  *
- * ButtonMap（XInput Standard）：
+ * Buttonmapping（XInput Standard）：
  * - 0: A, 1: B, 2: X, 3: Y
  * - 4: LB, 5: RB
  * - 6: BACK, 7: START
@@ -65,7 +65,7 @@ export class Linux gamepad host extends InputHost {
     }
 
     /**
-     * Initialize：Load uinput Driver并CreateVirtualGameGamepad
+     * Initialize: Load uinput driverandcreate virtual gamepad
      * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
@@ -76,13 +76,13 @@ export class Linux gamepad host extends InputHost {
             // TODO: DynamicImport uinput Lib
             // const uinput = require('node-uinput');
 
-            // TODO: CreateVirtualGameGamepadDevice
+            // TODO: create virtual gamepadDevice
             // this.uinputDevice = new uinput.createDevice([...]);
 
             // TODO: SetDeviceCapability
             // - KeyEvent
             // - AbsoluteAxisEvent（Joystick）
-            // - KeyMap（A/B/X/Y Wait）
+            // - Keymapping（A/B/X/Y Wait）
 
             // TODO: CreateDevice
             // await this.uinputDevice.create();
@@ -109,9 +109,9 @@ export class Linux gamepad host extends InputHost {
             return;
         }
 
-        // TODO: ButtonStateMap
-        // XInput Button位掩CodeMap
-        // const buttonMap = {
+        // TODO: ButtonStatemapping
+        // XInput Buttonbitmaskmapping
+        // const buttonmapping = {
         //     'a': 0x1000,      // A Button
         //     'b': 0x2000,      // B Button
         //     'x': 0x4000,      // X Button
@@ -130,7 +130,7 @@ export class Linux gamepad host extends InputHost {
         // };
 
         // TODO: SubmitButtonState
-        // const buttonsMask = this.mapButtonsToMask(state.buttons, buttonMap);
+        // const buttonsMask = this.mapButtonsToMask(state.buttons, buttonmapping);
         // this.uinputDevice.sendGamepadButtons(buttonsMask);
 
         // TODO: JoystickAxisValueConvert（-1.0~1.0 → -32768~32767）
@@ -185,7 +185,7 @@ export class Linux gamepad host extends InputHost {
     }
 
     /**
-     * Destroy：Clear理 uinput 资Source
+     * Destroy：Cleanup uinput resources
      */
     destroy(): void {
         // TODO: ImplementationDestroyLogic

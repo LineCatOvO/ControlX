@@ -2,14 +2,14 @@
  * Input routerManager
  * 
  * Responsibility：
- * 1. 作ForSystemOfUnique入Port，ResponsibleStateAggregateAndDistribute
+ * 1. As the unique entry point of the system，Responsible for state aggregation and distribution
  * 2. MaintainLocalStateCache，ForCalc Delta orAudit
  * 3. ParallelHandleDifferentDeviceTypeOfStateApply，ReduceLatency
- * 4. FaultIsolation，单One Host FailurenotInfluenceOther Host
+ * 4. Fault isolation，Single host failure does not affect other hosts
  * 
  * DesignMode：FacadeMode (Facade Pattern)
  * - ProvideUnifiedOfHighLevelInterface
- * - 隐藏子SystemOfComplexity
+ * - Hide subsystem complexity
  */
 
 import { InputHost } from '../hosts/InputHost';
@@ -20,7 +20,7 @@ import { InputState } from '../../types/ws';
  * Input routerManager
  */
 export class Input router {
-    /** Host Register表 */
+    /** Host registration table */
     private hosts: Map<InputDeviceType, InputHost> = new Map();
     
     /** LocalStateCache，ForAuditand Delta Calc */
@@ -114,8 +114,8 @@ export class Input router {
             promises.push(this.dispatch(InputDeviceType.JOYSTICK, fullState.joystick));
         }
 
-        // notWaitPendingExecute完成（实Time性要求高）
-        // 如NeedWaitPending，CanUse：await Promise.all(promises);
+        // Do not wait for pending execution completion（Real-time requirements are high）
+        // If need to wait for pending，Can use：await Promise.all(promises);
     }
 
     /**
@@ -149,7 +149,7 @@ export class Input router {
             this.stats.failedApplications++;
             
             // UpdateHostOferrorInfo
-            // HostInsidePartShouldAlreadyThroughHandle了errorRecord
+            // Host internal should already handle error recording
         }
     }
 
@@ -239,7 +239,7 @@ export class Input router {
     }
 
     /**
-     * Clear除StateCache
+     * Clear state cache
      */
     clearCache(): void {
         this.stateCache.clear();

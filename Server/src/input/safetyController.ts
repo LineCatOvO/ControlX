@@ -126,7 +126,7 @@ interface SafetyConfig {
  * 
  * Notes：
  * - In ApplyScheduler NotYetStartTime，currentTickTime For 0，ThisTimeWillRollbackto Date.now()
- * - ThisIs临TimeCompatibleMechanism，OfficialRunTimeMustensure ApplyScheduler FirstStart
+ * - This is a temporary compatibility mechanism，Official runtime must ensure ApplyScheduler starts first
  * ============================================================================
  */
 export class Safety controller {
@@ -479,7 +479,7 @@ export class Safety controller {
     }
 
     /**
-     * Getmost近OfClear record
+     * Get recent clear record
      * @param count Record count
      * @returns Clear recordArray
      */

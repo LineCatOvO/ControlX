@@ -255,7 +255,7 @@ export class StateStore {
             const entry = this.stateHistory[current];
             if (entry.state !== null && entry.sequenceNumber === sequenceNumber) {
                 entry.appliedTime = applyTime || Date.now();
-                return; // 找toAfterImmediatelyReturn
+                return; // Return immediately after found
             }
             current = (current + 1) % this.config.maxHistorySize;
         } while (current !== end);
@@ -267,7 +267,7 @@ export class StateStore {
      * @returns Is valid
      */
     private isValidState(state: InputState): boolean {
-        // Base本Verify：StateObjectMustexist
+        // Basic verification：State object must exist
         if (!state) return false;
 
         // VerifyKeyboardField（AllowArray，willInnormalizeStateInConvertForSet）
@@ -298,11 +298,11 @@ export class StateStore {
     /**
      * Extractsequence number
      * @param state StateObject
-     * @returns sequence number，IfframeIdnotNumberThenReturnNaN
+     * @returns sequence number，If frameId is not NumberThen return NaN
      */
     private extractSequenceNumber(state: InputState): number {
-        // Only接受NumberframeIdasForsequence number
-        // IfframeIdnotNumber，ThenReturnNaN
+        // Only accept Number frameId as sequence number
+        // If frameId is not Number，Then return NaN
         const frameId = (state as any).frameId;
         return typeof frameId === "number" ? frameId : NaN;
     }
@@ -313,12 +313,12 @@ export class StateStore {
      * @returns Is valid
      */
     private isValidSequenceNumber(sequenceNumber: number): boolean {
-        // Ifsequence numbernotNumber，useCurrentTimestampasForsequence number
+        // If sequence number is not Number，use current timestamp as sequence number
         if (isNaN(sequenceNumber)) {
             return true;
         }
 
-        // IfNoHasStateBeStore过，anysequence numberAllValid
+        // If no state has been stored，any sequence number is valid
         if (this.lastAppliedSequenceNumber === 0) {
             return true;
         }

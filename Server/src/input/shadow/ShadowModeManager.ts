@@ -3,12 +3,12 @@
  *
  * Responsibility：
  * 1. DualWriteScheduler：SameTimecallOld Executor andnew Router
- * 2. Logrecord：record两边OfExecuteResult
+ * 2. Log recording: record execution results of both sides
  * 3. ConsistentityCompare：Verify Executor and Router OfOutputConsistentity
  * 4. FallbackProtect：Router FailureTimeAutoRollbackto Executor
  *
  * DesignMode：DecorateManagerMode + StrategyMode
- * - Decorate现Has InputExecutorManager
+ * - Decorate existing InputExecutorManager
  * - provideCanSwitchOfExecuteStrategy（Executor-only / Router-only / Shadow）
  */
 
@@ -31,7 +31,7 @@ export interface ShadowModeConfig {
     logDifferences: boolean;
     /** AutoFallback：Router FailureTimeAutoSwitchto Executor-only Mode */
     autoFallback: boolean;
-    /** ContinuousFailureThreshold，达toAftertriggerAutoFallback */
+    /** Continuous failure threshold，Reaching this triggers auto fallback */
     failureThreshold: number;
 }
 
@@ -132,7 +132,7 @@ export class Shadow mode manager {
     /** CurrentMode */
     private _currentMode: 'executor' | 'router' | 'shadow' = 'shadow';
 
-    /** sequence number计NumberManager */
+    /** Sequence number counter */
     private sequenceCounter = 0;
 
     /** TotalExecuteCostTime */
@@ -289,7 +289,7 @@ export class Shadow mode manager {
             );
         }
 
-        // CheckExecuteCostTimeDifference（Exceed 50ms 认ForHasDifference）
+        // Check execution cost time difference（Exceeding 50ms is considered as having difference）
         const durationDiff = Math.abs(executorResult.duration - routerResult.duration);
         if (durationDiff > 50) {
             differences.push(
@@ -414,7 +414,7 @@ export class Shadow mode manager {
         console.log(`[ShadowMode] Switching from ${this._currentMode} to ${mode} mode`);
         this._currentMode = mode;
 
-        // ResetContinuousFailure计Number
+        // Reset continuous failure counter
         if (mode === 'shadow' || mode === 'router') {
             this.stats.consecutiveFailures = 0;
         }

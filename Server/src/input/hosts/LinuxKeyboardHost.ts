@@ -5,15 +5,15 @@
  *
  * TechStack：
  * - uinput: Linux InsideCoreModule，ForCreateVirtualInputDevice
- * - LibSelect：node-uinput or DirectCall evdev
+ * - LibSelect：node-uinput or Directly call evdev
  *
  * PendingImplementationFunction：
- * - [ ] Load uinput Driver
+ * - [ ] Load uinput driver
  * - [ ] CreateVirtualKeyboardDevice
  * - [ ] ImplementationKeyPressUnder/Release
  * - [ ] ImplementationDiffAlgorithm（Same WindowsKeyboardHost）
  * - [ ] ImplementationResetFunction
- * - [ ] Implementation资SourceClear理
+ * - [ ] ImplementationresourcesCleanup
  *
  * DepInstall：
  * ```bash
@@ -22,7 +22,7 @@
  * sudo dnf install uinput
  * ```
  *
- * PermissionConfig：
+ *  permissionConfig：
  * ```bash
  * sudo usermod -a -G uinput $USER
  * ```
@@ -46,7 +46,7 @@ export class Linux keyboard host extends InputHost {
     }
 
     /**
-     * Initialize：Load uinput Driver
+     * Initialize: Load uinput driver
      * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
@@ -127,7 +127,7 @@ export class Linux keyboard host extends InputHost {
     }
 
     /**
-     * Destroy：Clear理 uinput 资Source
+     * Destroy：Cleanup uinput resources
      */
     destroy(): void {
         // TODO: ImplementationDestroyLogic

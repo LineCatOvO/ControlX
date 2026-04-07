@@ -6,16 +6,16 @@
  * TechStack：
  * - Solution 1：IOKit HID Interface（Underlying，Flexible）
  * - Solution 2：GCController（Game Controller Framework，Recommend）
- * - LibSelect：node-gamepad or DirectCallNativeModule
+ * - LibSelect：node-gamepad or Directly callNativeModule
  *
  * PendingImplementationFunction：
- * - [ ] Load GCController Framework
+ * - [ ] Load GCController framework
  * - [ ] Connection/DiscoverController
- * - [ ] ImplementationButtonMap（XInput Standard）
+ * - [ ] ImplementationButtonmapping（XInput Standard）
  * - [ ] ImplementationJoystickAxisValueConvert
  * - [ ] ImplementationTriggerValueConvert
  * - [ ] ImplementationCompleteStateSubmit
- * - [ ] Implementation资SourceClear理
+ * - [ ] ImplementationresourcesCleanup
  *
  * DepInstall：
  * ```bash
@@ -24,7 +24,7 @@
  * npm install gamepad
  * ```
  *
- * ButtonMap（XInput Standard）：
+ * Buttonmapping（XInput Standard）：
  * - 0: A, 1: B, 2: X, 3: Y
  * - 4: LB, 5: RB
  * - 6: BACK, 7: START
@@ -60,7 +60,7 @@ export class macOS gamepad host extends InputHost {
     }
 
     /**
-     * Initialize：Load GCController Framework并ConnectionController
+     * Initialize: Load GCController frameworkandconnect controller
      * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
@@ -74,7 +74,7 @@ export class macOS gamepad host extends InputHost {
             // TODO: ConnectionFirstOneAvailableOfController
             // this.controller = GCController.get(0);
 
-            // TODO: or者监听ControllerConnection
+            // TODO: orlisten tocontroller connection
             // GCController.on('connected', (controller) => {
             //     this.controller = controller;
             // });
@@ -106,9 +106,9 @@ export class macOS gamepad host extends InputHost {
             return;
         }
 
-        // TODO: ButtonStateMap
-        // GCController ButtonMap
-        // const buttonMap = {
+        // TODO: ButtonStatemapping
+        // GCController Buttonmapping
+        // const buttonmapping = {
         //     'a': 'buttonA',
         //     'b': 'buttonB',
         //     'x': 'buttonX',
@@ -127,7 +127,7 @@ export class macOS gamepad host extends InputHost {
 
         // TODO: SubmitButtonState
         // for (const [key, pressed] of Object.entries(state.buttons)) {
-        //     const gcButton = buttonMap[key];
+        //     const gcButton = buttonmapping[key];
         //     if (gcButton && this.controller[gcButton]) {
         //         this.controller[gcButton].pressed = pressed;
         //     }
@@ -194,13 +194,13 @@ export class macOS gamepad host extends InputHost {
     }
 
     /**
-     * Destroy：Clear理 GCController 资Source
+     * Destroy：Cleanup GCController resources
      */
     destroy(): void {
         // TODO: ImplementationDestroyLogic
         this.reset();
 
-        // TODO: DisconnectControllerConnection
+        // TODO: Disconnectcontroller connection
         // if (this.controller) {
         //     this.controller.disconnect();
         //     this.controller = null;

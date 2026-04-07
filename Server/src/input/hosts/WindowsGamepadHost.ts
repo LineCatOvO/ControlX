@@ -8,7 +8,7 @@
  * - ModuleLoadFailure：Recorderror，DisableHost
  * - ExecuteFailure：Recorderror，notInfluenceOtherHost
  * 
- * XInput ButtonMap：
+ * XInput Buttonmapping：
  * - A: 0x0001, B: 0x0002, X: 0x0004, Y: 0x0008
  * - LB: 0x0100, RB: 0x0200
  * - Start: 0x0010, Back: 0x0020, Guide: 0x0400
@@ -90,7 +90,7 @@ export class Windows gamepad host extends InputHost {
     }
 
     /**
-     * Initialize：Load ViGEmClient Driver
+     * Initialize: Load ViGEmClient Driver
      * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
@@ -164,7 +164,7 @@ export class Windows gamepad host extends InputHost {
      * Build XInput state
      * 
      * XInput StateStructure：
-     * - wButtons: Button位掩Code
+     * - wButtons: Buttonbitmask
      * - bLeftTrigger: LeftTrigger (0-255)
      * - bRightTrigger: RightTrigger (0-255)
      * - sThumbLX: LeftJoystick X Axis (-32768 to 32767)

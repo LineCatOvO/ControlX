@@ -4,9 +4,9 @@
  * Responsibility：ShieldUnderlyingDriverDifference，ProvideUnifiedOf lifecycle and execution Interface
  * 
  * Design pattern：StrategyMode (Strategy Pattern)
- * - Define一族Algorithm（DifferentPlatformOfInputImplementation）
+ * - Definea family ofAlgorithm（DifferentPlatformOfInputImplementation）
  * - EncapsulateEachOneAlgorithm（EachOneSpecific Host Class）
- * - 使It们CanWith互换（PassUnifiedInterface）
+ * - Make them interchangeable（PassUnifiedInterface）
  */
 
 import { InputDeviceType, HostStatus, PlatformType, detectPlatform } from './types';
@@ -37,14 +37,14 @@ export abstract class Input host {
     }
 
     /**
-     * Initialize：LoadDriver/Lib
+     * Initialize: LoadDriver/Lib
      * AsyncExecute，AvoidBlockStartProcess
      * @returns WhetherInitializeSuccess
      */
     abstract initialize(): Promise<boolean>;
 
     /**
-     * Apply state：Core心ExecuteLogic
+     * Apply state：Corecore executionLogic
      * @param state Input state
      */
     abstract applyState(state: any): void;
@@ -55,7 +55,7 @@ export abstract class Input host {
     abstract reset(): void;
 
     /**
-     * Destroy：Clear理资Source
+     * Destroy：Cleanupresources
      */
     abstract destroy(): void;
 
