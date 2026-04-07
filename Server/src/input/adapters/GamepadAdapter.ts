@@ -1,20 +1,20 @@
 // Gamepad adapter implementation
 
-import { InputAdapter } from './InputAdapter';
+import { IGamepadAdapter } from '../../interfaces/IInputAdapter';
 import { GamepadXInputAdapter } from './GamepadXInputAdapter';
 import { InputState, InputDelta, InputEvent, GamepadAxesState, GamepadTriggersState } from '../../types/ws';
 
 /**
  * Gamepad adapter
- * Encapsulates GamepadXInputAdapter calling logic, implements InputAdapter interface
+ * Encapsulates GamepadXInputAdapter calling logic, implements IGamepadAdapter interface
  *
  * Design notes:
- * - Implements all methods of InputAdapter interface (applyState, applyDelta, applyEvent, reset)
+ * - Implements all methods of IGamepadAdapter interface (applyState, applyDelta, applyEvent, reset)
  * - Uses GamepadXInputAdapter (underlying ViGEmBus) to execute actual gamepad operations
  * - Gamepad does not support delta mode and event mode, only supports complete state apply
  * - Auto fallback when ViGEmBus not available (function disabled)
  */
-export class GamepadAdapter implements InputAdapter {
+export class GamepadAdapter implements IGamepadAdapter {
     private xinputAdapter: GamepadXInputAdapter;
     private isEnabled: boolean = false;
 
@@ -146,5 +146,41 @@ export class GamepadAdapter implements InputAdapter {
             this.xinputAdapter.disconnect();
             this.isEnabled = false;
         }
+    }
+
+    /**
+     * Apply gamepad state (IGamepadAdapter interface method)
+     * @param buttons Button state
+     * @param axes Joystick axis values
+     * @param triggers Trigger values
+     */
+    applyGamepadState(
+        buttons: Set<string> | string[],
+        axes: { [key: string]: number },
+        triggers: { [key: string]: number }
+    ): void {
+        if (!this.isEnabled) {
+            return;
+        }
+
+        const buttonSet = buttons instanceof Set ? buttons : new Set(buttons);
+        this.xinputAdapter.applyState(buttonSet, axes, triggers);
+    }
+
+    /**
+     * Get current gamepad state (IGamepadAdapter interface method)
+     * @returns Current gamepad state
+     */
+    getGamepadState(): {
+        buttons: Set<string>;
+        axes: { [key: string]: number };
+        triggers: { [key: string]: number };
+    } {
+        // GamepadXInputAdapter does not expose internal state, return default values
+        return {
+            buttons: new Set(),
+            axes: {},
+            triggers: {}
+        };
     }
 }

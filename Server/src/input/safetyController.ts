@@ -1,61 +1,107 @@
 /**
  * ============================================================================
- * Safety Controller Module (Safety Controller Module)
+ * Safety Controller Module
  * ============================================================================
- * 
- * 【Module responsibility】
- * This module is the safety guardian of the input system，Responsible for immediately clearing all input states in exceptional cases。
- * Safety controller is【Only allowed to trigger clearing】the module，Ensure single authority of clearing operations。
- * 
- * 【Core functionality】
- * 1. Clear permission control: through permission token mechanism，Ensure only authorized modules can trigger clearing
- * 2. Timeout detection: detect state reception timeout，Automatically trigger clearing
- * 3. Exception handling: handle WebSocket disconnect、state exception and other exceptional cases
- * 4. Clear record: record reason, time, permission type of all clearing operations
- * 
- * 【Module boundary】
- * - ✅ Allowed: trigger clearing, manage permission tokens, record clear history, detect timeout
- * - ❌ Prohibited: validate state legality (by Validator)、store state (by StateStore)、generate timestamp (by ApplyScheduler)
- * 
- * 【Clear permission types】
- * - internal: internal clearing，triggered by Safety controller itself（timeout, disconnect etc）
- * - external: external clearing，triggered by external module with valid token
- * - emergency: emergency clearing，no token required, for real emergency situations
- * 
- * 【Time authority】
- * All time-related operations in Safety controller must use tickTime provided by ApplyScheduler：
- * - currentTickTime: updated by ApplyScheduler.updateTickTime()
- * - lastValidStateTime: updated by ApplyScheduler.recordValidState()
- * - Prohibit calling Date.now() for timeout judgment
- * 
+ *
+ * 【Module Responsibility】
+ * This module is the safety guardian of the input system，responsible for immediately
+ * clearing all input states in exceptional cases.
+ *
+ * 【Design Pattern】
+ * - Observer Pattern: Notifies listeners on safety events
+ * - Dependency Inversion: Depends on interfaces, not concrete implementations
+ *
+ * 【Key Design】
+ * - Single authority pattern: Only SafetyController can trigger clearing
+ * - Permission token mechanism: External modules need token to request clearing
+ * - Event-driven: Emits events for important state changes
+ *
  * 【Dependencies】
- * - Dependencies: ExecutorManager (clear execution)、ApplyScheduler (time synchronization)
- * - Depended by: Executor (safety control)、ApplyScheduler (exception handling)
- * 
- * 【Key design】
- * - Single authority pattern: only Safety controller can trigger clearing
- * - Permission token mechanism: external modules need token to request clearing
- * - Time consistency: use ApplyScheduler tickTime to ensure time consistency
- * 
- * 【Notes】
- * - Clearing is highest priority operation, executes immediately
- * - Permission tokens should be properly stored, avoid leakage
- * - Emergency clearing should only be used in real emergency situations
- * 
+ * - Depends on: IInputExecutorManager (from ../interfaces)
+ * - Used by: Executor, ApplyScheduler
+ *
  * @module input/safetyController
- * @version 2.0.0
- * @last-updated 2026-03-13
+ * @version 3.0.0
+ * @last-updated 2026-04-08
  */
 
-import { InputExecutorManager } from "./interfaces";
+import { IInputExecutorManager } from '../interfaces/IInputExecutor';
 import { InputState } from "../types/ws";
+
+// =============================================================================
+// Types & Interfaces
+// =============================================================================
+
+/**
+ * Clear permission types
+ */
+export type ClearPermission = 'internal' | 'external' | 'emergency';
+
+/**
+ * Clear record
+ */
+export interface ClearRecord {
+    timestamp: number;
+    reason: string;
+    permission: ClearPermission;
+    tokenId?: string;
+}
+
+/**
+ * Safety controller configuration
+ */
+export interface SafetyConfig {
+    /** Timeout in milliseconds (default: 500ms) */
+    timeoutMs: number;
+    /** Custom clear reasons */
+    clearReasons?: Record<string, string>;
+}
+
+/**
+ * Safety event types
+ */
+export type SafetyEventType =
+    | 'clear_triggered'
+    | 'timeout_detected'
+    | 'emergency_triggered'
+    | 'token_created'
+    | 'token_revoked';
+
+/**
+ * Safety event
+ */
+export interface SafetyEvent {
+    type: SafetyEventType;
+    timestamp: number;
+    reason?: string;
+    tokenId?: string;
+    permission?: ClearPermission;
+}
+
+/**
+ * Safety event listener
+ */
+export type SafetyEventListener = (event: SafetyEvent) => void;
+
+/**
+ * Clear permission token interface
+ */
+export interface IClearPermissionToken {
+    getId(): string;
+    getCreatedAt(): number;
+    checkValid(): boolean;
+    invalidate(): void;
+}
+
+// =============================================================================
+// Clear Permission Token Implementation
+// =============================================================================
 
 /**
  * Clear permission token
- * Only modules holding valid tokens can trigger clear zero operation
- * Token is generated by Safety controller at initialization，distribute to authorized modules
+ * Only modules holding valid tokens can trigger clear operation
  */
-export class ClearPermissionToken {
+export class ClearPermissionToken implements IClearPermissionToken {
     private readonly id: string;
     private readonly createdAt: number;
     private isValid: boolean = true;
@@ -82,114 +128,111 @@ export class ClearPermissionToken {
     }
 }
 
-/**
- * Clear permission types
- */
-export type ClearPermission = 'internal' | 'external' | 'emergency';
-
-/**
- * Clear record
- */
-interface ClearRecord {
-    timestamp: number;
-    reason: string;
-    permission: ClearPermission;
-    tokenId?: string;
-}
-
-/**
- * Safety controller config
- */
-interface SafetyConfig {
-    timeoutMs: number; // Timeout time，Default 500ms
-    clearReasons?: Record<string, string>; // Clear reason record
-}
+// =============================================================================
+// Safety Controller Implementation
+// =============================================================================
 
 /**
  * Safety controller
- * Responsible for exceptional cases（timeout, disconnect, state validation failure etc）Immediately clear all input states
- * Safety controller IsOnly allowed to trigger clearingthe module，Ensure single authority of clearing operations
- * 
- * ============================================================================
- * Time authorityDescription
- * ============================================================================
- * All time-related operations in Safety controller must use tickTime provided by ApplyScheduler，
- * Prohibit calling Date.now() to get time，to ensure time consistency。
- * 
- * Time source：
- * - currentTickTime: By ApplyScheduler.updateTickTime() Update
- * - lastValidStateTime: By ApplyScheduler.recordValidState() Update
- * 
- * Timeout check mechanism：
- * - checkTimeout() uses currentTickTime instead of Date.now()
- * - Trigger clearing when currentTickTime - lastValidStateTime > timeoutMs
- * 
- * Notes：
- * - In ApplyScheduler NotYetStartTime，currentTickTime For 0，ThisTimeWillRollbackto Date.now()
- * - This is a temporary compatibility mechanism，Official runtime must ensure ApplyScheduler starts first
- * ============================================================================
+ * Responsible for exceptional cases（timeout, disconnect, state validation failure etc）
+ * immediately clearing all input states.
+ *
+ * 【Responsibility】
+ * - Clear permission control through permission token mechanism
+ * - Timeout detection for state reception
+ * - Exception handling for WebSocket disconnect, state exception etc
+ * - Clear record keeping with history
+ *
+ * 【Coupling Reduction】
+ * - Depends on IInputExecutorManager interface, not concrete implementation
+ * - Uses event-driven pattern for notifications
+ * - No direct dependency on ApplyScheduler for time management
  */
 export class SafetyController {
-    // Executor manager reference
-    private readonly executorManager: InputExecutorManager;
+    // Executor manager reference (interface-based, loose coupling)
+    private readonly executorManager: IInputExecutorManager;
 
-    // Config
+    // Configuration
     private readonly config: SafetyConfig;
 
-    // Timestamp of last successful state reception（using ApplyScheduler tickTime）
+    // State tracking
     private lastValidStateTime: number = 0;
-
-    // Timeout timer
-    private timeoutTimer: NodeJS.Timeout | null = null;
-
-    // Clear count
+    private currentTickTime: number = 0;
     private clearCount: number = 0;
-
-    // ExceptionClear count
     private exceptionClearCount: number = 0;
 
-    // Destroyed flag
+    // Timer
+    private timeoutTimer: NodeJS.Timeout | null = null;
+
+    // Lifecycle
     private isDestroyed: boolean = false;
 
-    // Clear reason record
+    // Clear records
+    private readonly clearRecords: ClearRecord[] = [];
+    private readonly maxClearRecords: number = 100;
     private clearReasons: Record<string, string> = {};
 
-    // Current tickTime（provided by ApplyScheduler）
-    private currentTickTime: number = 0;
-
-    // Permission token storage
+    // Permission tokens
     private readonly permissionTokens: Map<string, ClearPermissionToken> = new Map();
 
-    // Clear recordStore
-    private readonly clearRecords: ClearRecord[] = [];
-
-    // MaximumClear recordNumber
-    private readonly maxClearRecords: number = 100;
+    // Event listeners
+    private readonly eventListeners: Set<SafetyEventListener> = new Set();
 
     /**
      * Constructor
-     * @param executorManager Executor manager
-     * @param config Safety controller config
+     * @param executorManager Executor manager (interface-based)
+     * @param config Optional safety configuration
      */
     constructor(
-        executorManager: InputExecutorManager,
+        executorManager: IInputExecutorManager,
         config?: Partial<SafetyConfig>
     ) {
         this.executorManager = executorManager;
         this.config = {
-            timeoutMs: 500, // DefaultTimeout time 500ms
+            timeoutMs: 500,
             ...config,
         };
 
-        // Create internal permission token（for Safety controller itself）
+        // Create internal permission token
         this.createPermissionToken('safety-controller-internal', 'internal');
+    }
 
-        // No longer auto-start timeout check，Manually started by external call to startTimeoutCheck()
+    // =============================================================================
+    // Event Management
+    // =============================================================================
+
+    /**
+     * Subscribe to safety events
+     * @param listener Event listener function
+     * @returns Unsubscribe function
+     */
+    onEvent(listener: SafetyEventListener): () => void {
+        this.eventListeners.add(listener);
+        return () => {
+            this.eventListeners.delete(listener);
+        };
     }
 
     /**
+     * Emit safety event
+     * @param event Safety event
+     */
+    private emitEvent(event: SafetyEvent): void {
+        this.eventListeners.forEach(listener => {
+            try {
+                listener(event);
+            } catch (error) {
+                console.error('SafetyController: Event listener error:', error);
+            }
+        });
+    }
+
+    // =============================================================================
+    // Permission Token Management
+    // =============================================================================
+
+    /**
      * Create permission token
-     * Only Safety controller can create tokens，Ensure uniqueness and authority of tokens
      * @param tokenId Token ID
      * @param permission Permission type
      * @returns Permission token
@@ -197,30 +240,38 @@ export class SafetyController {
     createPermissionToken(tokenId: string, permission: ClearPermission): ClearPermissionToken {
         const token = new ClearPermissionToken(tokenId);
         this.permissionTokens.set(tokenId, token);
-        console.log(`Safety controller: Permission token created: ${tokenId} (${permission})`);
+
+        this.emitEvent({
+            type: 'token_created',
+            timestamp: Date.now(),
+            tokenId,
+            permission,
+        });
+
+        console.log(`SafetyController: Permission token created: ${tokenId} (${permission})`);
         return token;
     }
 
     /**
-     * VerifyPermission token
+     * Validate permission token
      * @param tokenId Token ID
      * @returns Whether token is valid
      */
     validatePermissionToken(tokenId: string): boolean {
         const token = this.permissionTokens.get(tokenId);
         if (!token) {
-            console.warn(`Safety controller: Invalid token: ${tokenId}`);
+            console.warn(`SafetyController: Invalid token: ${tokenId}`);
             return false;
         }
         if (!token.checkValid()) {
-            console.warn(`Safety controller: Token has been invalidated: ${tokenId}`);
+            console.warn(`SafetyController: Token has been invalidated: ${tokenId}`);
             return false;
         }
         return true;
     }
 
     /**
-     * CancelPermission token
+     * Revoke permission token
      * @param tokenId Token ID
      */
     revokePermissionToken(tokenId: string): void {
@@ -228,15 +279,23 @@ export class SafetyController {
         if (token) {
             token.invalidate();
             this.permissionTokens.delete(tokenId);
-            console.log(`Safety controller: Permission token revoked: ${tokenId}`);
+
+            this.emitEvent({
+                type: 'token_revoked',
+                timestamp: Date.now(),
+                tokenId,
+            });
+
+            console.log(`SafetyController: Permission token revoked: ${tokenId}`);
         }
     }
 
+    // =============================================================================
+    // Clear Operations
+    // =============================================================================
+
     /**
      * Record clear operation
-     * @param reason Clear reason
-     * @param permission Permission type
-     * @param tokenId Token ID（optional）
      */
     private recordClear(reason: string, permission: ClearPermission, tokenId?: string): void {
         const record: ClearRecord = {
@@ -248,172 +307,9 @@ export class SafetyController {
 
         this.clearRecords.push(record);
 
-        // limitRecord count
+        // Limit record count
         if (this.clearRecords.length > this.maxClearRecords) {
             this.clearRecords.shift();
-        }
-    }
-
-    /**
-     * UpdateCurrent tickTime（Called by ApplyScheduler）
-     * ApplyScheduler is the unique time authority，All timestamps come from here
-     * @param tickTime Current tick timestamp
-     */
-    updateTickTime(tickTime: number): void {
-        this.currentTickTime = tickTime;
-    }
-
-    /**
-     * Record valid state reception time
-     * @param state Received state
-     * @param tickTime tick timestamp（provided by ApplyScheduler，Used forTimeConsistentity）
-     */
-    recordValidState(state: InputState, tickTime: number): void {
-        // Use tickTime instead of Date.now()，Ensure time consistency
-        this.lastValidStateTime = tickTime;
-        this.currentTickTime = tickTime;
-        // RemoveRepeatLog，OnlyrecordkeyEvent
-    }
-
-    /**
-     * Trigger explicit clearing（Internal call，using internal token）
-     * @param reason Clear reason
-     */
-    triggerSafetyClear(reason: string = "explicit"): void {
-        this.clearAllInputs();
-        this.clearCount++;
-        this.clearReasons[this.clearCount] = reason;
-        this.recordClear(reason, 'internal', 'safety-controller-internal');
-        console.log(
-            `Safety controller: Safety clear triggered: ${reason}, total clears: ${this.clearCount}`
-        );
-    }
-
-    /**
-     * Trigger exception clearing（Internal call，using internal token）
-     * @param reason ExceptionReason
-     */
-    triggerExceptionClear(reason: string): void {
-        this.clearAllInputs();
-        this.clearCount++;
-        this.exceptionClearCount++;
-        this.clearReasons[this.clearCount] = reason;
-        this.recordClear(reason, 'emergency', 'safety-controller-internal');
-        console.log(
-            `Safety controller: Exception clear triggered: ${reason}, total clears: ${this.clearCount}, exception clears: ${this.exceptionClearCount}`
-        );
-    }
-
-    /**
-     * Handle explicit zero state（Internal call，using internal token）
-     * @param reason Clear reason
-     */
-    handleZeroState(reason: string = "zero_state"): void {
-        this.clearAllInputs();
-        this.clearCount++;
-        this.clearReasons[this.clearCount] = reason;
-        this.recordClear(reason, 'internal', 'safety-controller-internal');
-        console.log(
-            `Safety controller: Zero state handled: ${reason}, total clears: ${this.clearCount}`
-        );
-    }
-
-    /**
-     * Handle WebSocket disconnect（Internal call，using internal token）
-     * @param reason Clear reason
-     */
-    handleDisconnect(reason: string = "websocket_disconnected"): void {
-        this.clearAllInputs();
-        this.clearCount++;
-        this.clearReasons[this.clearCount] = reason;
-        this.recordClear(reason, 'internal', 'safety-controller-internal');
-        console.log(
-            `Safety controller: WebSocket disconnected: ${reason}, total clears: ${this.clearCount}`
-        );
-    }
-
-    /**
-     * External clear request（RequirePermission token）
-     * Only modules holding valid tokens can call this method
-     * @param reason Clear reason
-     * @param tokenId PermissionToken ID
-     * @returns Whether clearing succeeded
-     */
-    requestClear(reason: string, tokenId: string): boolean {
-        if (!this.validatePermissionToken(tokenId)) {
-            console.error(`Safety controller: Clear request denied - invalid token: ${tokenId}`);
-            return false;
-        }
-
-        this.clearAllInputs();
-        this.clearCount++;
-        this.clearReasons[this.clearCount] = reason;
-        this.recordClear(reason, 'external', tokenId);
-        console.log(
-            `Safety controller: External clear request accepted: ${reason}, token: ${tokenId}, total clears: ${this.clearCount}`
-        );
-        return true;
-    }
-
-    /**
-     * Emergency clearing（NoNeedPermission token，Used forEmergencycase）
-     * This method should only be used in real emergency situations
-     * @param reason Emergency reason
-     */
-    emergencyClear(reason: string = "emergency"): void {
-        this.clearAllInputs();
-        this.clearCount++;
-        this.exceptionClearCount++;
-        this.clearReasons[this.clearCount] = reason;
-        this.recordClear(reason, 'emergency');
-        console.log(
-            `Safety controller: EMERGENCY clear triggered: ${reason}, total clears: ${this.clearCount}, exception clears: ${this.exceptionClearCount}`
-        );
-    }
-
-    /**
-     * Start timeout check
-     */
-    startTimeoutCheck(): void {
-        // If destroyed, return directly
-        if (this.isDestroyed) {
-            return;
-        }
-
-        // If timer exists, clear first
-        if (this.timeoutTimer) {
-            clearInterval(this.timeoutTimer);
-        }
-
-        // Check timeout every 100ms
-        this.timeoutTimer = setInterval(() => {
-            this.checkTimeout();
-        }, 100);
-
-        console.log(
-            `Safety controller: Timeout check started with timeout: ${this.config.timeoutMs}ms`
-        );
-    }
-
-    /**
-     * Check timeout
-     * Use tickTime provided by ApplyScheduler for time consistency check
-     */
-    private checkTimeout(): void {
-        // If destroyed, return directly
-        if (this.isDestroyed) {
-            return;
-        }
-
-        // use currentTickTime（provided by ApplyScheduler）Andnot Date.now()
-        const now = this.currentTickTime || Date.now();
-        const elapsed = now - this.lastValidStateTime;
-
-        if (elapsed > this.config.timeoutMs) {
-            this.triggerSafetyClear();
-            console.log(
-                `Safety controller: Timeout detected, elapsed: ${elapsed}ms, timeout: ${this.config.timeoutMs}ms`
-            );
         }
     }
 
@@ -421,7 +317,6 @@ export class SafetyController {
      * Clear all inputs
      */
     private clearAllInputs(): void {
-        // Create zero state
         const zeroState: InputState = {
             keyboard: new Set(),
             mouse: {
@@ -439,52 +334,195 @@ export class SafetyController {
             },
         };
 
-        // Apply zero state to all executors
         this.executorManager.applyState(zeroState);
-
-        // Call executor reset method，Ensure complete clearing
         this.executorManager.reset();
     }
 
     /**
-     * GetClear count
-     * @returns Clear count
+     * Trigger safety clear (internal)
+     * @param reason Clear reason
      */
-    getClearCount(): number {
-        return this.clearCount;
+    triggerSafetyClear(reason: string = "explicit"): void {
+        this.clearAllInputs();
+        this.clearCount++;
+        this.clearReasons[this.clearCount] = reason;
+        this.recordClear(reason, 'internal', 'safety-controller-internal');
+
+        this.emitEvent({
+            type: 'clear_triggered',
+            timestamp: Date.now(),
+            reason,
+            permission: 'internal',
+            tokenId: 'safety-controller-internal',
+        });
+
+        console.log(
+            `SafetyController: Safety clear triggered: ${reason}, total clears: ${this.clearCount}`
+        );
     }
 
     /**
-     * GetExceptionClear count
-     * @returns ExceptionClear count
+     * Trigger exception clear
+     * @param reason Exception reason
      */
-    getExceptionClearCount(): number {
-        return this.exceptionClearCount;
+    triggerExceptionClear(reason: string): void {
+        this.clearAllInputs();
+        this.clearCount++;
+        this.exceptionClearCount++;
+        this.clearReasons[this.clearCount] = reason;
+        this.recordClear(reason, 'emergency', 'safety-controller-internal');
+
+        this.emitEvent({
+            type: 'emergency_triggered',
+            timestamp: Date.now(),
+            reason,
+            permission: 'emergency',
+        });
+
+        console.log(
+            `SafetyController: Exception clear triggered: ${reason}, total clears: ${this.clearCount}`
+        );
     }
 
     /**
-     * Get last valid state time
-     * @returns Timestamp of last valid state
+     * Handle zero state
+     * @param reason Clear reason
      */
-    getLastValidStateTime(): number {
-        return this.lastValidStateTime;
+    handleZeroState(reason: string = "zero_state"): void {
+        this.clearAllInputs();
+        this.clearCount++;
+        this.clearReasons[this.clearCount] = reason;
+        this.recordClear(reason, 'internal', 'safety-controller-internal');
+
+        this.emitEvent({
+            type: 'clear_triggered',
+            timestamp: Date.now(),
+            reason,
+            permission: 'internal',
+        });
+
+        console.log(
+            `SafetyController: Zero state handled: ${reason}, total clears: ${this.clearCount}`
+        );
     }
 
     /**
-     * GetClear record
-     * @returns Clear recordArray
+     * Handle WebSocket disconnect
+     * @param reason Disconnect reason
      */
-    getClearRecords(): ClearRecord[] {
-        return [...this.clearRecords];
+    handleDisconnect(reason: string = "websocket_disconnected"): void {
+        this.clearAllInputs();
+        this.clearCount++;
+        this.clearReasons[this.clearCount] = reason;
+        this.recordClear(reason, 'internal', 'safety-controller-internal');
+
+        this.emitEvent({
+            type: 'clear_triggered',
+            timestamp: Date.now(),
+            reason,
+            permission: 'internal',
+        });
+
+        console.log(
+            `SafetyController: WebSocket disconnected: ${reason}, total clears: ${this.clearCount}`
+        );
     }
 
     /**
-     * Get recent clear record
-     * @param count Record count
-     * @returns Clear recordArray
+     * External clear request
+     * @param reason Clear reason
+     * @param tokenId Permission token ID
+     * @returns Whether clearing succeeded
      */
-    getRecentClearRecords(count: number = 10): ClearRecord[] {
-        return this.clearRecords.slice(-count);
+    requestClear(reason: string, tokenId: string): boolean {
+        if (!this.validatePermissionToken(tokenId)) {
+            console.error(`SafetyController: Clear request denied - invalid token: ${tokenId}`);
+            return false;
+        }
+
+        this.clearAllInputs();
+        this.clearCount++;
+        this.clearReasons[this.clearCount] = reason;
+        this.recordClear(reason, 'external', tokenId);
+
+        this.emitEvent({
+            type: 'clear_triggered',
+            timestamp: Date.now(),
+            reason,
+            permission: 'external',
+            tokenId,
+        });
+
+        console.log(
+            `SafetyController: External clear request accepted: ${reason}, token: ${tokenId}`
+        );
+        return true;
+    }
+
+    /**
+     * Emergency clear
+     * @param reason Emergency reason
+     */
+    emergencyClear(reason: string = "emergency"): void {
+        this.clearAllInputs();
+        this.clearCount++;
+        this.exceptionClearCount++;
+        this.clearReasons[this.clearCount] = reason;
+        this.recordClear(reason, 'emergency');
+
+        this.emitEvent({
+            type: 'emergency_triggered',
+            timestamp: Date.now(),
+            reason,
+            permission: 'emergency',
+        });
+
+        console.log(
+            `SafetyController: EMERGENCY clear triggered: ${reason}, total clears: ${this.clearCount}`
+        );
+    }
+
+    // =============================================================================
+    // Timeout Management
+    // =============================================================================
+
+    /**
+     * Update current tick time (called by time authority)
+     * @param tickTime Current tick timestamp
+     */
+    updateTickTime(tickTime: number): void {
+        this.currentTickTime = tickTime;
+    }
+
+    /**
+     * Record valid state reception time
+     * @param state Received state
+     * @param tickTime Tick timestamp
+     */
+    recordValidState(state: InputState, tickTime: number): void {
+        this.lastValidStateTime = tickTime;
+        this.currentTickTime = tickTime;
+    }
+
+    /**
+     * Start timeout check
+     */
+    startTimeoutCheck(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+
+        if (this.timeoutTimer) {
+            clearInterval(this.timeoutTimer);
+        }
+
+        this.timeoutTimer = setInterval(() => {
+            this.checkTimeout();
+        }, 100);
+
+        console.log(
+            `SafetyController: Timeout check started with timeout: ${this.config.timeoutMs}ms`
+        );
     }
 
     /**
@@ -498,24 +536,87 @@ export class SafetyController {
     }
 
     /**
-     * DestroySafety controller
+     * Check timeout
+     */
+    private checkTimeout(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+
+        const now = this.currentTickTime || Date.now();
+        const elapsed = now - this.lastValidStateTime;
+
+        if (elapsed > this.config.timeoutMs) {
+            this.triggerSafetyClear("timeout");
+
+            this.emitEvent({
+                type: 'timeout_detected',
+                timestamp: Date.now(),
+                reason: `Timeout: ${elapsed}ms > ${this.config.timeoutMs}ms`,
+            });
+        }
+    }
+
+    // =============================================================================
+    // Lifecycle
+    // =============================================================================
+
+    /**
+     * Destroy safety controller
      */
     destroy(): void {
-        // Mark as destroyed
         this.isDestroyed = true;
-
-        // clearTimeout timer
         this.stopTimeoutCheck();
 
-        // CancelAllPermission token
-        this.permissionTokens.forEach((token, tokenId) => {
+        // Invalidate all tokens
+        this.permissionTokens.forEach((token) => {
             token.invalidate();
         });
         this.permissionTokens.clear();
 
-        console.log(
-            "Safety controller: Destroyed, total clears:",
-            this.clearCount
-        );
+        // Clear event listeners
+        this.eventListeners.clear();
+
+        console.log("SafetyController: Destroyed, total clears:", this.clearCount);
+    }
+
+    // =============================================================================
+    // Getters
+    // =============================================================================
+
+    /**
+     * Get clear count
+     */
+    getClearCount(): number {
+        return this.clearCount;
+    }
+
+    /**
+     * Get exception clear count
+     */
+    getExceptionClearCount(): number {
+        return this.exceptionClearCount;
+    }
+
+    /**
+     * Get last valid state time
+     */
+    getLastValidStateTime(): number {
+        return this.lastValidStateTime;
+    }
+
+    /**
+     * Get clear records
+     */
+    getClearRecords(): ClearRecord[] {
+        return [...this.clearRecords];
+    }
+
+    /**
+     * Get recent clear records
+     * @param count Number of records to retrieve
+     */
+    getRecentClearRecords(count: number = 10): ClearRecord[] {
+        return this.clearRecords.slice(-count);
     }
 }

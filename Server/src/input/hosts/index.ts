@@ -1,24 +1,60 @@
 /**
- * InputHostModuleUnifiedExport
+ * ============================================================================
+ * Input Host Module - Unified Exports
+ * ============================================================================
+ *
+ * 【Module Responsibility】
+ * Unified export of all input host types, interfaces, and implementations.
+ *
+ * @module input/hosts/index
+ * @version 2.0.0
  */
 
-// TypeDefine
-export { InputDeviceType, HostStatus, PlatformType, detectPlatform } from './types';
+// =============================================================================
+// Type Definitions
+// =============================================================================
+export {
+    InputDeviceType,
+    HostStatus,
+    PlatformType,
+    detectPlatform,
+} from './types';
 
-// AbstractBaseClass
+// =============================================================================
+// Interface Exports (Recommended)
+// =============================================================================
+export {
+    IInputHost,
+    IKeyboardHost,
+    IGamepadHost,
+    IInputHostFactory,
+    IInputHostManager,
+} from '../../interfaces/IInputHost';
+
+// =============================================================================
+// Abstract Base Class
+// =============================================================================
 export { InputHost } from './InputHost';
 
-// Windows PlatformImplementation
+// =============================================================================
+// Platform Implementations - Windows
+// =============================================================================
 export { WindowsKeyboardHost } from './WindowsKeyboardHost';
 export { WindowsGamepadHost } from './WindowsGamepadHost';
 
-// Linux PlatformImplementation（PendingMake）
+// =============================================================================
+// Platform Implementations - Linux
+// =============================================================================
 export { LinuxKeyboardHost } from './LinuxKeyboardHost';
 export { LinuxGamepadHost } from './LinuxGamepadHost';
 
-// MacOS PlatformImplementation（PendingMake）
+// =============================================================================
+// Platform Implementations - MacOS
+// =============================================================================
 export { MacOSKeyboardHost } from './MacOSKeyboardHost';
 export { MacOSGamepadHost } from './MacOSGamepadHost';
 
-// RouterManager（From router DirectoryImport）
+// =============================================================================
+// Router Manager (from router directory)
+// =============================================================================
 export { InputRouter } from '../router/InputRouter';
