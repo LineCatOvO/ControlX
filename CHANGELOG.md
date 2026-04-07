@@ -1,5 +1,39 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed (Security)
+- **P0 Security Fixes**: 修复关键安全漏洞
+  - **Auth Module**: 新增完整的WebSocket连接认证系统
+    - Token-based 认证机制
+    - IP 白名单/黑名单支持
+    - 每Token最大连接数限制
+    - Token过期自动清理
+    - 支持从URL参数、Authorization Header、Cookie获取Token
+  - **Rate Limiting**: 增强限流模块
+    - 滑动窗口算法实现
+    - IP级别限流
+    - 用户级别限流（支持角色配置）
+    - WebSocket消息级别限流
+    - 多级限流（每秒/每分钟/每小时/每天）
+    - 客户端封禁功能
+  - **Config Protection**: 配置安全加固
+    - 远程配置修改完全禁用（只读模式）
+    - 敏感配置项过滤（tokenSecret, whitelist, blacklist等）
+    - config_set/config_save/config_reset操作被拒绝并返回READONLY_MODE错误
+    - 所有配置变更必须通过本地配置文件进行
+
+### Security Impact
+- 防止未授权WebSocket连接
+- 防止DoS攻击（多层限流保护）
+- 防止敏感配置信息泄露
+- 防止远程配置篡改
+
+### Test Coverage
+- Auth模块: 27个测试用例，覆盖率89.74%
+- RateLimiter模块: 59个测试用例，覆盖率83.41%
+- Config Handler: 23个测试用例，覆盖率91.66%
+
 ## [2026-04-05] docs: 添加构建文档和多客户端架构设计 (task-P2-build-docs, task-P2-optimization-enhancement)
 
 ### Changes
