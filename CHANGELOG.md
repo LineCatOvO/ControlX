@@ -2,6 +2,55 @@
 
 ## [Unreleased]
 
+### Added (P0 WebSocket Input Event Handler)
+- **WebSocket 输入事件处理器完整实现**: `Server/src/ws/handlers/inputEvent.ts`
+  - **输入事件消息格式定义** (4.2.1):
+    - 增强 `InputEventMessage` 接口，添加 `eventId` 和 `clientSendTs` 字段
+    - 新增 `BatchInputEventMessage` 接口，支持批量事件传输
+    - 新增 `InputEventAckMessage` 和 `BatchInputEventAckMessage` ACK 消息类型
+    - 更新 `ClientMessage` 和 `ServerMessage` 联合类型，包含新消息类型
+  - **输入事件处理器实现** (4.2.2):
+    - 实现 `handleInputEvent` 函数，处理单个输入事件
+    - 完整的错误处理和 ACK/NACK 响应机制
+    - 支持 RTT 时间戳记录（serverRecvTs, serverApplyTs）
+    - 详细的日志记录和调试支持
+  - **批量输入事件支持** (4.2.3):
+    - 实现 `handleBatchInputEvents` 函数，处理批量事件
+    - 批量事件验证（非空检查、eventIds 匹配检查）
+    - 部分失败处理（partial success），返回成功和失败的事件列表
+    - 批量 ACK 消息格式，包含 ackEventIds 和 failedEventIds
+  - **序列号管理** (4.2.4):
+    - 每个客户端独立的序列状态跟踪（ClientSequenceState）
+    - 事件序列号单调性验证（eventId 必须递增）
+    - 序列间隙检测和警告（gap detection）
+    - 重复事件检测（duplicate detection）
+    - 自动清理旧序列记录（限制 Set 大小）
+  - **输入事件确认机制** (4.2.5):
+    - 成功确认（status: "success"）带时间戳
+    - 拒绝确认（status: "rejected"）带错误原因
+    - 错误确认（status: "error"）带异常信息
+    - 重复批处理确认（duplicate batch acknowledgment）
+  - **统计和监控**:
+    - 单事件统计（总数、成功、拒绝、错误）
+    - 批处理统计（总数、成功、部分失败、拒绝、错误）
+    - 序列错误计数
+    - 客户端数量跟踪
+    - 时间戳历史记录（限制 1000 条）
+  - **路由集成**:
+    - 更新 `Server/src/ws/router.ts`，添加 `batch_input_event` 处理器映射
+    - 支持 `input_event` 和 `batch_input_event` 消息类型路由
+  - **单元测试** (41 个测试用例):
+    - `Server/tests/ws/handlers/inputEvent.test.ts` (733 行)
+    - 单事件处理测试（8 个用例）
+    - 批处理测试（7 个用例，1 个跳过）
+    - 序列号管理测试（5 个用例）
+    - ACK 消息格式测试（4 个用例）
+    - 统计跟踪测试（5 个用例）
+    - 错误处理测试（4 个用例）
+    - 性能测试（3 个用例）
+    - 边缘情况测试（5 个用例）
+    - 代码覆盖率：91.16% 语句，83.69% 分支
+
 ### Added (P2 Integration Tests)
 - **集成测试和性能测试完善**: 全面的测试覆盖
   - **Xbox Channel 集成测试**: `Server/tests/integration/xboxChannel.test.ts` (716行)
