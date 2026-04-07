@@ -15,6 +15,27 @@
   - 添加 `/health` 健康检查端点支持 Docker 健康检查
   - 更新 `BUILDING.md` 和 `BUILD_CONFIG.md` 完整构建文档
 
+### Added (P0 Android Build Config)
+- **Android 客户端构建配置**: 完善的 CI/CD 和自动化构建
+  - 创建 `local.properties.template` 本地 SDK 路径配置模板
+  - 创建 `signing.properties.template` 签名配置模板
+  - 创建 `.github/workflows/android-build.yml` GitHub Actions 工作流
+    - 支持 Debug/Release APK 构建
+    - 单元测试和 Lint 检查
+    - ARM64 架构支持
+    - APK 产物自动上传
+  - 创建 `Dockerfile.android` Android 构建容器
+    - 多架构支持 (linux/amd64, linux/arm64)
+    - 包含 JDK 21, Android SDK, Build Tools, NDK
+  - 创建 `scripts/build-android.sh` 统一构建脚本
+    - 支持 debug/release/test/lint/clean/all/ci 命令
+    - 支持 --no-daemon/--offline/--info/--profile 选项
+  - 创建 `scripts/install-android-sdk.sh` SDK 安装脚本
+    - 支持 ARM64/x86_64 架构自动检测
+    - 支持自定义 API 版本和 NDK 安装
+  - 更新 `BUILDING.md` 添加自动化构建和 CI/CD 集成文档
+  - 更新 `AndroidClient/BUILD_CONFIG.md` 添加 CI/CD 配置说明
+
 ### Changed
 - **注释英文化**: 将所有中文注释翻译为英文
   - Batch 1: 翻译 input adapters 和 executors 模块中的中文注释
