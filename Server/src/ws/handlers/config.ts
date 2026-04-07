@@ -23,7 +23,7 @@ import { authManager } from "../../auth/auth";
 
 /**
  * SensitiveConfigItemList
- * This些ConfigItemnotShouldExpose给Client，PreventSensitiveInfoLeak
+ * These config items should not be exposed to client，Prevent sensitive info leak
  */
 const SENSITIVE_CONFIG_KEYS: string[] = [
     'tokenSecret',          // Token SecretKey
@@ -46,8 +46,8 @@ function filterSensitiveConfig(config: Config): Partial<Config> {
     for (const key of Object.keys(config) as (keyof Config)[]) {
         // OnlyKeepNonSensitiveConfigItem
         if (!SENSITIVE_CONFIG_KEYS.includes(key)) {
-            // UseType断言绕过 TypeScript OfStrictTypeCheck
-            // ThisIsSafeOf，因ForWeOnlyIsCopyConfigItem，not改Change其Type
+            // Use type assertion to bypass TypeScript strict type checking
+            // This is safe，Because we only copy config items，Not changing its type
             (filtered as any)[key] = config[key];
         }
     }
@@ -117,7 +117,7 @@ export function handleConfigGet(ws: any, message: ConfigGetMessage): void {
     // Get current config
     const currentConfig = configManager.getConfig();
 
-    // FilterSensitiveConfigItem，PreventSensitiveInfoLeak
+    // FilterSensitiveConfigItem，Prevent sensitive info leak
     const safeConfig = filterSensitiveConfig(currentConfig);
 
     // SendSafeConfigMessage（notIncludeSensitiveInfo）

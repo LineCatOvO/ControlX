@@ -4,13 +4,13 @@
  * ============================================================================
  *
  * 【Module responsibility】
- * 本ModuleProvideUnifiedOfLogRecordFunction，SupportStructuredLogOutput。
+ * This module provides unified logging functions，SupportStructuredLogOutput。
  *
  * 【Core functionality】
- * 1. LogLevel：Support DEBUG、INFO、WARN、ERROR 四OneLevel
- * 2. StructuredFormat：Support JSON FormatOutput，ConvenientForLogAggregateandDivide析
- * 3. LogOnUnder文：Support requestId、clientId WaitOnUnder文Info
- * 4. FormatOutput：Support JSON andPersonClassCan读两种Format
+ * 1. Log level: Supports DEBUG, INFO, WARN, ERROR four levels
+ * 2. Structured format: Supports JSON format output，Convenient for log aggregation and analysis
+ * 3. Log context: Supports requestId, clientId, etc. context info
+ * 4. Format output: Supports JSON and human-readable formats
  *
  * 【UseExample】
  * ```typescript
@@ -53,7 +53,7 @@ export interface LoggerConfig {
 }
 
 /**
- * LogOnUnder文Interface
+ * Log context interface
  */
 export interface LogContext {
     requestId?: string;
@@ -163,7 +163,7 @@ export class Logger {
     }
 
     /**
-     * CreateWithOnUnder文OfLogManager
+     * Create log manager with context
      */
     public withContext(context: LogContext): ContextLogger {
         return new ContextLogger(this, context);
@@ -193,7 +193,7 @@ export class Logger {
         if (this.config.format === LogFormat.JSON) {
             return JSON.stringify(entry);
         } else {
-            // PersonClassCan读Format
+            // Human-readable format
             const contextStr = context ? ` [${Object.entries(context).map(([k, v]) => `${k}=${v}`).join(', ')}]` : '';
             const stackStr = entry.stackTrace ? `\n  Stack: ${entry.stackTrace}` : '';
             return `${timestamp} [${levelName}]${contextStr} ${message}${stackStr}`;
@@ -263,7 +263,7 @@ export class Logger {
 }
 
 /**
- * WithOnUnder文OfLogManager
+ * Log manager with context
  */
 export class ContextLogger {
     private logger: Logger;

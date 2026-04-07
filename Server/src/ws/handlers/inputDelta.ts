@@ -9,7 +9,7 @@ import { inputState } from "../../input/state";
  * @param message InputDeltaMessage
  */
 export function handleInputDelta(ws: any, message: InputDeltaMessage) {
-    // CheckMessageNumber据
+    // Check message data
     if (!message.data) {
         console.error("Input delta handlerError: Invalid message data");
         
@@ -58,7 +58,7 @@ export function handleInputDelta(ws: any, message: InputDeltaMessage) {
         const executorManager = getExecutorManager();
         executorManager.applyState(inputState);
 
-        // RecordDetailOfInputDeltaNumber据Log
+        // Record detailed input delta data log
         console.log(formatInputDeltaMessageLog(message));
         
         // Send ACK Message

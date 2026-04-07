@@ -109,9 +109,9 @@ export class DebugManager {
     /**
      * RecordDebugMessage
      * @param level Log level
-     * @param message MessageInside容
+     * @param message Message content
      * @param source ComeSourceIdentifier
-     * @param data AttachNumber据
+     * @param data Attached data
      */
     log(level: LogLevel, message: string, source?: string, data?: any): void {
         if (!this.shouldLog(level)) {

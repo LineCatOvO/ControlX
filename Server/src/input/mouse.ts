@@ -6,7 +6,7 @@ import { mouse, Button, Point } from '@nut-tree-fork/nut-js';
 const LOG_CONFIG = {
     enabled: true,           // WhetherEnableLog
     verbose: false,          // WhetherEnableDetailLog
-    statsInterval: 100,      // Each多少TimeOperationOutputOncestatistics
+    statsInterval: 100,      // Output statistics every N operations
 };
 
 // MouseOperationstatistics
@@ -75,7 +75,7 @@ export function setMouseLogConfig(config: Partial<typeof LOG_CONFIG>) {
 /**
  * MouseInputExecutor
  * ResponsiblewillMouseInputStateConvertForSystemMouseEvent
- * use @nut-tree/nut-js ImplementationCrossPlatformMouse控制
+ * use @nut-tree/nut-js implementation for cross-platform mouse control
  */
 export class MouseExecutor implements InputExecutor {
     // recordCurrentMouseState
@@ -87,7 +87,7 @@ export class MouseExecutor implements InputExecutor {
         middle: false
     };
 
-    // Screen尺寸（Used forCoordinateConvert）
+    // Screen dimensions（Used forCoordinateConvert）
     private screenWidth: number = 1920;
     private screenHeight: number = 1080;
 
@@ -230,13 +230,13 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * moveMouseto指FixedPosition
+     * Move mouse to specified position
      * @param x X Coordinate（RelativeCoordinate，0-1 Range）
      * @param y Y Coordinate（RelativeCoordinate，0-1 Range）
      */
     private async moveMouse(x: number, y: number): Promise<void> {
         try {
-            // 验证输入值是否有效
+            // Validate if input value is valid
             if (!this.isValidCoordinate(x, y)) {
                 console.warn('⚠️ MouseExecutor: Invalid coordinates received:', { x, y });
                 updateStats('error', 1);
@@ -252,7 +252,7 @@ export class MouseExecutor implements InputExecutor {
             const clampedX = Math.max(0, Math.min(screenX, this.screenWidth - 1));
             const clampedY = Math.max(0, Math.min(screenY, this.screenHeight - 1));
 
-            // 验证转换后的坐标
+            // Validate converted coordinates
             if (!this.isValidScreenCoordinate(clampedX, clampedY)) {
                 console.warn('⚠️ MouseExecutor: Screen coordinates out of bounds:', { clampedX, clampedY });
                 updateStats('error', 1);
@@ -272,25 +272,25 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 验证输入坐标是否有效
-     * @param x X 坐标
-     * @param y Y 坐标
-     * @returns 是否有效
+     * Validate if input coordinates are valid
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @returns Whether valid
      */
     private isValidCoordinate(x: number, y: number): boolean {
-        // 检查是否为数字
+        // Check if is number
         if (typeof x !== 'number' || typeof y !== 'number') {
             return false;
         }
-        // 检查是否为有限数
+        // Check if is finite number
         if (!isFinite(x) || !isFinite(y)) {
             return false;
         }
-        // 检查是否为 NaN
+        // Check if is NaN
         if (isNaN(x) || isNaN(y)) {
             return false;
         }
-        // 检查是否在有效范围内 (允许稍微超出 0-1 范围，后面会进行边界限制)
+        // Check if is within valid range (Allow slightly exceeding 0-1 range，will be clamped later)
         if (x < -0.5 || x > 1.5 || y < -0.5 || y > 1.5) {
             return false;
         }
@@ -298,10 +298,10 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 验证屏幕坐标是否有效
-     * @param x X 屏幕坐标
-     * @param y Y 屏幕坐标
-     * @returns 是否有效
+     * Validate if screen coordinates are valid
+     * @param x X screen coordinate
+     * @param y Y screen coordinate
+     * @returns Whether valid
      */
     private isValidScreenCoordinate(x: number, y: number): boolean {
         return x >= 0 && x < this.screenWidth && y >= 0 && y < this.screenHeight;
@@ -349,11 +349,11 @@ export class MouseExecutor implements InputExecutor {
     /**
      * ScrollMouse
      * @param amount ScrollAmount
-     * @param direction Scroll方To（'up' or 'down'）
+     * @param direction Scroll direction（'up' or 'down'）
      */
     private async scrollMouse(amount: number, direction: string): Promise<void> {
         try {
-            // 验证滚动参数
+            // Validate scroll parameters
             if (!this.isValidScrollParams(amount, direction)) {
                 console.warn('⚠️ MouseExecutor: Invalid scroll parameters:', { amount, direction });
                 updateStats('error', 1);
@@ -374,25 +374,25 @@ export class MouseExecutor implements InputExecutor {
     }
 
     /**
-     * 验证滚动参数是否有效
-     * @param amount 滚动量
-     * @param direction 滚动方向
-     * @returns 是否有效
+     * Validate scroll parametersWhether valid
+     * @param amount scroll amount
+     * @param direction scroll direction
+     * @returns Whether valid
      */
     private isValidScrollParams(amount: number, direction: string): boolean {
-        // 验证 amount
+        // Validate amount
         if (typeof amount !== 'number' || !isFinite(amount) || isNaN(amount)) {
             return false;
         }
-        // 限制滚动量范围
+        // Limit scroll amount range
         if (amount < 1 || amount > 1000) {
             return false;
         }
-        // 验证 direction
+        // Validate direction
         if (typeof direction !== 'string') {
             return false;
         }
-        // 只允许 'up' 或 'down'
+        // Only allow 'up' or 'down'
         if (direction !== 'up' && direction !== 'down') {
             return false;
         }

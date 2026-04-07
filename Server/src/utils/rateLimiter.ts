@@ -4,7 +4,7 @@
  * ============================================================================
  *
  * 【Module responsibility】
- * 本ModuleProvideComprehensiveOfRateLimitingFunction，PreventDoSAttackAndAbuse。
+ * This module provides comprehensive rate limiting functions，Prevent DoS attacks and abuse。
  * SupportSlidingWindowAlgorithm、IPRateLimiting、UserRateLimiting、WebSocketMessageRateLimiting。
  *
  * 【Core functionality】
@@ -16,15 +16,15 @@
  *
  * 【UseExample】
  * ```typescript
- * // IP限流
+ * // IP rate limiting
  * const ipLimiter = new SlidingWindowRate limiter({ windowSizeMs: 60000, maxRequests: 100 });
  * const result = ipLimiter.checkLimit('192.168.1.1');
  *
- * // 用户限流
+ * // User rate limiting
  * const userLimiter = new UserRate limiter();
  * const result = userLimiter.checkLimit('user-123', { role: 'premium' });
  *
- * // WebSocket消息限流
+ * // WebSocket message rate limiting
  * const wsLimiter = new WebSocketRate limiter();
  * const result = wsLimiter.checkMessageRate('client-1', 'input');
  * ```

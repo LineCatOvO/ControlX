@@ -1,5 +1,5 @@
 /**
- * FormatInputNumber据WithConvenientForLogRecord
+ * Format input data for convenient logging
  */
 
 import {
@@ -16,7 +16,7 @@ import {
 export function formatInputMessageLog(message: InputMessage): string | null {
     const { data, metadata } = message;
 
-    // CheckWhetherHasActualOfInputChange化，AndNonNullState
+    // Check whether has actual input changes，And non-null state
     const hasMeaningfulInput =
         (data.keyboard && data.keyboard.length > 0) ||
         (data.mouse &&
@@ -32,7 +32,7 @@ export function formatInputMessageLog(message: InputMessage): string | null {
                 (data.joystick.y !== undefined &&
                     Math.abs(data.joystick.y) > 0.01)));
 
-    // IfNoHasHasMeaningOfInputChange化，ReturnnullRepresentnotShouldRecordLog
+    // If no meaningful input changes，Return null represents should not record log
     if (!hasMeaningfulInput) {
         return null;
     }
@@ -161,7 +161,7 @@ export function formatInputEventMessageLog(message: InputEventMessage): string {
     if (data) {
         logParts.push(`${data.type}`);
 
-        // AccordingToEventTypeAddSpecificNumber据
+        // Add specific data according to event type
         switch (data.type) {
             case "key_down":
             case "key_up":

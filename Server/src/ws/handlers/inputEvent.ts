@@ -10,7 +10,7 @@ import { formatInputEventMessageLog } from '../../utils/logInputData';
  * @param message InputEventMessage
  */
 export function handleInputEvent(ws: any, message: InputEventMessage) {
-    // CheckMessageNumber据
+    // Check message data
     if (!message.data) {
         console.error("Input event handlerError: Invalid message data");
         
@@ -35,7 +35,7 @@ export function handleInputEvent(ws: any, message: InputEventMessage) {
         // ApplyInputEventtoAllExecutor
         executorManager.applyEvent(message.data);
 
-        // RecordDetailOfInputEventNumber据Log
+        // Record detailed input event data log
         console.log(formatInputEventMessageLog(message));
         
         // Send ACK Message

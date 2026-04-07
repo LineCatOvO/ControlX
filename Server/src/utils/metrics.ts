@@ -122,7 +122,7 @@ export interface InputStats {
 }
 
 /**
- * System资Sourcestatistics
+ * System resource statistics
  */
 export interface SystemResourceStats {
     cpuUsage: number;
@@ -154,7 +154,7 @@ export class MetricsCollector {
         lastEventTime: 0,
     };
     private inputEventHistory: { timestamp: number; count: number }[] = [];
-    private readonly historyWindowMs = 60000; // 1Divide钟窗Port
+    private readonly historyWindowMs = 60000; // 1 minute window
 
     private constructor() {}
 
@@ -266,7 +266,7 @@ export class MetricsCollector {
     // ==================== metricOperation ====================
 
     /**
-     * increment计NumberManager
+     * Increment counter
      * @param name metricName
      * @param value incrementValue（Default1）
      */
@@ -284,7 +284,7 @@ export class MetricsCollector {
     }
 
     /**
-     * decrement计NumberManager（onlyUsed forSpecialscenario）
+     * Decrement counter（Only used for special scenarios）
      * @param name metricName
      * @param value decrementValue（Default1）
      */
@@ -298,7 +298,7 @@ export class MetricsCollector {
             console.warn(`Metric ${name} is not a counter`);
             return;
         }
-        // 计NumberManagerAllowdecrement（Used forResetscenario）
+        // Counter allows decrement（Used for reset scenarios）
         metric.value -= value;
     }
 
@@ -375,7 +375,7 @@ export class MetricsCollector {
         metric.sum += value;
         metric.count++;
 
-        // Updatebucket计Number
+        // Update bucket counter
         const buckets = metric.metadata.unit
             ? [0.1, 0.5, 1, 2.5, 5, 10] // Defaultbucket
             : [0.1, 0.5, 1, 2.5, 5, 10];
@@ -504,7 +504,7 @@ export class MetricsCollector {
         // recordtoHistory
         this.inputEventHistory.push({ timestamp: now, count: 1 });
 
-        // Clear理ExpireHistory
+        // Cleanup expired history
         this.cleanupInputHistory();
 
         // calculateEachSecondEventNumber
@@ -516,7 +516,7 @@ export class MetricsCollector {
     }
 
     /**
-     * Clear理ExpireOfInputHistory
+     * Cleanup expired input history
      */
     private cleanupInputHistory(): void {
         const cutoff = Date.now() - this.historyWindowMs;
@@ -540,7 +540,7 @@ export class MetricsCollector {
             .filter((h) => h.timestamp >= windowStart)
             .reduce((sum, h) => sum + h.count, 0);
 
-        // calculateActual窗PortSize（Second）
+        // Calculate actual window size（Second）
         const oldestEvent = this.inputEventHistory[0]?.timestamp || now;
         const windowSize = Math.max((now - oldestEvent) / 1000, 1);
 
@@ -694,7 +694,7 @@ export class MetricsCollector {
                 // TYPE declare
                 lines.push(`# TYPE ${fullMetricName} histogram`);
 
-                // bucketValue（累积计Number）
+                // CBucket value（Accumulated count）
                 const bucketBoundaries = [0.1, 0.5, 1, 2.5, 5, 10, '+Inf'];
                 let cumulativeCount = 0;
 
@@ -711,7 +711,7 @@ export class MetricsCollector {
                 lines.push(`${fullMetricName}_count ${metric.count}`);
             }
 
-            lines.push(''); // NullLineDivide隔
+            lines.push(''); // Empty line separator
         });
 
         return lines.join('\n');
@@ -830,7 +830,7 @@ export class MetricsCollector {
         // recordtoHistory
         this.throughputHistory.push({ timestamp: now, count: currentEPS });
 
-        // Clear理ExpireHistory（keep 5 Divide钟）
+        // Cleanup expired history（keep 5 minutes）
         const cutoff5m = now - 300000;
         this.throughputHistory = this.throughputHistory.filter(h => h.timestamp >= cutoff5m);
 
