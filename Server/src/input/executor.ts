@@ -43,7 +43,7 @@ import { MouseExecutor } from "./mouse";
 import { JoystickExecutor } from "./joystick";
 import { GamepadExecutor } from "./gamepad";
 import { SafetyController } from "./safetyController";
-import { InputExecutor, InputExecutorManager } from "./interfaces";
+import { IInputExecutor, IInputExecutorManager } from "../interfaces";
 import { TestModeKeyboardExecutor } from "./test-keyboard";
 import { DryRunExecutor } from "./dryRunExecutor";
 import { ApplyScheduler } from "./applyScheduler";
@@ -66,23 +66,24 @@ let dryRunExecutor: DryRunExecutor | null = null;
 
 /**
  * Input executor manager implementation
+ * Implements IInputExecutorManager interface
  */
-export class DefaultInputExecutorManager implements InputExecutorManager {
-    private executors: InputExecutor[] = [];
+export class DefaultInputExecutorManager implements IInputExecutorManager {
+    private executors: IInputExecutor[] = [];
 
     /**
      * Add input executor
-     * @param executor InputExecutor
+     * @param executor IInputExecutor
      */
-    addExecutor(executor: InputExecutor): void {
+    addExecutor(executor: IInputExecutor): void {
         this.executors.push(executor);
     }
 
     /**
      * Remove input executor
-     * @param executor InputExecutor
+     * @param executor IInputExecutor
      */
-    removeExecutor(executor: InputExecutor): void {
+    removeExecutor(executor: IInputExecutor): void {
         this.executors = this.executors.filter((e) => e !== executor);
     }
 
@@ -120,10 +121,18 @@ export class DefaultInputExecutorManager implements InputExecutorManager {
     /**
      * Get test mode executors（if exists）
      */
-    getTestModeExecutors(): InputExecutor[] {
+    getTestModeExecutors(): IInputExecutor[] {
         return this.executors.filter(
             (executor) => executor instanceof TestModeKeyboardExecutor
         );
+    }
+
+    /**
+     * Get all registered executors
+     * @returns Array of executors
+     */
+    getExecutors(): IInputExecutor[] {
+        return [...this.executors];
     }
 }
 
@@ -282,7 +291,7 @@ function executeInput() {
  * Get input executor manager
  * @returns Input executor manager instance
  */
-export function getExecutorManager(): InputExecutorManager {
+export function getExecutorManager(): IInputExecutorManager {
     return executorManager;
 }
 

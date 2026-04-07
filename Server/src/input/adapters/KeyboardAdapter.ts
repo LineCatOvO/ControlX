@@ -1,19 +1,19 @@
 // Keyboard adapter implementation
 
-import { InputAdapter } from './InputAdapter';
+import { IKeyboardAdapter } from '../../interfaces/IInputAdapter';
 import { KeyboardExecutor } from '../keyboard';
 import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
  * Keyboard adapter
- * Encapsulates KeyboardExecutor calling logic，implements InputAdapter interface
+ * Encapsulates KeyboardExecutor calling logic，implements IKeyboardAdapter interface
  *
  * Design notes：
- * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
+ * - implements IKeyboardAdapter interface with all methods（applyState, applyDelta, applyEvent, reset）
  * - Internally delegates to KeyboardExecutor for actual keyboard operations
  * - Provides keyboard-specific methods（applyKeyboardState, getKeyboardState）
  */
-export class KeyboardAdapter implements InputAdapter {
+export class KeyboardAdapter implements IKeyboardAdapter {
     private executor: KeyboardExecutor;
 
     constructor(executor: KeyboardExecutor) {

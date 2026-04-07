@@ -1,144 +1,70 @@
-// Input adapter interface definition
-
-import { InputState, InputDelta, InputEvent } from '../../types/ws';
-
 /**
- * Input adapter base interface
- * Extends InputExecutor interface，Ensure compatibility with executorManager
+ * ============================================================================
+ * Input Adapter Interface Definition (Legacy)
+ * ============================================================================
  *
- * Design notes：
- * - Input adapter InterfaceExtendForExtends InputExecutor interface
- * - All adapters must implement applyState, applyDelta, applyEvent, reset methods
- * - Ensure adapters can be directly used by executorManager
+ * ⚠️ DEPRECATION NOTICE:
+ * This file is kept for backward compatibility. New code should import from
+ * `../../interfaces` instead.
+ *
+ * 【Migration Guide】
+ * - Old: import { InputAdapter } from './adapters/InputAdapter';
+ * - New: import { IInputAdapter } from '../../interfaces';
+ *
+ * @module input/adapters/InputAdapter
+ * @deprecated Use ../../interfaces/IInputAdapter instead
+ * @version 2.0.0
  */
-export interface InputAdapter {
-    /**
-     * Apply complete input state
-     * @param state Input state
-     */
-    applyState(state: InputState): void;
 
-    /**
-     * Apply input delta
-     * @param delta Input delta
-     */
-    applyDelta(delta: InputDelta): void;
+// Import from types for InputState, InputDelta, InputEvent
+type InputState = import('../../types/ws').InputState;
+type InputDelta = import('../../types/ws').InputDelta;
+type InputEvent = import('../../types/ws').InputEvent;
 
-    /**
-     * Apply input event
-     * @param event Input event
-     */
-    applyEvent(event: InputEvent): void;
-
-    /**
-     * ResetInput state
-     */
-    reset(): void;
-}
+// Re-export from new interfaces module for backward compatibility
+import {
+    IInputAdapter,
+    IKeyboardAdapter,
+    IGamepadAdapter,
+    IMouseAdapter,
+    IJoystickAdapter,
+} from '../../interfaces/IInputAdapter';
 
 /**
- * Keyboard adapter interface
+ * Input adapter base interface (legacy alias)
+ * @deprecated Use IInputAdapter from '../../interfaces' instead
  */
-export interface KeyboardAdapter extends InputAdapter {
-    /**
-     * Apply keyboard state
-     * @param pressedKeys Set of pressed keys
-     */
-    applyKeyboardState(pressedKeys: Set<string> | string[]): void;
-
-    /**
-     * Get current keyboard state
-     * @returns CurrentSet of pressed keys
-     */
-    getKeyboardState(): Set<string>;
-}
+export interface InputAdapter extends IInputAdapter {}
 
 /**
- * Gamepad adapter interface
+ * Keyboard adapter interface (legacy alias)
+ * @deprecated Use IKeyboardAdapter from '../../interfaces' instead
  */
-export interface GamepadAdapter extends InputAdapter {
-    /**
-     * Apply gamepad state
-     * @param buttons Button state
-     * @param axes Joystick axis values
-     * @param triggers Trigger values
-     */
-    applyGamepadState(
-        buttons: Set<string> | string[],
-        axes: { [key: string]: number },
-        triggers: { [key: string]: number }
-    ): void;
-
-    /**
-     * Get current gamepad state
-     * @returns Current gamepad state
-     */
-    getGamepadState(): {
-        buttons: Set<string>;
-        axes: { [key: string]: number };
-        triggers: { [key: string]: number };
-    };
-}
+export interface KeyboardAdapter extends IKeyboardAdapter {}
 
 /**
- * Mouse adapter interface
+ * Gamepad adapter interface (legacy alias)
+ * @deprecated Use IGamepadAdapter from '../../interfaces' instead
  */
-export interface MouseAdapter extends InputAdapter {
-    /**
-     * Apply mouse state
-     * @param x Mouse X coordinate
-     * @param y Mouse Y coordinate
-     * @param left Left button state
-     * @param right Right button state
-     * @param middle Middle button state
-     */
-    applyMouseState(
-        x: number,
-        y: number,
-        left: boolean,
-        right: boolean,
-        middle: boolean
-    ): void;
-
-    /**
-     * Get current mouse state
-     * @returns Current mouse state
-     */
-    getMouseState(): {
-        x: number;
-        y: number;
-        left: boolean;
-        right: boolean;
-        middle: boolean;
-    };
-}
+export interface GamepadAdapter extends IGamepadAdapter {}
 
 /**
- * Joystick adapter interface
+ * Mouse adapter interface (legacy alias)
+ * @deprecated Use IMouseAdapter from '../../interfaces' instead
  */
-export interface JoystickAdapter extends InputAdapter {
-    /**
-     * Apply joystick state
-     * @param x X axis value
-     * @param y Y axis value
-     * @param deadzone Deadzone
-     * @param smoothing Smoothing coefficient
-     */
-    applyJoystickState(
-        x: number,
-        y: number,
-        deadzone: number,
-        smoothing: number
-    ): void;
+export interface MouseAdapter extends IMouseAdapter {}
 
-    /**
-     * Get current joystick state
-     * @returns Current joystick state
-     */
-    getJoystickState(): {
-        x: number;
-        y: number;
-        deadzone: number;
-        smoothing: number;
-    };
-}
+/**
+ * Joystick adapter interface (legacy alias)
+ * @deprecated Use IJoystickAdapter from '../../interfaces' instead
+ */
+export interface JoystickAdapter extends IJoystickAdapter {}
+
+// Re-export type definitions for local usage
+export type {
+    IInputAdapter,
+    IKeyboardAdapter,
+    IGamepadAdapter,
+    IMouseAdapter,
+    IJoystickAdapter,
+};

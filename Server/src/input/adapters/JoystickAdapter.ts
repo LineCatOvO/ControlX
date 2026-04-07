@@ -1,19 +1,19 @@
 // Joystick adapter implementation
 
-import { InputAdapter } from './InputAdapter';
+import { IJoystickAdapter } from '../../interfaces/IInputAdapter';
 import { JoystickExecutor } from '../joystick';
 import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
  * Joystick adapter
- * Encapsulates JoystickExecutor calling logic, implements InputAdapter interface
+ * Encapsulates JoystickExecutor calling logic, implements IJoystickAdapter interface
  *
  * Design notes:
- * - Implements all methods of InputAdapter interface (applyState, applyDelta, applyEvent, reset)
+ * - Implements all methods of IJoystickAdapter interface (applyState, applyDelta, applyEvent, reset)
  * - Internally delegates to JoystickExecutor to execute actual joystick operations
  * - Provides joystick-specific methods (applyJoystickState, getJoystickState)
  */
-export class JoystickAdapter implements InputAdapter {
+export class JoystickAdapter implements IJoystickAdapter {
     private executor: JoystickExecutor;
 
     constructor(executor: JoystickExecutor) {

@@ -1,20 +1,20 @@
-// Mouse adapterImplementation
+// Mouse adapter implementation
 
-import { InputAdapter } from './InputAdapter';
+import { IMouseAdapter } from '../../interfaces/IInputAdapter';
 import { MouseExecutor } from '../mouse';
 import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
  * Mouse adapter
- * Encapsulates MouseExecutor calling logic，implements InputAdapter interface
+ * Encapsulates MouseExecutor calling logic，implements IMouseAdapter interface
  *
  * Design notes：
- * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
- * - MouseExecutor MethodIsAsyncOf，AdapterMethodReturn void（AsyncCallnotBlock）
- * - InsidePartDelegateTo MouseExecutor ExecuteActualOfMouseOperation
- * - ProvideMouseSpecificOfMethod（applyMouseState, getMouseState）
+ * - implements IMouseAdapter interface with all methods（applyState, applyDelta, applyEvent, reset）
+ * - MouseExecutor methods are async，adapter methods return void (async calls don't block)
+ * - Internally delegates to MouseExecutor for actual mouse operations
+ * - Provides mouse-specific methods（applyMouseState, getMouseState）
  */
-export class MouseAdapter implements InputAdapter {
+export class MouseAdapter implements IMouseAdapter {
     private executor: MouseExecutor;
 
     constructor(executor: MouseExecutor) {

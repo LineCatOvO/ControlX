@@ -1,73 +1,29 @@
-// Input Executor Interface Definition
-
-import { InputState, InputDelta, InputEvent } from '../types/ws';
-
 /**
- * InputExecutorInterface
- * For abstracting different input device execution logic
+ * ============================================================================
+ * Input Executor Interface Definition (Legacy)
+ * ============================================================================
+ *
+ * ⚠️ DEPRECATION NOTICE:
+ * This file is kept for backward compatibility. New code should import from
+ * `../interfaces` instead.
+ *
+ * 【Migration Guide】
+ * - Old: import { InputExecutor, InputExecutorManager } from './interfaces';
+ * - New: import { IInputExecutor, IInputExecutorManager } from '../interfaces';
+ *
+ * @module input/interfaces
+ * @deprecated Use ../interfaces instead
+ * @version 2.0.0
  */
-export interface InputExecutor {
-  /**
-   * ApplyCompleteInputState
-   * @param state InputState
-   */
-  applyState(state: InputState): void;
-  
-  /**
-   * ApplyInputDelta
-   * @param delta InputDelta
-   */
-  applyDelta(delta: InputDelta): void;
-  
-  /**
-   * ApplyInputEvent
-   * @param event InputEvent
-   */
-  applyEvent(event: InputEvent): void;
-  
-  /**
-   * ResetInputState
-   */
-  reset(): void;
-}
 
-/**
- * Input Executor Manager Interface
- * For managing multiple input executors
- */
-export interface InputExecutorManager {
-  /**
-   * Add input executor
-   * @param executor InputExecutor
-   */
-  addExecutor(executor: InputExecutor): void;
-  
-  /**
-   * Remove input executor
-   * @param executor InputExecutor
-   */
-  removeExecutor(executor: InputExecutor): void;
-  
-  /**
-   * Apply complete input state to all executors
-   * @param state InputState
-   */
-  applyState(state: InputState): void;
-  
-  /**
-   * Apply input delta to all executors
-   * @param delta InputDelta
-   */
-  applyDelta(delta: InputDelta): void;
-  
-  /**
-   * Apply input event to all executors
-   * @param event InputEvent
-   */
-  applyEvent(event: InputEvent): void;
-  
-  /**
-   * Reset all executors
-   */
-  reset(): void;
-}
+// Re-export from new interfaces module for backward compatibility
+export {
+    IInputExecutor as InputExecutor,
+    IInputExecutorManager as InputExecutorManager,
+} from '../interfaces/IInputExecutor';
+
+// Also export with new names for gradual migration
+export {
+    IInputExecutor,
+    IInputExecutorManager,
+} from '../interfaces/IInputExecutor';
