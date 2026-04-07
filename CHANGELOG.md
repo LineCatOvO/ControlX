@@ -2,6 +2,58 @@
 
 ## [Unreleased]
 
+### Added (P2 Integration Tests)
+- **集成测试和性能测试完善**: 全面的测试覆盖
+  - **Xbox Channel 集成测试**: `Server/tests/integration/xboxChannel.test.ts` (716行)
+    - 游戏手柄按钮输入流测试（单键、多键、释放、序列、所有Xbox按钮）
+    - 摇杆轴输入流测试（左摇杆、右摇杆、双摇杆同时）
+    - 触发器输入流测试（LT、RT、双触发器）
+    - 组合游戏手柄输入测试（按钮+摇杆+触发器）
+    - 游戏手柄输入增量测试（delta更新）
+    - 游戏手柄事件消息测试（按钮事件、摇杆事件、触发器事件）
+    - 高频游戏手柄输入测试（60 FPS模拟）
+    - 游戏手柄错误处理测试（无效数据、越界值）
+  - **异常场景集成测试**: `Server/tests/integration/exceptionScenarios.test.ts` (740行)
+    - 断开连接和重连场景测试（立即重连、延迟重连、多次快速重连、安全状态超时）
+    - 高并发处理测试（多客户端并发、消息突发、并发ping和输入消息、不同消息类型并发）
+    - 错误恢复测试（畸形JSON、缺少必填字段、未知消息类型、状态存储溢出）
+    - 无效消息处理测试（无效baseStateId、空增量、无效配置值、超大消息）
+    - 超时处理测试（连接超时、消息等待超时、延迟消息处理）
+    - 状态损坏恢复测试（无效状态转换、错误条件下的一致性维护）
+    - 资源管理测试（客户端断开后资源清理）
+  - **延迟基准测试**: `Server/tests/performance/latencyBenchmark.test.ts` (750行)
+    - Ping/Pong RTT测量（基础RTT、突发负载RTT、并发客户端RTT）
+    - 输入处理延迟测量（完整状态处理、增量更新处理）
+    - 事件确认延迟测量（事件消息确认、状态消息确认）
+    - 配置操作延迟测量（配置获取、配置设置）
+    - 延迟探测响应时间测量
+    - 负载下延迟测量
+    - 综合延迟报告生成
+  - **吞吐量基准测试**: `Server/tests/performance/throughputBenchmark.test.ts` (732行)
+    - Ping/Pong吞吐量测试（持续吞吐量、突发吞吐量）
+    - 输入状态吞吐量测试（完整状态更新、增量更新）
+    - 事件消息吞吐量测试（事件消息、状态消息）
+    - 并发客户端吞吐量测试（5个并发客户端）
+    - 不同负载大小吞吐量测试（小/中/大负载）
+    - 持续吞吐量稳定性测试
+    - 综合吞吐量报告生成
+  - **测试工具和公用设施**:
+    - `Server/tests/common/integrationTestUtils.ts` (435行) - 集成测试公用工具
+      - 测试服务器生命周期管理（setupTestServer、teardownTestServer）
+      - 客户端工厂方法（createTestClient、createTestClients）
+      - 断言辅助函数（Assertions集合）
+      - 性能测量工具（PerformanceMetrics类）
+      - 负载测试运行器（runLoadTest）
+      - 指数退避重试（retryWithBackoff）
+    - `Server/tests/common/wsClient.ts` - WebSocket客户端包装器
+      - 消息等待能力（waitForMessage）
+      - 自动消息队列管理
+      - 连接超时处理
+  - **测试文档**:
+    - `Server/tests/integration/README.md` - 集成测试说明文档
+    - `Server/tests/performance/README.md` - 性能测试说明文档
+    - 包含测试类别、运行命令、性能基线、结果解读指南
+
 ### Added (P2 Metrics Observability)
 - **指标模块重构与实现**: 完整的可观测性指标系统
   - **MetricsCollector 迁移**: 将 `Server/src/utils/metrics.ts` (872行) 重构为专门的指标模块
