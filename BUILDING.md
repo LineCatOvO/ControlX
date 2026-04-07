@@ -1,6 +1,6 @@
 # ControlX 构建指南
 
-**更新日期**: 2026-04-05
+**更新日期**: 2026-04-10
 
 本文档介绍 ControlX 项目（Server + AndroidClient）的完整构建流程。
 
@@ -14,7 +14,12 @@ controlx/
 │   ├── src/             # TypeScript 源代码
 │   ├── dist/            # 编译输出
 │   ├── tests/           # 测试文件
-│   └── docs/            # 文档
+│   ├── scripts/         # 构建脚本
+│   ├── docs/            # 文档
+│   ├── package.json     # 依赖配置
+│   ├── tsconfig.json    # TypeScript 配置
+│   ├── Dockerfile       # 容器化配置
+│   └── ecosystem.config.js  # PM2 配置
 ├── AndroidClient/       # Android 客户端
 │   ├── app/             # 应用模块
 │   └── gradle/          # Gradle 配置
@@ -32,6 +37,8 @@ controlx/
 | Node.js | 20+ LTS | v24.14.0 推荐 |
 | pnpm | 10+ | 快速、节省磁盘空间 |
 | TypeScript | 5+ | 严格模式 |
+| PM2 | 5+ | 可选，生产部署 |
+| Docker | 24+ | 可选，容器化部署 |
 
 ### 客户端构建
 
@@ -53,28 +60,89 @@ cd Server
 pnpm install
 ```
 
-### 2. 开发构建
+### 2. 开发模式
 
 ```bash
-pnpm dev
+# 方式 1: 使用 pnpm
+pnpm run dev
+
+# 方式 2: 使用脚本
+./scripts/start.sh dev
 ```
 
 ### 3. 生产构建
 
 ```bash
-pnpm build
+# 方式 1: 使用 pnpm
+pnpm run build
+
+# 方式 2: 使用脚本
+./scripts/build.sh build
+
+# 完整构建（清理 + 测试 + 构建）
+./scripts/build.sh all
 ```
 
 ### 4. 运行测试
 
 ```bash
+# 运行所有测试
 pnpm test
+
+# 带覆盖率
+pnpm run test:coverage
+
+# 监听模式
+pnpm run test:watch
 ```
 
 ### 5. 运行服务
 
 ```bash
-node dist/index.js
+# 直接运行
+pnpm start
+
+# 生产模式
+pnpm run start:prod
+
+# PM2 模式
+pnpm run start:pm2
+
+# 使用脚本
+./scripts/start.sh prod
+```
+
+### 6. 停止服务
+
+```bash
+# 停止 PM2
+pnpm run stop:pm2
+
+# 使用脚本
+./scripts/stop.sh pm2
+
+# 停止所有
+./scripts/stop.sh all
+```
+
+### 7. Docker 构建
+
+```bash
+# 构建镜像
+pnpm run docker:build
+
+# 多平台构建
+pnpm run docker:buildx
+
+# 运行容器
+pnpm run docker:run:detach
+
+# 停止容器
+pnpm run docker:stop
+
+# 或使用脚本
+./scripts/start.sh docker
+./scripts/stop.sh docker
 ```
 
 **详细文档**: [Server/BUILD_CONFIG.md](Server/BUILD_CONFIG.md)
@@ -131,6 +199,115 @@ cp app/signing-config-example.properties app/signing-config.properties
 
 ---
 
+## 构建脚本快速参考
+
+### Server 脚本
+
+| 脚本 | 命令 | 说明 |
+|------|------|------|
+| 构建 | `./scripts/build.sh build` | 生产构建 |
+| 开发 | `./scripts/build.sh dev` | 开发模式 |
+| 测试 | `./scripts/build.sh test` | 运行测试 |
+| 清理 | `./scripts/build.sh clean` | 清理构建 |
+| 完整 | `./scripts/build.sh all` | 完整流程 |
+| 启动 | `./scripts/start.sh dev` | 启动开发 |
+| 启动 | `./scripts/start.sh prod` | 启动生产 |
+| 启动 | `./scripts/start.sh pm2` | PM2 模式 |
+| 启动 | `./scripts/start.sh docker` | Docker 模式 |
+| 停止 | `./scripts/stop.sh pm2` | 停止 PM2 |
+| 停止 | `./scripts/stop.sh docker` | 停止 Docker |
+| 停止 | `./scripts/stop.sh all` | 停止全部 |
+| 重启 | `./scripts/restart.sh pm2` | 重载 PM2 |
+| 重启 | `./scripts/restart.sh docker` | 重启 Docker |
+
+---
+
+## PM2 部署
+
+### 安装 PM2
+
+```bash
+npm install -g pm2
+```
+
+### 启动生产环境
+
+```bash
+cd Server
+pnpm install --frozen-lockfile --prod
+pnpm run build
+pnpm run start:pm2
+```
+
+### 常用命令
+
+```bash
+# 查看状态
+pm2 status
+
+# 查看日志
+pm2 logs controlx-server
+
+# 监控界面
+pm2 monit
+
+# 重载配置
+pm2 reload ecosystem.config.js
+
+# 停止服务
+pm2 stop controlx-server
+
+# 删除服务
+pm2 delete controlx-server
+```
+
+---
+
+## Docker 部署
+
+### 单平台构建
+
+```bash
+cd Server
+docker build -t controlx-server:latest .
+docker run -d -p 3000:3000 -p 8080:8080 --name controlx-server controlx-server:latest
+```
+
+### 多平台构建
+
+```bash
+# 启用 buildx
+docker buildx create --use
+
+# 多平台构建
+docker buildx build --platform linux/amd64,linux/arm64 -t controlx-server:latest --push .
+```
+
+### Docker Compose 示例
+
+```yaml
+version: '3.8'
+services:
+  controlx-server:
+    image: controlx-server:latest
+    container_name: controlx-server
+    ports:
+      - "3000:3000"
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - WS_PORT=3000
+      - WEB_PORT=8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+```
+
+---
+
 ## ARM64 环境配置
 
 ### Linux ARM64 (aarch64)
@@ -175,10 +352,13 @@ sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 ### 服务端验证清单
 
 - [ ] `pnpm install` 成功
-- [ ] `pnpm type-check` 无错误
-- [ ] `pnpm build` 成功
-- [ ] `pnpm test` 全部通过
-- [ ] `node dist/index.js` 正常启动
+- [ ] `pnpm run type-check` 无错误
+- [ ] `pnpm run build` 成功
+- [ ] `pnpm run test` 全部通过
+- [ ] `pnpm start` 正常启动
+- [ ] `./scripts/build.sh all` 成功
+- [ ] `docker build` 成功（如有 Docker）
+- [ ] PM2 启动正常（如有 PM2）
 
 ### 客户端验证清单
 
@@ -198,6 +378,10 @@ sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 | TypeScript 错误 | 检查 tsconfig.json 严格模式 |
 | 模块未找到 | 运行 `pnpm install` |
 | 构建超时 | 增加 Node.js 内存 |
+| 端口冲突 | 修改环境变量 WS_PORT/WEB_PORT |
+| 权限错误 | 使用 sudo 或检查文件权限 |
+| PM2 未找到 | `npm install -g pm2` |
+| Docker 构建失败 | 检查 Dockerfile 语法 |
 
 ### 客户端常见问题
 
@@ -213,9 +397,12 @@ sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 ## 相关文档
 
 - [Server/BUILD_CONFIG.md](Server/BUILD_CONFIG.md) - 服务端构建详细配置
+- [Server/Dockerfile](Server/Dockerfile) - Docker 构建配置
+- [Server/ecosystem.config.js](Server/ecosystem.config.js) - PM2 配置
 - [AndroidClient/BUILD_CONFIG.md](AndroidClient/BUILD_CONFIG.md) - 客户端构建详细配置
 - [Server/docs/monitoring-setup.md](Server/docs/monitoring-setup.md) - 监控部署文档
 - [Server/docs/ci-cd-setup.md](Server/docs/ci-cd-setup.md) - CI/CD 配置文档
+- [CHANGELOG.md](CHANGELOG.md) - 变更日志
 
 ---
 
@@ -224,5 +411,7 @@ sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 - [Node.js 官方文档](https://nodejs.org/)
 - [pnpm 文档](https://pnpm.io/)
 - [TypeScript 手册](https://www.typescriptlang.org/docs/)
+- [PM2 文档](https://pm2.keymetrics.io/)
+- [Docker 文档](https://docs.docker.com/)
 - [Android 构建系统](https://developer.android.com/build)
 - [Gradle 性能优化](https://docs.gradle.org/current/userguide/performance.html)

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+- **注释英文化**: 将所有中文注释翻译为英文
+  - Batch 1: 翻译 input adapters 和 executors 模块中的中文注释
+  - Batch 2: 翻译 input 和 utils 模块中的中文注释
+  - Batch 3: 翻译 input 模块中剩余的中文注释
+  - Batch 4: 完成最后一批中文注释翻译
+  - Batch 5: 修复翻译后类和接口名称问题
+  - 共更新 32 个文件，涉及输入适配器、执行器、工具函数等
+
 ### Fixed (P1 Functional Defects)
 - **P1 功能缺陷修复**: 完善功能缺陷修复
   - **WebSocket 连接数限制**: 实现全局连接数限制

@@ -1,0 +1,72 @@
+# 依赖目录
+node_modules
+.pnpm-store
+
+# 构建输出
+dist
+coverage
+*.tsbuildinfo
+
+# 测试文件
+tests
+**/*.test.ts
+**/*.spec.ts
+jest.config.js
+
+# IDE 和编辑器
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# 日志文件
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# 环境文件
+.env
+.env.local
+.env.*.local
+.env.production
+.env.production.example
+
+# 版本控制
+.git
+.gitignore
+
+# 文档（除必要外）
+docs
+*.md
+!README.md
+
+# 脚本（保留构建脚本）
+scripts/build.sh
+
+# 配置文件示例
+config.example.json
+
+# 监控数据
+monitoring/grafana/data
+monitoring/prometheus/data
+
+# 测试客户端
+test-client.js
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Docker 相关（避免循环）
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# 其他
+.DS_Store
+Thumbs.db
+*.tgz
+*.tar.gz
+*.zip

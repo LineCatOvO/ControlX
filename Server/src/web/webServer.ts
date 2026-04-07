@@ -87,6 +87,21 @@ export function stopWebMonitor(): void {
  */
 function handleHttpRequest(req: any, res: any): void {
     const url = req.url === '/' ? '/index.html' : req.url;
+
+    // Health check endpoint for Docker/load balancer
+    if (url === '/health') {
+        const health = {
+            status: 'healthy',
+            timestamp: Date.now(),
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            version: process.version,
+        };
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(health));
+        return;
+    }
+
     const filePath = join(STATIC_DIR, url);
 
     // Security check: prevent directory traversal attack

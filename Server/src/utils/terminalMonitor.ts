@@ -4,7 +4,7 @@
 /**
  * Terminal status panel class
  */
-export class Terminal monitor {
+export class TerminalMonitor {
     private state: any;
     private fps: number;
     private intervalId: NodeJS.Timeout | null = null;

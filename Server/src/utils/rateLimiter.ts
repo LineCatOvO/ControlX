@@ -21,11 +21,11 @@
  * const result = ipLimiter.checkLimit('192.168.1.1');
  *
  * // User rate limiting
- * const userLimiter = new UserRate limiter();
+ * const userLimiter = new UserRateLimiter();
  * const result = userLimiter.checkLimit('user-123', { role: 'premium' });
  *
  * // WebSocket message rate limiting
- * const wsLimiter = new WebSocketRate limiter();
+ * const wsLimiter = new WebSocketRateLimiter();
  * const result = wsLimiter.checkMessageRate('client-1', 'input');
  * ```
  *
@@ -630,7 +630,7 @@ export interface RoleConfig {
 /**
  * User rate limiter configuration
  */
-export interface UserRate limiterConfig {
+export interface UserRateLimiterConfig {
     /** Default configuration for users without a specific role */
     default: SlidingWindowConfig;
     /** Role-specific configurations */
@@ -642,7 +642,7 @@ export interface UserRate limiterConfig {
 /**
  * Default user rate limiter configuration
  */
-const DEFAULT_USER_CONFIG: UserRate limiterConfig = {
+const DEFAULT_USER_CONFIG: UserRateLimiterConfig = {
     default: {
         windowSizeMs: 60000,
         maxRequests: 100,
@@ -657,19 +657,19 @@ const DEFAULT_USER_CONFIG: UserRate limiterConfig = {
 };
 
 /**
- * UserRate limiter - Rate limiting based on user ID and roles
+ * UserRateLimiter - Rate limiting based on user ID and roles
  *
  * Supports different rate limits for different user roles.
  */
-export class UserRate limiter {
-    private config: UserRate limiterConfig;
+export class UserRateLimiter {
+    private config: UserRateLimiterConfig;
     private limiters: Map<string, SlidingWindowRateLimiter> = new Map();
 
     /**
      * Create a new user rate limiter
      * @param config User rate limiter configuration
      */
-    constructor(config: Partial<UserRate limiterConfig> = {}) {
+    constructor(config: Partial<UserRateLimiterConfig> = {}) {
         this.config = {
             ...DEFAULT_USER_CONFIG,
             ...config,
@@ -688,7 +688,7 @@ export class UserRate limiter {
             }));
         }
 
-        logger.info('UserRate limiter initialized', { roles: Array.from(this.config.roles.keys()) });
+        logger.info('UserRateLimiter initialized', { roles: Array.from(this.config.roles.keys()) });
     }
 
     /**
@@ -789,7 +789,7 @@ export class UserRate limiter {
      * Update configuration
      * @param config New configuration
      */
-    updateConfig(config: Partial<UserRate limiterConfig>): void {
+    updateConfig(config: Partial<UserRateLimiterConfig>): void {
         this.config = { ...this.config, ...config };
 
         // Update all limiters
@@ -820,7 +820,7 @@ export class UserRate limiter {
             limiter.destroy();
         }
         this.limiters.clear();
-        logger.info('UserRate limiter destroyed');
+        logger.info('UserRateLimiter destroyed');
     }
 }
 
@@ -847,7 +847,7 @@ export interface MessageTypeConfig {
 /**
  * WebSocket rate limiter configuration
  */
-export interface WebSocketRate limiterConfig {
+export interface WebSocketRateLimiterConfig {
     /** Overall message rate limit */
     overall: SlidingWindowConfig;
     /** Per-message-type rate limits */
@@ -859,7 +859,7 @@ export interface WebSocketRate limiterConfig {
 /**
  * Default WebSocket rate limiter configuration
  */
-const DEFAULT_WS_CONFIG: WebSocketRate limiterConfig = {
+const DEFAULT_WS_CONFIG: WebSocketRateLimiterConfig = {
     overall: {
         windowSizeMs: 1000,    // 1 second
         maxRequests: 60,       // 60 messages per second
@@ -875,12 +875,12 @@ const DEFAULT_WS_CONFIG: WebSocketRate limiterConfig = {
 };
 
 /**
- * WebSocketRate limiter - Rate limiting for WebSocket messages
+ * WebSocketRateLimiter - Rate limiting for WebSocket messages
  *
  * Supports both overall message rate limiting and per-message-type limits.
  */
-export class WebSocketRate limiter {
-    private config: WebSocketRate limiterConfig;
+export class WebSocketRateLimiter {
+    private config: WebSocketRateLimiterConfig;
     private overallLimiter: SlidingWindowRateLimiter;
     private typeLimiters: Map<string, SlidingWindowRateLimiter> = new Map();
 
@@ -888,7 +888,7 @@ export class WebSocketRate limiter {
      * Create a new WebSocket rate limiter
      * @param config WebSocket rate limiter configuration
      */
-    constructor(config: Partial<WebSocketRate limiterConfig> = {}) {
+    constructor(config: Partial<WebSocketRateLimiterConfig> = {}) {
         this.config = {
             ...DEFAULT_WS_CONFIG,
             ...config,
@@ -906,7 +906,7 @@ export class WebSocketRate limiter {
             }));
         }
 
-        logger.info('WebSocketRate limiter initialized');
+        logger.info('WebSocketRateLimiter initialized');
     }
 
     /**
@@ -1063,7 +1063,7 @@ export class WebSocketRate limiter {
      * Update configuration
      * @param config New configuration
      */
-    updateConfig(config: Partial<WebSocketRate limiterConfig>): void {
+    updateConfig(config: Partial<WebSocketRateLimiterConfig>): void {
         this.config = { ...this.config, ...config };
         this.overallLimiter.updateConfig(this.config.overall);
 
@@ -1109,7 +1109,7 @@ export class WebSocketRate limiter {
             limiter.destroy();
         }
         this.typeLimiters.clear();
-        logger.info('WebSocketRate limiter destroyed');
+        logger.info('WebSocketRateLimiter destroyed');
     }
 }
 
@@ -1120,11 +1120,11 @@ export class WebSocketRate limiter {
  */
 
 /**
- * MultiLevelRate limiter - Combines multiple time window limits
+ * MultiLevelRateLimiter - Combines multiple time window limits
  *
  * Supports per-second, per-minute, per-hour, and per-day limits simultaneously.
  */
-export class MultiLevelRate limiter {
+export class MultiLevelRateLimiter {
     private config: MultiLevelConfig;
     private secondLimiter?: SlidingWindowRateLimiter;
     private minuteLimiter?: SlidingWindowRateLimiter;
@@ -1248,35 +1248,35 @@ export class MultiLevelRate limiter {
 /**
  * Combined rate limiter configuration
  */
-export interface CombinedRate limiterConfig {
+export interface CombinedRateLimiterConfig {
     /** IP rate limiter configuration */
     ip?: Partial<IPRateLimiterConfig>;
     /** User rate limiter configuration */
-    user?: Partial<UserRate limiterConfig>;
+    user?: Partial<UserRateLimiterConfig>;
     /** WebSocket rate limiter configuration */
-    websocket?: Partial<WebSocketRate limiterConfig>;
+    websocket?: Partial<WebSocketRateLimiterConfig>;
 }
 
 /**
- * CombinedRate limiter - Combines IP, User, and WebSocket rate limiting
+ * CombinedRateLimiter - Combines IP, User, and WebSocket rate limiting
  *
  * This is the main rate limiter that should be used by the application.
  */
-export class CombinedRate limiter {
+export class CombinedRateLimiter {
     ipLimiter: IPRateLimiter;
-    userLimiter: UserRate limiter;
-    wsLimiter: WebSocketRate limiter;
+    userLimiter: UserRateLimiter;
+    wsLimiter: WebSocketRateLimiter;
 
     /**
      * Create a new combined rate limiter
      * @param config Combined rate limiter configuration
      */
-    constructor(config: CombinedRate limiterConfig = {}) {
+    constructor(config: CombinedRateLimiterConfig = {}) {
         this.ipLimiter = new IPRateLimiter(config.ip);
-        this.userLimiter = new UserRate limiter(config.user);
-        this.wsLimiter = new WebSocketRate limiter(config.websocket);
+        this.userLimiter = new UserRateLimiter(config.user);
+        this.wsLimiter = new WebSocketRateLimiter(config.websocket);
 
-        logger.info('CombinedRate limiter initialized');
+        logger.info('CombinedRateLimiter initialized');
     }
 
     /**
@@ -1374,8 +1374,8 @@ export class CombinedRate limiter {
      */
     getStats(): {
         ip: ReturnType<IPRateLimiter['getStats']>;
-        user: ReturnType<UserRate limiter['getStats']>;
-        websocket: ReturnType<WebSocketRate limiter['getStats']>;
+        user: ReturnType<UserRateLimiter['getStats']>;
+        websocket: ReturnType<WebSocketRateLimiter['getStats']>;
     } {
         return {
             ip: this.ipLimiter.getStats(),
@@ -1391,7 +1391,7 @@ export class CombinedRate limiter {
         this.ipLimiter.destroy();
         this.userLimiter.destroy();
         this.wsLimiter.destroy();
-        logger.info('CombinedRate limiter destroyed');
+        logger.info('CombinedRateLimiter destroyed');
     }
 }
 
@@ -1402,7 +1402,7 @@ export class CombinedRate limiter {
  */
 
 // Default combined rate limiter instance
-export const rateLimiter = new CombinedRate limiter();
+export const rateLimiter = new CombinedRateLimiter();
 
 // Export individual limiter classes for advanced usage
 export default rateLimiter;
