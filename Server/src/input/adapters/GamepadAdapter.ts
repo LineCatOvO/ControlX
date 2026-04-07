@@ -1,4 +1,4 @@
-// Gamepad adapterImplementation
+// Gamepad adapter implementation
 
 import { InputAdapter } from './InputAdapter';
 import { GamepadXInputAdapter } from './GamepadXInputAdapter';
@@ -6,13 +6,13 @@ import { InputState, InputDelta, InputEvent, GamepadAxesState, GamepadTriggersSt
 
 /**
  * Gamepad adapter
- * Encapsulates GamepadXInputAdapter calling logic，implements InputAdapter interface
+ * Encapsulates GamepadXInputAdapter calling logic, implements InputAdapter interface
  *
- * Design notes：
- * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
- * - Use GamepadXInputAdapter（Underlying ViGEmBus）ExecuteActualOfGamepadOperation
- * - GameGamepadnotSupportDeltaModeandEventMode，OnlySupportCompleteStateApply
- * - ViGEmBus notAvailableTimeAutoFallback（FunctionDisable）
+ * Design notes:
+ * - Implements all methods of InputAdapter interface (applyState, applyDelta, applyEvent, reset)
+ * - Uses GamepadXInputAdapter (underlying ViGEmBus) to execute actual gamepad operations
+ * - Gamepad does not support delta mode and event mode, only supports complete state apply
+ * - Auto fallback when ViGEmBus not available (function disabled)
  */
 export class GamepadAdapter implements InputAdapter {
     private xinputAdapter: GamepadXInputAdapter;
@@ -23,11 +23,11 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * InitializeAdapter（DetectionandConnection）
-     * @returns WhetherInitializeSuccess
+     * Initialize adapter (detection and connection)
+     * @returns Whether initialization successful
      */
     public initialize(): boolean {
-        // Detection ViGEmBus WhetherAvailable
+        // Check if ViGEmBus is available
         const detection = this.xinputAdapter.detect();
 
         if (!detection.available) {
@@ -42,7 +42,7 @@ export class GamepadAdapter implements InputAdapter {
             return false;
         }
 
-        // TryConnectionVirtualController
+        // Try to connect virtual controller
         const connected = this.xinputAdapter.connect();
         if (!connected) {
             console.error('❌ GamepadAdapter: Failed to connect virtual controller');
@@ -56,14 +56,14 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * Apply complete input state（InputAdapter InterfaceMethod）
+     * Apply complete input state (InputAdapter interface method)
      * @param state Input state
      *
-     * Map规Then：
-     * - state.gamepad: ButtonSet -> XInput Button掩Code
-     * - state.gamepadAxes: GameGamepadJoystick -> LX, LY, RX, RY
-     * - state.gamepadTriggers: GameGamepadTrigger -> LT, RT
-     * - state.joystick: IndependentJoystickDevice（notForGameGamepad）
+     * Mapping rules:
+     * - state.gamepad: Button Set -> XInput Button mask code
+     * - state.gamepadAxes: Gamepad joystick -> LX, LY, RX, RY
+     * - state.gamepadTriggers: Gamepad trigger -> LT, RT
+     * - state.joystick: Independent joystick device (not for gamepad)
      */
     applyState(state: InputState): void {
         if (!this.isEnabled) {
@@ -71,10 +71,10 @@ export class GamepadAdapter implements InputAdapter {
         }
 
         if (state.gamepad) {
-            // From state InExtractGameGamepadButton
+            // Extract gamepad buttons from state
             const buttons = state.gamepad;
 
-            // From gamepadAxes ExtractJoystickAxisValue（CompleteMapLeftRightJoystick）
+            // Extract joystick axis values from gamepadAxes (complete map left/right joystick)
             const axes: GamepadAxesState | undefined = state.gamepadAxes;
             const xinputAxes: { [key: string]: number } = {};
             if (axes) {
@@ -84,7 +84,7 @@ export class GamepadAdapter implements InputAdapter {
                 if (axes.RY !== undefined) xinputAxes.RY = axes.RY;
             }
 
-            // From gamepadTriggers ExtractTriggerValue
+            // Extract trigger values from gamepadTriggers
             const triggers: GamepadTriggersState | undefined = state.gamepadTriggers;
             const xinputTriggers: { [key: string]: number } = {};
             if (triggers) {
@@ -97,31 +97,31 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * Apply input delta（InputAdapter InterfaceMethod）
+     * Apply input delta (InputAdapter interface method)
      * @param delta Input delta
      */
     applyDelta(delta: InputDelta): void {
         if (!this.isEnabled) {
             return;
         }
-        // GameGamepadnotSupportDeltaMode，DirectSkip
+        // Gamepad does not support delta mode, skip directly
         console.log('GamepadEvent: Delta not supported, use full state instead');
     }
 
     /**
-     * Apply input event（InputAdapter InterfaceMethod）
+     * Apply input event (InputAdapter interface method)
      * @param event Input event
      */
     applyEvent(event: InputEvent): void {
         if (!this.isEnabled) {
             return;
         }
-        // GameGamepadnotSupportEventMode，DirectSkip
+        // Gamepad does not support event mode, skip directly
         console.log('GamepadEvent: Event not supported, use full state instead');
     }
 
     /**
-     * ResetInput state（InputAdapter InterfaceMethod）
+     * Reset input state (InputAdapter interface method)
      */
     reset(): void {
         if (!this.isEnabled) {
@@ -132,14 +132,14 @@ export class GamepadAdapter implements InputAdapter {
     }
 
     /**
-     * GetEnableState
+     * Get enabled state
      */
     getEnabled(): boolean {
         return this.isEnabled;
     }
 
     /**
-     * Clear理资Source
+     * Cleanup resources
      */
     cleanup(): void {
         if (this.isEnabled) {

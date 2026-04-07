@@ -1,4 +1,4 @@
-// Joystick adapterImplementation
+// Joystick adapter implementation
 
 import { InputAdapter } from './InputAdapter';
 import { JoystickExecutor } from '../joystick';
@@ -6,12 +6,12 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
  * Joystick adapter
- * Encapsulates JoystickExecutor calling logic，implements InputAdapter interface
+ * Encapsulates JoystickExecutor calling logic, implements InputAdapter interface
  *
- * Design notes：
- * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
- * - InsidePartDelegateTo JoystickExecutor ExecuteActualOfJoystickOperation
- * - ProvideJoystickSpecificOfMethod（applyJoystickState, getJoystickState）
+ * Design notes:
+ * - Implements all methods of InputAdapter interface (applyState, applyDelta, applyEvent, reset)
+ * - Internally delegates to JoystickExecutor to execute actual joystick operations
+ * - Provides joystick-specific methods (applyJoystickState, getJoystickState)
  */
 export class JoystickAdapter implements InputAdapter {
     private executor: JoystickExecutor;
@@ -21,7 +21,7 @@ export class JoystickAdapter implements InputAdapter {
     }
 
     /**
-     * Apply complete input state（InputAdapter InterfaceMethod）
+     * Apply complete input state (InputAdapter interface method)
      * @param state Input state
      */
     applyState(state: InputState): void {
@@ -29,7 +29,7 @@ export class JoystickAdapter implements InputAdapter {
     }
 
     /**
-     * Apply input delta（InputAdapter InterfaceMethod）
+     * Apply input delta (InputAdapter interface method)
      * @param delta Input delta
      */
     applyDelta(delta: InputDelta): void {
@@ -37,7 +37,7 @@ export class JoystickAdapter implements InputAdapter {
     }
 
     /**
-     * Apply input event（InputAdapter InterfaceMethod）
+     * Apply input event (InputAdapter interface method)
      * @param event Input event
      */
     applyEvent(event: InputEvent): void {
@@ -45,18 +45,18 @@ export class JoystickAdapter implements InputAdapter {
     }
 
     /**
-     * ResetInput state（InputAdapter InterfaceMethod）
+     * Reset input state (InputAdapter interface method)
      */
     reset(): void {
         this.executor.reset();
     }
 
     /**
-     * ApplyJoystickState（JoystickSpecificMethod）
-     * @param x X AxisValue
-     * @param y Y AxisValue
-     * @param deadzone DeadZone
-     * @param smoothing 平滑系Number
+     * Apply joystick state (joystick-specific method)
+     * @param x X axis value
+     * @param y Y axis value
+     * @param deadzone Dead zone
+     * @param smoothing Smoothing coefficient
      */
     applyJoystickState(
         x: number,
@@ -72,8 +72,8 @@ export class JoystickAdapter implements InputAdapter {
     }
 
     /**
-     * GetCurrentJoystickState
-     * @returns CurrentJoystickState
+     * Get current joystick state
+     * @returns Current joystick state
      */
     getJoystickState(): {
         x: number;
@@ -81,7 +81,7 @@ export class JoystickAdapter implements InputAdapter {
         deadzone: number;
         smoothing: number;
     } {
-        // JoystickExecutor notExposeInsidePartState，ReturnDefaultValue
+        // JoystickExecutor does not expose internal state, return default values
         return { x: 0, y: 0, deadzone: 0, smoothing: 0 };
     }
 }

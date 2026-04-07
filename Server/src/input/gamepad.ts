@@ -4,21 +4,21 @@ import { GamepadAdapter } from "./adapters/GamepadAdapter";
 import { GamepadXInputAdapter } from "./adapters/GamepadXInputAdapter";
 
 /**
- * GameGamepadInputExecutor
- * ResponsiblewillGameGamepadInputStateConvertForSystemGamepadInput
- * 
- * FallbackStrategy：
- * - ViGEmBus Available：useVirtual Xbox 360 Controller
- * - ViGEmBus notAvailable：recordWarning，DisableGameGamepadFunction，onlyuseKeyboardMap
+ * Gamepad Input Executor
+ * Responsible for converting gamepad input state to system gamepad input
+ *
+ * Fallback Strategy:
+ * - ViGEmBus Available: use virtual Xbox 360 Controller
+ * - ViGEmBus not available: log warning, disable gamepad function, only use keyboard mapping
  */
 export class GamepadExecutor implements InputExecutor {
     /** XInput Adapter */
     private xinputAdapter: GamepadXInputAdapter;
-    /** GameGamepadAdapter（Encapsulate XInput） */
+    /** Gamepad adapter (encapsulates XInput) */
     private gamepadAdapter: GamepadAdapter;
-    /** WhetherAlreadyInitialize */
+    /** Whether already initialized */
     private isInitialized: boolean = false;
-    /** recordCurrentGameGamepadState（ForLog） */
+    /** Record current gamepad state (for logging) */
     private currentGamepadState: Set<string> = new Set();
 
     /**
@@ -29,11 +29,11 @@ export class GamepadExecutor implements InputExecutor {
         
         // Create XInput Adapter
         this.xinputAdapter = new GamepadXInputAdapter();
-        
-        // CreateGameGamepadAdapter
+
+        // Create gamepad adapter
         this.gamepadAdapter = new GamepadAdapter(this.xinputAdapter);
-        
-        // TryInitialize
+
+        // Try initialize
         this.isInitialized = this.gamepadAdapter.initialize();
         
         if (this.isInitialized) {
@@ -49,57 +49,57 @@ export class GamepadExecutor implements InputExecutor {
     }
 
     /**
-     * ApplyCompleteInputState
+     * Apply complete input state
      * @param state InputState
      */
     async applyState(state: InputState): Promise<void> {
         if (!this.isInitialized) {
-            // ViGEmBus notAvailable，SkipGameGamepadExecute
+            // ViGEmBus not available, skip gamepad execution
             return;
         }
 
         if (state.gamepad) {
-            // UpdateGameGamepadState（ForLog）
+            // Update gamepad state (for logging)
             this.updateGamepadState(state.gamepad);
-            
-            // ApplyStateto XInput Adapter
+
+            // Apply state to XInput Adapter
             this.gamepadAdapter.applyState(state);
         }
     }
 
     /**
-     * ApplyInputDelta
+     * Apply input delta
      * @param delta InputDelta
      */
     applyDelta(delta: InputDelta): void {
         if (!this.isInitialized) {
             return;
         }
-        // GameGamepadnotSupportDeltaMode，DirectSkip
+        // Gamepad does not support delta mode, skip directly
         console.log('GamepadEvent: Delta not supported, use full state instead');
     }
 
     /**
-     * ApplyInputEvent
+     * Apply input event
      * @param event InputEvent
      */
     applyEvent(event: InputEvent): void {
         if (!this.isInitialized) {
             return;
         }
-        // GameGamepadnotSupportEventMode，DirectSkip
+        // Gamepad does not support event mode, skip directly
         console.log('GamepadEvent: Event not supported, use full state instead');
     }
 
     /**
-     * ResetInputState
+     * Reset input state
      */
     async reset(): Promise<void> {
         if (!this.isInitialized) {
             return;
         }
-        
-        // ResetGameGamepadState
+
+        // Reset gamepad state
         this.gamepadAdapter.reset();
         this.currentGamepadState.clear();
 
@@ -107,44 +107,44 @@ export class GamepadExecutor implements InputExecutor {
     }
 
     /**
-     * GetEnableState
+     * Get enabled state
      */
     isEnabled(): boolean {
         return this.isInitialized;
     }
 
     /**
-     * UpdateGameGamepadState（ForLog）
-     * @param newState newOfGameGamepadState
+     * Update gamepad state (for logging)
+     * @param newState New gamepad state
      */
     private updateGamepadState(newState: Set<string>): void {
-        // FindAddOfButton（NeedwantPressUnder）
+        // Find added buttons (need to press)
         const buttonsToPress = new Set(
             [...newState].filter(
                 (button) => !this.currentGamepadState.has(button)
             )
         );
 
-        // FindRemoveOfButton（Needwantrelease）
+        // Find removed buttons (need to release)
         const buttonsToRelease = new Set(
             [...this.currentGamepadState].filter(
                 (button) => !newState.has(button)
             )
         );
 
-        // OnlyInStateHasChangeizeTimerecordLog
+        // Only log when state changes
         if (buttonsToPress.size > 0 || buttonsToRelease.size > 0) {
             console.log(
                 `🎮 Gamepad: Pressing: [${Array.from(buttonsToPress).join(', ')}], Releasing: [${Array.from(buttonsToRelease).join(', ')}]`
             );
 
-            // UpdateCurrentGameGamepadState
+            // Update current gamepad state
             this.currentGamepadState = newState;
         }
     }
 
     /**
-     * Clear理资Source
+     * Cleanup resources
      */
     cleanup(): void {
         if (this.isInitialized) {

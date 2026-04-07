@@ -2,11 +2,11 @@ import { InputExecutor } from './interfaces';
 import { InputState, InputDelta, InputEvent } from '../types/ws';
 
 /**
- * Xbox 360GamepadInputExecutor
- * ResponsibleWillGamepadInputStateConvertForSystemInputEvent
+ * Xbox 360 Gamepad Input Executor
+ * Responsible for converting gamepad input state to system input events
  */
 export class JoystickExecutor implements InputExecutor {
-  // RecordCurrentGamepadState
+  // Record current gamepad state
   private currentJoystickState = {
     axes: {
       lx: 0, ly: 0, rx: 0, ry: 0
@@ -21,82 +21,82 @@ export class JoystickExecutor implements InputExecutor {
       lt: 0, rt: 0
     }
   };
-  
-  // VirtualDeviceConnectionState
+
+  // Virtual device connection state
   private isDeviceConnected = false;
   
   /**
-   * ApplyCompleteInputState
+   * Apply complete input state
    * @param state InputState
    */
   applyState(state: InputState): void {
     if (state.joystick) {
-      // UpdateAxisState
+      // Update axis state
       this.updateAxes(state.joystick);
-      
-      // HereCanWithAddButtonandTriggerOfHandle
-      
-      // SubmitFullFrameStatetoVirtualDevice
+
+      // Can add button and trigger handling here
+
+      // Submit full frame state to virtual device
       this.submitFullState();
     }
   }
   
   /**
-   * ApplyInputDelta
+   * Apply input delta
    * @param delta InputDelta
    */
   applyDelta(delta: InputDelta): void {
     if (delta.joystick) {
       console.log('JoystickEvent: Applying delta', delta.joystick);
-      // DeltaHandle（PendingImplementation）
+      // Delta handling (pending implementation)
     }
   }
   
   /**
-   * ApplyInputEvent
+   * Apply input event
    * @param event InputEvent
    */
   applyEvent(event: InputEvent): void {
     if (event.type === 'joystick_move') {
       console.log('JoystickEvent: Applying event', event.type, event.data);
-      // EventHandle（PendingImplementation）
+      // Event handling (pending implementation)
     }
   }
   
   /**
-   * ResetInputState
+   * Reset input state
    */
   reset(): void {
-    // OnlyInCurrentStateNonDefaultTimeRecordResetEvent
+    // Only log reset event when current state is not default
     if (!this.isDefaultState()) {
-      // AllAxisResetToZero
+      // Reset all axes to zero
       this.currentJoystickState.axes = {
         lx: 0, ly: 0, rx: 0, ry: 0
       };
-      
-      // AllButtonRelease
+
+      // Release all buttons
       this.currentJoystickState.buttons = {
         a: false, b: false, x: false, y: false,
         lb: false, rb: false, back: false, start: false,
         ls: false, rs: false,
         up: false, down: false, left: false, right: false
       };
-      
-      // AllTriggerResetToZero
+
+      // Reset all triggers to zero
       this.currentJoystickState.triggers = {
         lt: 0, rt: 0
       };
-      
-      // SubmitResetToZeroState
+
+      // Submit reset to zero state
       this.submitFullState();
-      
+
       console.log('JoystickEvent: Resetting to zero state');
     }
   }
   
   /**
-   * CheckCurrentStateWhetherForDefaultState
-   * @returns WhetherForDefaultState
+   * Check if current state is default state
+   * @returns Whether is default state
    */
   private isDefaultState(): boolean {
     return this.currentJoystickState.axes.lx === 0 &&
@@ -109,14 +109,14 @@ export class JoystickExecutor implements InputExecutor {
   }
   
   /**
-   * UpdateAxisState
+   * Update axis state
    * @param joystickState JoystickState
    */
   private updateAxes(joystickState: any): void {
-    // RecordAxisValueChange化
+    // Record axis value changes
     const axisChanges: any = {};
-    
-    // HandleJoystickAxisState
+
+    // Handle joystick axis state
     if (joystickState.x !== undefined) {
       const oldValue = this.currentJoystickState.axes.lx;
       const newValue = this.clampAxisValue(joystickState.x);
@@ -134,39 +134,39 @@ export class JoystickExecutor implements InputExecutor {
       }
     }
     
-    // OnlyInHasAxisValueChange化TimeRecordLog
+    // Only log when axis values change
     if (Object.keys(axisChanges).length > 0) {
       console.log('JoystickEvent: Axis values changed', axisChanges);
     }
-    
-    // HereCanWithAddMoreAxisOfHandle
+
+    // Can add more axis handling here
   }
   
   /**
-   * LimitAxisValueRangeIn[-1.0, 1.0]
-   * @param value OriginalValue
-   * @returns LimitAfterOfValue
+   * Clamp axis value within [-1.0, 1.0]
+   * @param value Original value
+   * @returns Clamped value
    */
   private clampAxisValue(value: number): number {
     return Math.max(-1.0, Math.min(1.0, value));
   }
-  
+
   /**
-   * LimitTriggerValueRangeIn[0.0, 1.0]
-   * @param value OriginalValue
-   * @returns LimitAfterOfValue
+   * Clamp trigger value within [0.0, 1.0]
+   * @param value Original value
+   * @returns Clamped value
    */
   private clampTriggerValue(value: number): number {
     return Math.max(0.0, Math.min(1.0, value));
   }
-  
+
   /**
-   * SubmitFullFrameStatetoVirtualDevice
+   * Submit full frame state to virtual device
    */
   private submitFullState(): void {
     try {
-      // HereWillInHasvigemclientEnvTimeReplaceForRealOfvigemclientCall
-      // Example：
+      // Will be replaced with actual vigemclient calls when available
+      // Example:
       // vigemclient.setAxis(0, this.currentJoystickState.axes.lx);
       // vigemclient.setAxis(1, this.currentJoystickState.axes.ly);
       // ...

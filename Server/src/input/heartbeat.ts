@@ -1,56 +1,56 @@
-// HeartbeatModule
+// Heartbeat Module
 
 import { InputState } from "../types/ws";
 
 /**
- * HeartbeatConfig
+ * Heartbeat config
  */
 interface HeartbeatConfig {
-    intervalMs: number; // HeartbeatInterval，Default30Second
-    timeoutMs: number; // HeartbeatTimeoutTime，Default60Second
+    intervalMs: number; // Heartbeat interval, default 30 seconds
+    timeoutMs: number; // Heartbeat timeout, default 60 seconds
 }
 
 /**
- * HeartbeatState
+ * Heartbeat state
  */
 interface HeartbeatState {
-    lastSendTime: number; // mostAfterSendHeartbeatTime
-    lastReceiveTime: number; // mostAfterReceiveHeartbeatTime
-    consecutiveFailures: number; // ContinuousFailureTimecount
-    isAlive: boolean; // WhetherStore活
+    lastSendTime: number; // Last heartbeat send time
+    lastReceiveTime: number; // Last heartbeat receive time
+    consecutiveFailures: number; // Consecutive failure count
+    isAlive: boolean; // Whether alive
 }
 
 /**
- * HeartbeatModule
- * ResponsibleClientHeartbeatDetectionandTimeoutHandle
+ * Heartbeat module
+ * Responsible for client heartbeat detection and timeout handling
  */
 export class HeartbeatModule {
     // Config
     private readonly config: HeartbeatConfig;
 
-    // HeartbeatState
+    // Heartbeat state
     private state: HeartbeatState;
 
-    // HeartbeatFixedTimeManager
+    // Heartbeat timer
     private timer: NodeJS.Timeout | null = null;
 
-    // HeartbeatCallback
+    // Heartbeat callback
     private onTimeoutCallback: (() => void) | null = null;
 
-    // Timeout计countManager
+    // Timeout counter
     private consecutiveTimeouts: number = 0;
 
-    // MaximumContinuousTimeoutTimecount
+    // Maximum consecutive timeout count
     private readonly maxConsecutiveTimeouts: number = 3;
 
     /**
-     * ConstructFunction
-     * @param config HeartbeatConfig
+     * Constructor
+     * @param config Heartbeat config
      */
     constructor(config?: Partial<HeartbeatConfig>) {
         this.config = {
-            intervalMs: 30000, // Default30Second
-            timeoutMs: 60000, // Default60Second
+            intervalMs: 30000, // Default 30 seconds
+            timeoutMs: 60000, // Default 60 seconds
             ...config,
         };
 
@@ -63,18 +63,18 @@ export class HeartbeatModule {
     }
 
     /**
-     * StartHeartbeatModule
+     * Start heartbeat module
      */
     start(): void {
-        // IfAlreadyThroughInRun，FirstStop
+        // If already running, stop first
         if (this.timer) {
             clearInterval(this.timer);
         }
 
-        // SendFirstOneHeartbeat
+        // Send first heartbeat
         this.sendHeartbeat();
 
-        // StartHeartbeatFixedTimeManager
+        // Start heartbeat timer
         this.timer = setInterval(() => {
             this.sendHeartbeat();
         }, this.config.intervalMs);
@@ -85,7 +85,7 @@ export class HeartbeatModule {
     }
 
     /**
-     * StopHeartbeatModule
+     * Stop heartbeat module
      */
     stop(): void {
         if (this.timer) {
@@ -97,59 +97,59 @@ export class HeartbeatModule {
     }
 
     /**
-     * SendHeartbeat
+     * Send heartbeat
      */
     private sendHeartbeat(): void {
         const now = Date.now();
 
-        // UpdateSendTime
+        // Update send time
         this.state.lastSendTime = now;
 
-        // SendHeartbeatMessage
+        // Send heartbeat message
         this.dispatchHeartbeat(now);
 
         console.log(`Heartbeat: Sent at ${now}`);
     }
 
     /**
-     * DistributeHeartbeatMessage（ByWebSocketModuleCall）
-     * @param timestamp HeartbeatTimestamp
+     * Dispatch heartbeat message (called by WebSocket module)
+     * @param timestamp Heartbeat timestamp
      */
     dispatchHeartbeat(timestamp: number): void {
-        // ByWebSocketModuleImplementation，Here留Null
+        // Implemented by WebSocket module, placeholder here
         // format: { type: 'ping', timestamp }
     }
 
     /**
-     * Handle heartbeat response（ByWebSocketModuleCall）
-     * @param timestamp ResponseTimestamp
+     * Handle heartbeat response (called by WebSocket module)
+     * @param timestamp Response timestamp
      */
     handlePong(timestamp: number): void {
         const now = Date.now();
 
-        // UpdateReceiveTime
+        // Update receive time
         this.state.lastReceiveTime = now;
         this.state.isAlive = true;
 
-        // ResetContinuousFailure计count
+        // Reset consecutive failure count
         this.state.consecutiveFailures = 0;
         this.consecutiveTimeouts = 0;
 
-        // calculateRTT
+        // Calculate RTT
         const rtt = now - timestamp;
 
-        // recordHeartbeatResponse
+        // Log heartbeat response
         console.log(`Heartbeat: Received pong, RTT = ${rtt}ms`);
 
-        // Each10TimeHeartbeatOutputOncestatistics
+        // Output stats every 10 heartbeats
         if (this.state.consecutiveFailures % 10 === 0) {
             console.log("Heartbeat Stats:", this.getStats());
         }
     }
 
     /**
-     * CheckHeartbeatTimeout
-     * @returns WhetherTimeout
+     * Check heartbeat timeout
+     * @returns Whether timeout occurred
      */
     checkTimeout(): boolean {
         const now = Date.now();
@@ -162,12 +162,12 @@ export class HeartbeatModule {
                 `Heartbeat: Timeout detected, elapsed: ${elapsed}ms, consecutive timeouts: ${this.consecutiveTimeouts}`
             );
 
-            // TriggerTimeoutCallback
+            // Trigger timeout callback
             if (this.onTimeoutCallback) {
                 this.onTimeoutCallback();
             }
 
-            // Each 5 TimeContinuousTimeoutOutputOnceWarning
+            // Output warning every 5 consecutive timeouts
             if (this.consecutiveTimeouts % 5 === 0) {
                 console.warn(
                     `Heartbeat: High consecutive timeouts (${this.consecutiveTimeouts}), triggering safety clear`
@@ -181,24 +181,24 @@ export class HeartbeatModule {
     }
 
     /**
-     * SetTimeoutCallback
-     * @param callback CallbackFunction
+     * Set timeout callback
+     * @param callback Callback function
      */
     onTimeout(callback: () => void): void {
         this.onTimeoutCallback = callback;
     }
 
     /**
-     * GetHeartbeatState
-     * @returns HeartbeatState
+     * Get heartbeat state
+     * @returns Heartbeat state
      */
     getState(): HeartbeatState {
         return { ...this.state };
     }
 
     /**
-     * GetHeartbeatstatistics
-     * @returns Heartbeatstatistics
+     * Get heartbeat statistics
+     * @returns Heartbeat statistics
      */
     getStats() {
         return {
@@ -213,7 +213,7 @@ export class HeartbeatModule {
     }
 
     /**
-     * ResetHeartbeatState
+     * Reset heartbeat state
      */
     reset(): void {
         this.state = {
@@ -227,8 +227,8 @@ export class HeartbeatModule {
     }
 
     /**
-     * GetRTT（往返Time）
-     * @returns RTT，IfNoHas收toResponseThenReturn-1
+     * Get RTT (round-trip time)
+     * @returns RTT, returns -1 if no response received
      */
     getRTT(): number {
         if (this.state.lastReceiveTime === 0 || this.state.lastSendTime === 0) {
@@ -238,16 +238,16 @@ export class HeartbeatModule {
     }
 
     /**
-     * GetHeartbeatInterval
-     * @returns HeartbeatInterval
+     * Get heartbeat interval
+     * @returns Heartbeat interval
      */
     getInterval(): number {
         return this.config.intervalMs;
     }
 
     /**
-     * GetHeartbeatTimeoutTime
-     * @returns HeartbeatTimeoutTime
+     * Get heartbeat timeout
+     * @returns Heartbeat timeout
      */
     getTimeout(): number {
         return this.config.timeoutMs;
