@@ -5,14 +5,14 @@ import { getExecutorManager } from '../../input/executor';
 import { formatInputEventMessageLog } from '../../utils/logInputData';
 
 /**
- * HandleInputEventMessage
+ * Handle input eventMessage
  * @param ws WebSocket connection
  * @param message InputEventMessage
  */
 export function handleInputEvent(ws: any, message: InputEventMessage) {
     // CheckMessageNumber据
     if (!message.data) {
-        console.error("InputEventHandlerError: Invalid message data");
+        console.error("Input event handlerError: Invalid message data");
         
         const errorMsg = {
             type: "error",
@@ -23,7 +23,7 @@ export function handleInputEvent(ws: any, message: InputEventMessage) {
         try {
             ws.send(JSON.stringify(errorMsg));
         } catch (error) {
-            console.error("InputEventHandlerError: Error sending error message:", error);
+            console.error("Input event handlerError: Error sending error message:", error);
         }
         return;
     }
@@ -51,10 +51,10 @@ export function handleInputEvent(ws: any, message: InputEventMessage) {
         try {
             ws.send(JSON.stringify(ackMessage));
         } catch (error) {
-            console.error("InputEventHandlerError: Error sending ACK:", error);
+            console.error("Input event handlerError: Error sending ACK:", error);
         }
     } catch (error) {
-        console.error("InputEventHandlerError: Error processing message:", error);
+        console.error("Input event handlerError: Error processing message:", error);
         
         const errorMsg = {
             type: "error",
@@ -65,7 +65,7 @@ export function handleInputEvent(ws: any, message: InputEventMessage) {
         try {
             ws.send(JSON.stringify(errorMsg));
         } catch (sendError) {
-            console.error("InputEventHandlerError: Error sending error message:", sendError);
+            console.error("Input event handlerError: Error sending error message:", sendError);
         }
     }
 }

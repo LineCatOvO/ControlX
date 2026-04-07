@@ -4,14 +4,14 @@ import { getExecutorManager } from "../../input/executor";
 import { inputState } from "../../input/state";
 
 /**
- * HandleInputDeltaMessage
+ * Handle input deltaMessage
  * @param ws WebSocket connection
  * @param message InputDeltaMessage
  */
 export function handleInputDelta(ws: any, message: InputDeltaMessage) {
     // CheckMessageNumber据
     if (!message.data) {
-        console.error("InputDeltaHandlerError: Invalid message data");
+        console.error("Input delta handlerError: Invalid message data");
         
         const errorMsg = {
             type: "error",
@@ -22,7 +22,7 @@ export function handleInputDelta(ws: any, message: InputDeltaMessage) {
         try {
             ws.send(JSON.stringify(errorMsg));
         } catch (error) {
-            console.error("InputDeltaHandlerError: Error sending error message:", error);
+            console.error("Input delta handlerError: Error sending error message:", error);
         }
         return;
     }
@@ -74,10 +74,10 @@ export function handleInputDelta(ws: any, message: InputDeltaMessage) {
         try {
             ws.send(JSON.stringify(ackMessage));
         } catch (error) {
-            console.error("InputDeltaHandlerError: Error sending ACK:", error);
+            console.error("Input delta handlerError: Error sending ACK:", error);
         }
     } catch (error) {
-        console.error("InputDeltaHandlerError: Error processing message:", error);
+        console.error("Input delta handlerError: Error processing message:", error);
         
         const errorMsg = {
             type: "error",
@@ -88,7 +88,7 @@ export function handleInputDelta(ws: any, message: InputDeltaMessage) {
         try {
             ws.send(JSON.stringify(errorMsg));
         } catch (sendError) {
-            console.error("InputDeltaHandlerError: Error sending error message:", sendError);
+            console.error("Input delta handlerError: Error sending error message:", sendError);
         }
     }
 }

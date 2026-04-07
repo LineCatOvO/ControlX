@@ -1,5 +1,5 @@
 /**
- * InputHostAbstractBaseClass
+ * Input hostAbstractBaseClass
  * 
  * Responsibility：ShieldUnderlyingDriverDifference，ProvideUnifiedOf lifecycle and execution Interface
  * 
@@ -12,9 +12,9 @@
 import { InputDeviceType, HostStatus, PlatformType, detectPlatform } from './types';
 
 /**
- * InputHostAbstractBaseClass
+ * Input hostAbstractBaseClass
  */
-export abstract class InputHost {
+export abstract class Input host {
     /** Device type */
     protected readonly deviceType: InputDeviceType;
     

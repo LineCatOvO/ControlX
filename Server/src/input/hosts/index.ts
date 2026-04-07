@@ -10,15 +10,15 @@ export { InputHost } from './InputHost';
 
 // Windows PlatformImplementation
 export { WindowsKeyboardHost } from './WindowsKeyboardHost';
-export { WindowsGamepadHost } from './WindowsGamepadHost';
+export { Windows gamepad host } from './Windows gamepad host';
 
 // Linux PlatformImplementation（PendingMake）
-export { LinuxKeyboardHost } from './LinuxKeyboardHost';
-export { LinuxGamepadHost } from './LinuxGamepadHost';
+export { Linux keyboard host } from './Linux keyboard host';
+export { Linux gamepad host } from './Linux gamepad host';
 
 // MacOS PlatformImplementation（PendingMake）
-export { MacOSKeyboardHost } from './MacOSKeyboardHost';
-export { MacOSGamepadHost } from './MacOSGamepadHost';
+export { macOS keyboard host } from './macOS keyboard host';
+export { macOS gamepad host } from './macOS gamepad host';
 
 // RouterManager（From router DirectoryImport）
 export { InputRouter } from '../router/InputRouter';

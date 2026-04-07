@@ -3,27 +3,27 @@ import { InputState, InputDelta, InputEvent } from "../types/ws";
 
 const keySender = require("node-key-sender");
 
-// LogConfig
+// Log config
 const LOG_CONFIG = {
-    enabled: true,           // WhetherEnableLog
-    verbose: false,          // WhetherEnableDetailLog
-    statsInterval: 100,      // Each多少TimeOperationOutputOnceStatistics
+    enabled: true,           // Whether to enable logging
+    verbose: false,          // Whether to enable detailed logging
+    statsInterval: 100,      // Output statistics every N operations
 };
 
-// ErrorConfig
+// Error config
 const ERROR_CONFIG = {
-    maxConsecutiveErrors: 10,  // MaxAllowOfContinuousErrorCount
-    errorResetInterval: 5000,  // ErrorCountResetTimeInterval(ms)
+    maxConsecutiveErrors: 10,  // Maximum allowed consecutive error count
+    errorResetInterval: 5000,  // Error count reset interval (ms)
 };
 
-// ErrorTracking
+// Error tracking
 let consecutiveErrors = 0;
 let lastErrorTime = 0;
 
 /**
- * CheckWhetherIsShouldResetErrorCount
+ * Check whether error count should be reset
  */
-function shouldResetErrorCount(): boolean {
+function shouldReset error count(): boolean {
     const now = Date.now();
     if (now - lastErrorTime > ERROR_CONFIG.errorResetInterval) {
         consecutiveErrors = 0;
@@ -33,29 +33,29 @@ function shouldResetErrorCount(): boolean {
 }
 
 /**
- * RecordErrorAndCheckWhetherNeedDisable
- * @returns boolean WhetherNeedDisableKeyboardFunction
+ * Record error and check whether keyboard function needs to be disabled
+ * @returns boolean Whether keyboard function needs to be disabled
  */
 function recordError(): boolean {
-    shouldResetErrorCount();
+    shouldReset error count();
     consecutiveErrors++;
     lastErrorTime = Date.now();
     return consecutiveErrors >= ERROR_CONFIG.maxConsecutiveErrors;
 }
 
-// KeyboardMapStatistics
+// Keyboard mapping statistics
 const keyboardStats = {
     totalUpdates: 0,
     totalPresses: 0,
     totalReleases: 0,
-    redundantPresses: 0,     // 幂Wait性阻止OfRepeatKey
+    redundantPresses: 0,     // Idempotency blocking of repeated keys
     resetCount: 0,
     errorCount: 0,
     lastUpdateTs: 0,
 };
 
 /**
- * UpdateKeyboardStatistics
+ * Update keyboard statistics
  */
 function updateStats(type: 'press' | 'release' | 'redundant' | 'reset' | 'error', count: number = 1) {
     keyboardStats.totalUpdates++;
@@ -73,7 +73,7 @@ function updateStats(type: 'press' | 'release' | 'redundant' | 'reset' | 'error'
         keyboardStats.errorCount++;
     }
 
-    // PeriodicOutputStatistics
+    // Periodic output of statistics
     if (keyboardStats.totalUpdates % LOG_CONFIG.statsInterval === 0) {
         console.log('🎹 Keyboard Stats:', {
             totalUpdates: keyboardStats.totalUpdates,
@@ -87,30 +87,30 @@ function updateStats(type: 'press' | 'release' | 'redundant' | 'reset' | 'error'
 }
 
 /**
- * GetKeyboardStatisticsInfo
+ * Get keyboard statistics info
  */
 export function getKeyboardStats() {
     return { ...keyboardStats };
 }
 
 /**
- * ValidateKeyName
- * @param key KeyNameToValidate
- * @returns boolean WhetherIsEffectiveKey
+ * Validate key name
+ * @param key Key name to validate
+ * @returns boolean Whether is valid key
  */
 function validateKey(key: unknown): key is string {
     if (typeof key !== "string") {
         return false;
     }
-    // KeyNameCannotBeEmpty
+    // Key name cannot be empty
     if (key.length === 0 || key.trim().length === 0) {
         return false;
     }
-    // KeyNameLengthLimit
+    // Key name length limit
     if (key.length > 100) {
         return false;
     }
-    // CheckWhetherContainIllegalCharacter
+    // Check whether contains invalid characters
     const invalidChars = /[\x00-\x1f\x7f]/;
     if (invalidChars.test(key)) {
         return false;
@@ -119,18 +119,18 @@ function validateKey(key: unknown): key is string {
 }
 
 /**
- * ValidateInputState
- * @param state InputStateToValidate
- * @returns boolean WhetherIsEffectiveState
+ * Validate input state
+ * @param state Input state to validate
+ * @returns boolean Whether is valid state
  */
 function validateInputState(state: unknown): state is InputState {
     if (!state || typeof state !== "object") {
         return false;
     }
-    // CheckKeyboardField
+    // Check keyboard field
     const s = state as InputState;
     if (s.keyboard !== undefined && !(s.keyboard instanceof Set)) {
-        // keyboardShouldBeSetOrundefined
+        // Keyboard should be Set or undefined
         if (!Array.isArray(s.keyboard)) {
             return false;
         }
@@ -139,10 +139,10 @@ function validateInputState(state: unknown): state is InputState {
 }
 
 /**
- * LogErrorWithContext
- * @param operation OperationName
- * @param error ErrorObject
- * @param context ContextInfo
+ * Log error with context
+ * @param operation Operation name
+ * @param error Error object
+ * @param context Context info
  */
 function logError(operation: string, error: unknown, context?: Record<string, unknown>): void {
     const errorInfo = {
@@ -169,27 +169,27 @@ export function setKeyboardLogConfig(config: Partial<typeof LOG_CONFIG>) {
 }
 
 /**
- * KeyboardInputExecutor
- * ResponsibleWillKeyboardInputStateConvertForSystemKeyboardEvent
- * ImplementationDiffCalc、幂Wait性保证、CorrectOfKeyOrder
+ * Keyboard Input Executor
+ * Responsible for converting keyboard input state to system keyboard events
+ * Implements diff calculation, idempotency guarantee, correct key order
  */
 export class KeyboardExecutor implements InputExecutor {
-    // RecordCurrentKeyboardState
+    // Record current keyboard state
     private currentKeyboardState: Set<string> = new Set();
-    // RecordAllAlreadySend过OfKey（Used for幂Wait性保证）
+    // Record all keys already sent (used for idempotency guarantee)
     private sentKeys: Set<string> = new Set();
-    // RecordKeyOfSendOrder
+    // Record key send order
     private keyOrder: string[] = [];
-    // RecordOnOnceOfKeyboardState（Used forCalcDifference）
+    // Record previous keyboard state (used for calculating difference)
     private previousKeyboardState: Set<string> = new Set();
 
     /**
-     * ApplyCompleteInputState
+     * Apply complete input state
      * @param state InputState
      */
     applyState(state: InputState): void {
         try {
-            // InputValidation
+            // Input validation
             if (!validateInputState(state)) {
                 logError("applyState", new Error("Invalid input state"), { state });
                 return;
@@ -197,7 +197,7 @@ export class KeyboardExecutor implements InputExecutor {
 
             const newState = state.keyboard || new Set();
 
-            // ValidateAllKeysInState
+            // Validate all keys in state
             const validatedNewState = new Set<string>();
             for (const key of newState) {
                 if (validateKey(key)) {
@@ -207,7 +207,7 @@ export class KeyboardExecutor implements InputExecutor {
                 }
             }
 
-            // CalcAndOnOnceStateOfDifference（DiffCalc）
+            // Calculate difference with previous state (diff calculation)
             const keysToRelease = new Set(
                 [...this.previousKeyboardState].filter((key) => !validatedNewState.has(key))
             );
@@ -216,34 +216,34 @@ export class KeyboardExecutor implements InputExecutor {
                 [...validatedNewState].filter((key) => !this.previousKeyboardState.has(key))
             );
 
-            // UpdateCurrentKeyboardStateForOnOnceState
+            // Update current keyboard state for previous state
             this.previousKeyboardState = new Set(this.currentKeyboardState);
 
-            // UpdateCurrentKeyboardState（In updateKeyboardState InHandle sentKeys）
+            // Update current keyboard state (handle sentKeys in updateKeyboardState)
             this.updateKeyboardState(validatedNewState, keysToRelease, keysToPress);
         } catch (error) {
             logError("applyState", error, { state });
-            // ErrorNotThrow，AvoidServiceCollapse
+            // Do not throw error, avoid service collapse
         }
     }
 
     /**
-     * ApplyInputDelta
+     * Apply input delta
      * @param delta InputDelta
      */
     applyDelta(delta: InputDelta): void {
         try {
-            // InputValidation
+            // Input validation
             if (!delta || typeof delta !== "object") {
                 logError("applyDelta", new Error("Invalid delta input"), { delta });
                 return;
             }
 
             if (delta.keyboard) {
-                // CreateNewOfKeyboardStateCopy
+                // Create new keyboard state copy
                 const newState = new Set(this.currentKeyboardState);
 
-                // HandlePressUnderOfKey
+                // Handle pressed keys
                 if (delta.keyboard.pressed && Array.isArray(delta.keyboard.pressed)) {
                     delta.keyboard.pressed.forEach((key) => {
                         if (validateKey(key)) {
@@ -254,7 +254,7 @@ export class KeyboardExecutor implements InputExecutor {
                     });
                 }
 
-                // HandleReleaseOfKey
+                // Handle released keys
                 if (delta.keyboard.released && Array.isArray(delta.keyboard.released)) {
                     delta.keyboard.released.forEach((key) => {
                         if (validateKey(key)) {
@@ -265,35 +265,35 @@ export class KeyboardExecutor implements InputExecutor {
                     });
                 }
 
-                // UpdateKeyboardState
+                // Update keyboard state
                 this.updateKeyboardState(newState);
             }
         } catch (error) {
             logError("applyDelta", error, { delta });
-            // ErrorNotThrow，AvoidServiceCollapse
+            // Do not throw error，avoid service collapse
         }
     }
 
     /**
-     * ApplyInputEvent
+     * Apply input event
      * @param event InputEvent
      */
     applyEvent(event: InputEvent): void {
         try {
-            // InputValidation
+            // Input validation
             if (!event || typeof event !== "object") {
                 logError("applyEvent", new Error("Invalid event input"), { event });
                 return;
             }
 
             if (event.type === "key_down" || event.type === "key_up") {
-                // ValidationKeyField
+                // Validate key field
                 if (!event.data || typeof event.data !== "object" || !validateKey(event.data.key)) {
                     logError("applyEvent", new Error(`Invalid key in event: ${String(event.data?.key)}`), { event });
                     return;
                 }
 
-                // CreateNewOfKeyboardStateCopy
+                // Create new keyboard state copy
                 const newState = new Set(this.currentKeyboardState);
 
                 const key = event.data.key;
@@ -303,17 +303,17 @@ export class KeyboardExecutor implements InputExecutor {
                     newState.delete(key);
                 }
 
-                // UpdateKeyboardState
+                // Update keyboard state
                 this.updateKeyboardState(newState);
             }
         } catch (error) {
             logError("applyEvent", error, { event });
-            // ErrorNotThrow，AvoidServiceCollapse
+            // Do not throw error，avoid service collapse
         }
     }
 
     /**
-     * UpdateKeyboardState
+     * Update keyboard state
      * @param newState NewOfKeyboardState
      * @param keysToRelease RequireReleaseOfKey
      * @param keysToPress RequirePressUnderOfKey
@@ -324,7 +324,7 @@ export class KeyboardExecutor implements InputExecutor {
         keysToPress?: Set<string>
     ): void {
         try {
-            // IfNoHasProvideDifferenceInfo，ThenReNewCalc
+            // If difference info not provided，Then recalculate
             if (!keysToRelease || !keysToPress) {
                 keysToRelease = new Set(
                     [...this.previousKeyboardState].filter((key) => !newState.has(key))
@@ -335,9 +335,9 @@ export class KeyboardExecutor implements InputExecutor {
                 );
             }
 
-            // OnlyInStateHasChange化TimeRecordLog
+            // Only log when state changes
             if (keysToPress.size > 0 || keysToRelease.size > 0) {
-                // DetailLog
+                // Detailed log
                 if (LOG_CONFIG.verbose) {
                     console.log(`🎹 KeyboardEvent [${new Date().toISOString()}]:`);
                     console.log(`   Previous: [${Array.from(this.previousKeyboardState).join(', ')}]`);
@@ -350,7 +350,7 @@ export class KeyboardExecutor implements InputExecutor {
                     `🎹 KeyboardEvent: State change - Pressing: [${Array.from(keysToPress).join(', ')}], Releasing: [${Array.from(keysToRelease).join(', ')}]`
                 );
 
-                // FirstReleasenotRequireOfKey（CorrectOfKeyOrder）
+                // First release keys not needed（correct key order）
                 if (keysToRelease.size > 0) {
                     try {
                         keySender.sendKey(Array.from(keysToRelease));
@@ -365,12 +365,12 @@ export class KeyboardExecutor implements InputExecutor {
                     }
                 }
 
-                // 然AfterPressUnderAddOfKey（幂Wait性保证）
+                // Then press added keys（idempotency guarantee）
                 const newKeysToPress = new Set(
                     [...keysToPress].filter((key) => !this.sentKeys.has(key))
                 );
 
-                // StatisticsBe幂Wait性阻止OfKey
+                // Statistics of idempotency blocked keys
                 const redundantKeys = keysToPress.size - newKeysToPress.size;
                 if (redundantKeys > 0) {
                     updateStats('redundant', redundantKeys);
@@ -380,7 +380,7 @@ export class KeyboardExecutor implements InputExecutor {
                 }
 
                 if (newKeysToPress.size > 0) {
-                    // WillNewKeyAddtoAlreadySendSetandOrderList
+                    // Add new keys to sent set and order list
                     newKeysToPress.forEach((key) => {
                         this.sentKeys.add(key);
                         this.keyOrder.push(key);
@@ -418,11 +418,11 @@ export class KeyboardExecutor implements InputExecutor {
     }
 
     /**
-     * ResetInputState
+     * Reset input state
      */
     reset(): void {
         try {
-            // TraverseAllAlreadyPressUnderKeyOneByOneSend KeyUp（ClearZeroTimeOfKeyboardLineFor）
+            // Traverse all pressed keys one by one and send KeyUp（Clear keyboard line to zero）
             if (this.currentKeyboardState.size > 0) {
                 console.log(`🎹 KeyboardEvent: Resetting - Releasing ${this.currentKeyboardState.size} key(s): [${Array.from(this.currentKeyboardState).join(', ')}]`);
 
@@ -438,13 +438,13 @@ export class KeyboardExecutor implements InputExecutor {
                 }
             }
 
-            // ClearNullAllState
+            // Clear all states
             this.currentKeyboardState.clear();
             this.previousKeyboardState.clear();
             this.sentKeys.clear();
             this.keyOrder = [];
 
-            // ResetErrorCount
+            // Reset error count
             consecutiveErrors = 0;
             lastErrorTime = 0;
 

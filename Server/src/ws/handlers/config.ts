@@ -2,8 +2,8 @@
  * ConfigMessageHandler
  * 
  * Handle WebSocket ConfigRelatedMessage：
- * - config_get: GetCurrentConfig
- * - config_set: UpdateConfig
+ * - config_get: Get current config
+ * - config_set: Update config
  * - config_save: SaveConfigtoFile
  * - config_reset: ResetConfigForDefaultValue
  */
@@ -114,7 +114,7 @@ function sendMessage(ws: any, message: ConfigMessage | ConfigAckMessage | Config
  * @param message ConfigGetMessage
  */
 export function handleConfigGet(ws: any, message: ConfigGetMessage): void {
-    // GetCurrentConfig
+    // Get current config
     const currentConfig = configManager.getConfig();
 
     // FilterSensitiveConfigItem，PreventSensitiveInfoLeak

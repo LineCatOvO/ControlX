@@ -7,11 +7,11 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
  * Extends InputExecutor interface，Ensure compatibility with executorManager
  *
  * Design notes：
- * - InputAdapter InterfaceExtendForExtends InputExecutor interface
+ * - Input adapter InterfaceExtendForExtends InputExecutor interface
  * - All adapters must implement applyState, applyDelta, applyEvent, reset methods
  * - Ensure adapters can be directly used by executorManager
  */
-export interface InputAdapter {
+export interface Input adapter {
     /**
      * Apply complete input state
      * @param state Input state
@@ -39,7 +39,7 @@ export interface InputAdapter {
 /**
  * Keyboard adapter interface
  */
-export interface KeyboardAdapter extends InputAdapter {
+export interface KeyboardAdapter extends Input adapter {
     /**
      * Apply keyboard state
      * @param pressedKeys Set of pressed keys
@@ -56,7 +56,7 @@ export interface KeyboardAdapter extends InputAdapter {
 /**
  * Gamepad adapter interface
  */
-export interface GamepadAdapter extends InputAdapter {
+export interface GamepadAdapter extends Input adapter {
     /**
      * Apply gamepad state
      * @param buttons Button state
@@ -83,7 +83,7 @@ export interface GamepadAdapter extends InputAdapter {
 /**
  * Mouse adapter interface
  */
-export interface MouseAdapter extends InputAdapter {
+export interface MouseAdapter extends Input adapter {
     /**
      * Apply mouse state
      * @param x Mouse X coordinate
@@ -116,7 +116,7 @@ export interface MouseAdapter extends InputAdapter {
 /**
  * Joystick adapter interface
  */
-export interface JoystickAdapter extends InputAdapter {
+export interface JoystickAdapter extends Input adapter {
     /**
      * Apply joystick state
      * @param x X axis value

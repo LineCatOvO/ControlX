@@ -43,7 +43,7 @@ export enum LogFormat {
 }
 
 /**
- * LogConfigInterface
+ * Log configInterface
  */
 export interface LoggerConfig {
     level: LogLevel;
@@ -75,7 +75,7 @@ export interface LogEntry {
 }
 
 /**
- * DefaultLogConfig
+ * DefaultLog config
  */
 const DEFAULT_CONFIG: LoggerConfig = {
     level: LogLevel.INFO,

@@ -1,5 +1,5 @@
 /**
- * InputRouterManager
+ * Input routerManager
  * 
  * Responsibility：
  * 1. 作ForSystemOfUnique入Port，ResponsibleStateAggregateAndDistribute
@@ -17,9 +17,9 @@ import { InputDeviceType } from '../hosts/types';
 import { InputState } from '../../types/ws';
 
 /**
- * InputRouterManager
+ * Input routerManager
  */
-export class InputRouter {
+export class Input router {
     /** Host Register表 */
     private hosts: Map<InputDeviceType, InputHost> = new Map();
     
@@ -47,22 +47,22 @@ export class InputRouter {
         // IfAlreadyStoreIn，FirstDestroyOldOf
         const existingHost = this.hosts.get(type);
         if (existingHost) {
-            console.log(`[InputRouter] Replacing existing ${type} host`);
+            console.log(`[Input router] Replacing existing ${type} host`);
             existingHost.destroy();
         }
         
         this.hosts.set(type, host);
-        console.log(`[InputRouter] Registered ${type} host`);
+        console.log(`[Input router] Registered ${type} host`);
         
         // AsyncInitialize，notBlockRegister
         host.initialize().then((success: boolean) => {
             if (success) {
-                console.log(`[InputRouter] ✅ ${type} host initialized successfully`);
+                console.log(`[Input router] ✅ ${type} host initialized successfully`);
             } else {
-                console.warn(`[InputRouter] ⚠️  ${type} host initialization failed on ${host.getStatus().platform}`);
+                console.warn(`[Input router] ⚠️  ${type} host initialization failed on ${host.getStatus().platform}`);
             }
         }).catch((error: unknown) => {
-            console.error(`[InputRouter] ❌ ${type} host initialization error:`, error);
+            console.error(`[Input router] ❌ ${type} host initialization error:`, error);
         });
     }
 
@@ -130,9 +130,9 @@ export class InputRouter {
         // HostnotStoreInorNotYetEnable，FallbackHandle
         if (!host || !host.isHostEnabled()) {
             if (!host) {
-                console.debug(`[InputRouter] No host registered for ${type}`);
+                console.debug(`[Input router] No host registered for ${type}`);
             } else {
-                console.debug(`[InputRouter] Host for ${type} is not enabled`);
+                console.debug(`[Input router] Host for ${type} is not enabled`);
             }
             return;
         }
@@ -145,7 +145,7 @@ export class InputRouter {
             host.applyState(state);
             
         } catch (error) {
-            console.error(`[InputRouter] Error applying state for ${type}:`, error);
+            console.error(`[Input router] Error applying state for ${type}:`, error);
             this.stats.failedApplications++;
             
             // UpdateHostOferrorInfo
@@ -157,12 +157,12 @@ export class InputRouter {
      * ResetAllHost
      */
     resetAll(): void {
-        console.log('[InputRouter] Resetting all hosts');
+        console.log('[Input router] Resetting all hosts');
         this.hosts.forEach((host, type) => {
             try {
                 host.reset();
             } catch (error) {
-                console.error(`[InputRouter] Error resetting ${type}:`, error);
+                console.error(`[Input router] Error resetting ${type}:`, error);
             }
         });
         this.stateCache.clear();
@@ -172,12 +172,12 @@ export class InputRouter {
      * DestroyAllHost
      */
     destroyAll(): void {
-        console.log('[InputRouter] Destroying all hosts');
+        console.log('[Input router] Destroying all hosts');
         this.hosts.forEach((host, type) => {
             try {
                 host.destroy();
             } catch (error) {
-                console.error(`[InputRouter] Error destroying ${type}:`, error);
+                console.error(`[Input router] Error destroying ${type}:`, error);
             }
         });
         this.hosts.clear();

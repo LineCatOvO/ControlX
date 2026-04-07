@@ -1,10 +1,10 @@
-// InputExecuteInterfaceDefine
+// Input Executor Interface Definition
 
 import { InputState, InputDelta, InputEvent } from '../types/ws';
 
 /**
  * InputExecutorInterface
- * ForAbstractDifferentInputDeviceOfExecuteLogic
+ * For abstracting different input device execution logic
  */
 export interface InputExecutor {
   /**
@@ -32,42 +32,42 @@ export interface InputExecutor {
 }
 
 /**
- * InputExecutorManageManagerInterface
- * ForManage多OneInputExecutor
+ * Input Executor Manager Interface
+ * For managing multiple input executors
  */
 export interface InputExecutorManager {
   /**
-   * AddInputExecutor
+   * Add input executor
    * @param executor InputExecutor
    */
   addExecutor(executor: InputExecutor): void;
   
   /**
-   * RemoveInputExecutor
+   * Remove input executor
    * @param executor InputExecutor
    */
   removeExecutor(executor: InputExecutor): void;
   
   /**
-   * ApplyCompleteInputStatetoAllExecutor
+   * Apply complete input state to all executors
    * @param state InputState
    */
   applyState(state: InputState): void;
   
   /**
-   * ApplyInputDeltatoAllExecutor
+   * Apply input delta to all executors
    * @param delta InputDelta
    */
   applyDelta(delta: InputDelta): void;
   
   /**
-   * ApplyInputEventtoAllExecutor
+   * Apply input event to all executors
    * @param event InputEvent
    */
   applyEvent(event: InputEvent): void;
   
   /**
-   * ResetAllExecutor
+   * Reset all executors
    */
   reset(): void;
 }

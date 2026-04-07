@@ -34,7 +34,7 @@
 import { InputHost } from './InputHost';
 import { InputDeviceType } from './types';
 
-export class LinuxKeyboardHost extends InputHost {
+export class Linux keyboard host extends InputHost {
     /** uinput DeviceHandle（PendingImplementation） */
     private uinputDevice: any = null;
 

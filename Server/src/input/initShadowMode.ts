@@ -26,7 +26,7 @@ export interface ShadowModeInitConfig {
 }
 
 /**
- * InitializeShadowMode
+ * Initialize shadow mode
  *
  * @param executorManager 现HasExecutorManageManager
  * @param config Config

@@ -21,7 +21,7 @@ import { InputDeviceType } from '../hosts/types';
  * ShadowModeConfig
  */
 export interface ShadowModeConfig {
-    /** WhetherEnableShadowMode */
+    /** WhetherEnable shadow mode */
     enabled: boolean;
     /** WhetherEnableDetailLog */
     verbose: boolean;
@@ -98,7 +98,7 @@ export interface ShadowModeStats {
 /**
  * ShadowModeManageManager
  */
-export class ShadowModeManager {
+export class Shadow mode manager {
     /** Config */
     private readonly config: ShadowModeConfig;
 
@@ -493,7 +493,7 @@ export class ShadowModeManager {
      * DestroyShadowModeManageManager
      */
     destroy(): void {
-        console.log('[ShadowMode] Destroying ShadowModeManager');
+        console.log('[ShadowMode] Destroying Shadow mode manager');
         this.clearStats();
         this.clearLogs();
     }
