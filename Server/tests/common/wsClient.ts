@@ -4,12 +4,14 @@ const WebSocket = require('ws');
 interface WsClientOptions {
   url?: string;
   timeout?: number;
+  token?: string;
 }
 
 export class WsClient {
   private ws: any = null;
   private url: string;
   private timeout: number;
+  private token: string | undefined;
   private messageHandlers: ((message: any) => void)[] = [];
   private closeHandlers: (() => void)[] = [];
   private errorHandlers: ((error: Error) => void)[] = [];
@@ -18,6 +20,7 @@ export class WsClient {
   constructor(options?: WsClientOptions) {
     this.url = options?.url || 'ws://localhost:3000';
     this.timeout = options?.timeout || 5000;
+    this.token = options?.token;
   }
 
   connect(): Promise<void> {
@@ -30,7 +33,12 @@ export class WsClient {
       let isResolved = false;
       let isOpen = false;
 
-      this.ws = new WebSocket(this.url);
+      // Add token to URL if provided
+      const url = this.token
+        ? `${this.url}?token=${encodeURIComponent(this.token)}`
+        : this.url;
+
+      this.ws = new WebSocket(url);
 
       this.ws.on('open', () => {
         if (!isResolved) {
