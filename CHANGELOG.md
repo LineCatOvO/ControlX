@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added (P0 Server Build Config)
+- **服务端构建配置**: 完整的构建和部署配置
+  - 创建 `Dockerfile` 支持多阶段构建，支持 Linux x64/ARM64 多平台
+  - 创建 `.dockerignore` 优化 Docker 镜像大小
+  - 创建 `ecosystem.config.js` PM2 生产部署配置（生产/开发/测试模式）
+  - 完善 `package.json` 添加引擎规范（Node.js 20+, pnpm 10+）和丰富脚本
+  - 完善 `tsconfig.json` TypeScript 严格模式配置
+  - 创建 `scripts/start.sh` 启动脚本（支持 dev/prod/pm2/docker 模式）
+  - 创建 `scripts/stop.sh` 停止脚本
+  - 创建 `scripts/restart.sh` 重启脚本
+  - 添加 `/health` 健康检查端点支持 Docker 健康检查
+  - 更新 `BUILDING.md` 和 `BUILD_CONFIG.md` 完整构建文档
+
 ### Changed
 - **注释英文化**: 将所有中文注释翻译为英文
   - Batch 1: 翻译 input adapters 和 executors 模块中的中文注释
