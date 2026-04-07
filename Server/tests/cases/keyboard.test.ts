@@ -316,13 +316,102 @@ describe("Keyboard Output Tests", () => {
 
         test("should handle reset errors gracefully", () => {
             keyboardExecutor.applyState(createState(["W"]));
-            
+
             sendKeyMock.mockImplementationOnce(() => {
                 throw new Error("Mock sendKey error");
             });
 
             // Should not throw
             expect(() => keyboardExecutor.reset()).not.toThrow();
+        });
+
+        test("should handle invalid key names", () => {
+            // Should not throw with empty string key
+            const invalidState = {
+                keyboard: new Set(["W", "", "A"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            } as InputState;
+
+            expect(() => keyboardExecutor.applyState(invalidState)).not.toThrow();
+            expect(sendKeyMock).toHaveBeenCalled();
+        });
+
+        test("should handle null/undefined state", () => {
+            // Should not throw with null state
+            expect(() => keyboardExecutor.applyState(null as unknown as InputState)).not.toThrow();
+            expect(() => keyboardExecutor.applyState(undefined as unknown as InputState)).not.toThrow();
+        });
+
+        test("should handle keys with control characters", () => {
+            const invalidState = {
+                keyboard: new Set(["W", "\x00\x01", "A"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            } as InputState;
+
+            expect(() => keyboardExecutor.applyState(invalidState)).not.toThrow();
+        });
+
+        test("should handle very long key names", () => {
+            const longKey = "A".repeat(150);
+            const invalidState = {
+                keyboard: new Set([longKey, "W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            } as InputState;
+
+            expect(() => keyboardExecutor.applyState(invalidState)).not.toThrow();
+        });
+
+        test("should handle applyDelta with invalid data", () => {
+            expect(() => keyboardExecutor.applyDelta(null as unknown as InputDelta)).not.toThrow();
+            expect(() => keyboardExecutor.applyDelta({} as InputDelta)).not.toThrow();
+            expect(() => keyboardExecutor.applyDelta({ keyboard: null } as unknown as InputDelta)).not.toThrow();
+        });
+
+        test("should handle applyEvent with invalid data", () => {
+            expect(() => keyboardExecutor.applyEvent(null as unknown as InputEvent)).not.toThrow();
+            expect(() => keyboardExecutor.applyEvent({} as InputEvent)).not.toThrow();
+            expect(() => keyboardExecutor.applyEvent({ type: "key_down" } as InputEvent)).not.toThrow();
+            expect(() => keyboardExecutor.applyEvent({ type: "key_down", data: {} } as InputEvent)).not.toThrow();
+            expect(() => keyboardExecutor.applyEvent({ type: "key_down", data: { key: "" } } as InputEvent)).not.toThrow();
+        });
+
+        test("should handle consecutive errors without crashing", () => {
+            sendKeyMock.mockImplementation(() => {
+                throw new Error("Simulated error");
+            });
+
+            // Multiple calls should not crash
+            for (let i = 0; i < 15; i++) {
+                expect(() => keyboardExecutor.applyState(createState([`Key${i}`]))).not.toThrow();
+            }
+
+            // Reset should clear error state
+            expect(() => keyboardExecutor.reset()).not.toThrow();
+        });
+
+        test("should handle non-string keys in delta", () => {
+            const delta: InputDelta = {
+                keyboard: {
+                    pressed: [123, null, undefined, "W"] as unknown as string[],
+                    released: [],
+                },
+            };
+
+            expect(() => keyboardExecutor.applyDelta(delta)).not.toThrow();
+        });
+
+        test("should handle non-array pressed/released in delta", () => {
+            const delta = {
+                keyboard: {
+                    pressed: "W",
+                    released: "A",
+                },
+            } as unknown as InputDelta;
+
+            expect(() => keyboardExecutor.applyDelta(delta)).not.toThrow();
         });
     });
 

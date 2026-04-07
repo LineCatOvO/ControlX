@@ -3,6 +3,8 @@ import {
     startWsServer,
     stopWsServer,
     getActualPort,
+    setConnectionLimit,
+    getConnectionLimit,
 } from "../../src/ws/server";
 import { inputState } from "../../src/input/state";
 import { safeState } from "../../src/input/safeState";
@@ -130,5 +132,71 @@ describe("WebSocket Connection Tests", () => {
         expect(inputState.keyboard).toEqual(new Set(safeState.keyboard));
         expect(inputState.mouse).toEqual(safeState.mouse);
         expect(inputState.joystick).toEqual(safeState.joystick);
+    });
+
+    test("should enforce global connection limit", async () => {
+        // Save original limit
+        const originalLimit = getConnectionLimit();
+
+        try {
+            // Set a low limit for testing
+            setConnectionLimit(2);
+
+            const client1 = new WsClient({ url: `ws://localhost:${serverPort}` });
+            const client2 = new WsClient({ url: `ws://localhost:${serverPort}` });
+
+            // Connect first two clients successfully
+            await expect(client1.connect()).resolves.not.toThrow();
+            await expect(client2.connect()).resolves.not.toThrow();
+
+            // Third connection should be rejected - wait for error message or close
+            const client3 = new WsClient({ url: `ws://localhost:${serverPort}` });
+
+            // Listen for error message
+            const errorPromise = new Promise<void>((resolve) => {
+                client3.onMessage((message) => {
+                    if (message.type === "error" && message.code === "MAX_CONNECTIONS_REACHED") {
+                        resolve();
+                    }
+                });
+            });
+
+            // Listen for connection close
+            const closePromise = new Promise<void>((resolve) => {
+                client3.onClose(() => resolve());
+            });
+
+            // Try to connect - may resolve (open) but then get error/close
+            try {
+                await client3.connect();
+            } catch (e) {
+                // Connection rejected immediately - this is expected
+            }
+
+            // Wait for either error message or close event (with timeout)
+            await Promise.race([
+                errorPromise,
+                closePromise,
+                new Promise<void>((_, reject) =>
+                    setTimeout(() => reject(new Error("Timeout waiting for connection rejection")), 3000)
+                )
+            ]);
+
+            // Clean up
+            client1.close();
+            client2.close();
+
+            // Wait for disconnections to be processed
+            await new Promise((resolve) => setTimeout(resolve, 100));
+        } finally {
+            // Restore original limit
+            setConnectionLimit(originalLimit);
+        }
+    }, 15000);
+
+    test("should get current connection limit", () => {
+        const limit = getConnectionLimit();
+        expect(typeof limit).toBe("number");
+        expect(limit).toBeGreaterThan(0);
     });
 });

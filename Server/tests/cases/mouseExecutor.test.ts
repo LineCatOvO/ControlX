@@ -1,6 +1,23 @@
 import { MouseExecutor } from "../../src/input/mouse";
 import { InputState, InputDelta, InputEvent } from "../../src/types/ws";
 
+// Mock @nut-tree-fork/nut-js
+jest.mock('@nut-tree-fork/nut-js', () => ({
+    mouse: {
+        setPosition: jest.fn().mockResolvedValue(undefined),
+        pressButton: jest.fn().mockResolvedValue(undefined),
+        releaseButton: jest.fn().mockResolvedValue(undefined),
+        click: jest.fn().mockResolvedValue(undefined),
+        scrollDown: jest.fn().mockResolvedValue(undefined),
+    },
+    Button: {
+        LEFT: 'left',
+        RIGHT: 'right',
+        MIDDLE: 'middle',
+    },
+    Point: jest.fn().mockImplementation((x, y) => ({ x, y })),
+}));
+
 describe("MouseExecutor", () => {
     let mouseExecutor: MouseExecutor;
 
@@ -38,7 +55,7 @@ describe("MouseExecutor", () => {
 
     // Helper function to create input event
     function createEvent(
-        type: "mouse_move" | "mouse_click",
+        type: "mouse_move" | "mouse_click" | "mouse_scroll",
         data: any
     ): InputEvent {
         return {
@@ -60,7 +77,7 @@ describe("MouseExecutor", () => {
     describe("移动Test (Movement Tests)", () => {
         describe("坐标移动 (Coordinate Movement)", () => {
             test("should apply positive X coordinate movement", () => {
-                const state = createState({ x: 100, y: 0 });
+                const state = createState({ x: 0.5, y: 0 });
                 mouseExecutor.applyState(state);
 
                 // Should not throw and state should be tracked
@@ -68,28 +85,28 @@ describe("MouseExecutor", () => {
             });
 
             test("should apply positive Y coordinate movement", () => {
-                const state = createState({ x: 0, y: 100 });
+                const state = createState({ x: 0, y: 0.5 });
                 mouseExecutor.applyState(state);
 
                 expect(mouseExecutor).toBeDefined();
             });
 
             test("should apply negative X coordinate movement", () => {
-                const state = createState({ x: -100, y: 0 });
+                const state = createState({ x: -0.1, y: 0 });
                 mouseExecutor.applyState(state);
 
                 expect(mouseExecutor).toBeDefined();
             });
 
             test("should apply negative Y coordinate movement", () => {
-                const state = createState({ x: 0, y: -100 });
+                const state = createState({ x: 0, y: -0.1 });
                 mouseExecutor.applyState(state);
 
                 expect(mouseExecutor).toBeDefined();
             });
 
             test("should apply diagonal movement (both X and Y)", () => {
-                const state = createState({ x: 150, y: 200 });
+                const state = createState({ x: 0.5, y: 0.75 });
                 mouseExecutor.applyState(state);
 
                 expect(mouseExecutor).toBeDefined();
@@ -106,16 +123,16 @@ describe("MouseExecutor", () => {
         describe("相对移动 (Relative Movement)", () => {
             test("should track state changes between movements", () => {
                 // First movement
-                mouseExecutor.applyState(createState({ x: 100, y: 100 }));
+                mouseExecutor.applyState(createState({ x: 0.25, y: 0.25 }));
                 // Second movement
-                mouseExecutor.applyState(createState({ x: 200, y: 200 }));
+                mouseExecutor.applyState(createState({ x: 0.5, y: 0.5 }));
 
                 expect(mouseExecutor).toBeDefined();
             });
 
             test("should handle rapid coordinate changes", () => {
                 for (let i = 0; i < 10; i++) {
-                    mouseExecutor.applyState(createState({ x: i * 10, y: i * 10 }));
+                    mouseExecutor.applyState(createState({ x: i * 0.05, y: i * 0.05 }));
                 }
 
                 expect(mouseExecutor).toBeDefined();
@@ -213,7 +230,7 @@ describe("MouseExecutor", () => {
             // Initial state
             mouseExecutor.applyState(createState({ x: 0, y: 0 }));
             // Changed state
-            mouseExecutor.applyState(createState({ x: 100, y: 100 }));
+            mouseExecutor.applyState(createState({ x: 0.5, y: 0.5 }));
 
             expect(mouseExecutor).toBeDefined();
         });
@@ -228,7 +245,7 @@ describe("MouseExecutor", () => {
         });
 
         test("should not trigger on same state", () => {
-            const state = createState({ x: 100, y: 100, left: true });
+            const state = createState({ x: 0.5, y: 0.5, left: true });
             mouseExecutor.applyState(state);
             mouseExecutor.applyState(state);
 
@@ -239,7 +256,7 @@ describe("MouseExecutor", () => {
             // Initial state
             mouseExecutor.applyState(createState({ x: 0, y: 0, left: false, right: false }));
             // Multiple changes
-            mouseExecutor.applyState(createState({ x: 100, y: 200, left: true, right: true }));
+            mouseExecutor.applyState(createState({ x: 0.5, y: 0.75, left: true, right: true }));
 
             expect(mouseExecutor).toBeDefined();
         });
@@ -249,23 +266,23 @@ describe("MouseExecutor", () => {
         describe("拖拽Operation (Drag Operations)", () => {
             test("should handle drag with left button", () => {
                 // Start position with left button pressed
-                mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
+                mouseExecutor.applyState(createState({ x: 0.2, y: 0.2, left: true }));
                 // Move while dragging
-                mouseExecutor.applyState(createState({ x: 150, y: 100, left: true }));
-                mouseExecutor.applyState(createState({ x: 200, y: 100, left: true }));
+                mouseExecutor.applyState(createState({ x: 0.3, y: 0.2, left: true }));
+                mouseExecutor.applyState(createState({ x: 0.4, y: 0.2, left: true }));
                 // Release
-                mouseExecutor.applyState(createState({ x: 200, y: 100, left: false }));
+                mouseExecutor.applyState(createState({ x: 0.4, y: 0.2, left: false }));
 
                 expect(mouseExecutor).toBeDefined();
             });
 
             test("should handle drag with right button", () => {
                 // Start position with right button pressed
-                mouseExecutor.applyState(createState({ x: 100, y: 100, right: true }));
+                mouseExecutor.applyState(createState({ x: 0.2, y: 0.2, right: true }));
                 // Move while dragging
-                mouseExecutor.applyState(createState({ x: 100, y: 150, right: true }));
+                mouseExecutor.applyState(createState({ x: 0.2, y: 0.3, right: true }));
                 // Release
-                mouseExecutor.applyState(createState({ x: 100, y: 150, right: false }));
+                mouseExecutor.applyState(createState({ x: 0.2, y: 0.3, right: false }));
 
                 expect(mouseExecutor).toBeDefined();
             });
@@ -274,20 +291,20 @@ describe("MouseExecutor", () => {
         describe("点击+移动Operation (Click + Move Operations)", () => {
             test("should handle click then move", () => {
                 // Click at position
-                mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
-                mouseExecutor.applyState(createState({ x: 100, y: 100, left: false }));
+                mouseExecutor.applyState(createState({ x: 0.3, y: 0.3, left: true }));
+                mouseExecutor.applyState(createState({ x: 0.3, y: 0.3, left: false }));
                 // Move to new position
-                mouseExecutor.applyState(createState({ x: 200, y: 200 }));
+                mouseExecutor.applyState(createState({ x: 0.6, y: 0.6 }));
 
                 expect(mouseExecutor).toBeDefined();
             });
 
             test("should handle move then click", () => {
                 // Move to position
-                mouseExecutor.applyState(createState({ x: 100, y: 100 }));
+                mouseExecutor.applyState(createState({ x: 0.3, y: 0.3 }));
                 // Click at position
-                mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
-                mouseExecutor.applyState(createState({ x: 100, y: 100, left: false }));
+                mouseExecutor.applyState(createState({ x: 0.3, y: 0.3, left: true }));
+                mouseExecutor.applyState(createState({ x: 0.3, y: 0.3, left: false }));
 
                 expect(mouseExecutor).toBeDefined();
             });
@@ -318,7 +335,7 @@ describe("MouseExecutor", () => {
             });
 
             test("should handle decimal coordinates", () => {
-                const state = createState({ x: 123.456, y: 789.012 });
+                const state = createState({ x: 0.123456, y: 0.789012 });
                 mouseExecutor.applyState(state);
 
                 expect(mouseExecutor).toBeDefined();
@@ -340,7 +357,7 @@ describe("MouseExecutor", () => {
             });
 
             test("should handle multiple resets", () => {
-                mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
+                mouseExecutor.applyState(createState({ x: 0.3, y: 0.3, left: true }));
                 mouseExecutor.reset();
                 mouseExecutor.reset();
 
@@ -348,9 +365,9 @@ describe("MouseExecutor", () => {
             });
 
             test("should handle state after reset", () => {
-                mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
+                mouseExecutor.applyState(createState({ x: 0.3, y: 0.3, left: true }));
                 mouseExecutor.reset();
-                mouseExecutor.applyState(createState({ x: 200, y: 200 }));
+                mouseExecutor.applyState(createState({ x: 0.6, y: 0.6 }));
 
                 expect(mouseExecutor).toBeDefined();
             });
@@ -382,7 +399,7 @@ describe("MouseExecutor", () => {
 
     describe("applyDelta MethodTest (applyDelta Method Tests)", () => {
         test("should apply mouse delta with coordinate changes", () => {
-            const delta = createDelta({ x: 50, y: 50 });
+            const delta = createDelta({ x: 0.25, y: 0.25 });
             mouseExecutor.applyDelta(delta);
 
             expect(mouseExecutor).toBeDefined();
@@ -396,7 +413,7 @@ describe("MouseExecutor", () => {
         });
 
         test("should apply mouse delta with both coordinates and buttons", () => {
-            const delta = createDelta({ x: 100, y: 100, left: true });
+            const delta = createDelta({ x: 0.5, y: 0.5, left: true });
             mouseExecutor.applyDelta(delta);
 
             expect(mouseExecutor).toBeDefined();
@@ -419,7 +436,7 @@ describe("MouseExecutor", () => {
 
     describe("applyEvent MethodTest (applyEvent Method Tests)", () => {
         test("should handle mouse_move event", () => {
-            const event = createEvent("mouse_move", { x: 100, y: 200 });
+            const event = createEvent("mouse_move", { x: 0.5, y: 0.75 });
             mouseExecutor.applyEvent(event);
 
             expect(mouseExecutor).toBeDefined();
@@ -439,6 +456,27 @@ describe("MouseExecutor", () => {
             expect(mouseExecutor).toBeDefined();
         });
 
+        test("should handle mouse_scroll event with default values", () => {
+            const event = createEvent("mouse_scroll", {});
+            mouseExecutor.applyEvent(event);
+
+            expect(mouseExecutor).toBeDefined();
+        });
+
+        test("should handle mouse_scroll event with custom values", () => {
+            const event = createEvent("mouse_scroll", { amount: 50, direction: "up" });
+            mouseExecutor.applyEvent(event);
+
+            expect(mouseExecutor).toBeDefined();
+        });
+
+        test("should handle mouse_scroll event with down direction", () => {
+            const event = createEvent("mouse_scroll", { amount: 100, direction: "down" });
+            mouseExecutor.applyEvent(event);
+
+            expect(mouseExecutor).toBeDefined();
+        });
+
         test("should ignore non-mouse events", () => {
             const event: InputEvent = {
                 type: "key_down",
@@ -451,9 +489,46 @@ describe("MouseExecutor", () => {
         });
     });
 
+    describe("滚动ValidationTest (Scroll Validation Tests)", () => {
+        test("should handle scroll with zero amount", () => {
+            const event = createEvent("mouse_scroll", { amount: 0, direction: "down" });
+            mouseExecutor.applyEvent(event);
+
+            expect(mouseExecutor).toBeDefined();
+        });
+
+        test("should handle scroll with negative amount", () => {
+            const event = createEvent("mouse_scroll", { amount: -50, direction: "down" });
+            mouseExecutor.applyEvent(event);
+
+            expect(mouseExecutor).toBeDefined();
+        });
+
+        test("should handle scroll with very large amount", () => {
+            const event = createEvent("mouse_scroll", { amount: 9999, direction: "down" });
+            mouseExecutor.applyEvent(event);
+
+            expect(mouseExecutor).toBeDefined();
+        });
+
+        test("should handle scroll with invalid direction", () => {
+            const event = createEvent("mouse_scroll", { amount: 100, direction: "invalid" });
+            mouseExecutor.applyEvent(event);
+
+            expect(mouseExecutor).toBeDefined();
+        });
+
+        test("should handle scroll with non-numeric amount", () => {
+            const event = createEvent("mouse_scroll", { amount: "invalid", direction: "down" });
+            mouseExecutor.applyEvent(event);
+
+            expect(mouseExecutor).toBeDefined();
+        });
+    });
+
     describe("reset MethodTest (reset Method Tests)", () => {
         test("should reset to default state", () => {
-            mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
+            mouseExecutor.applyState(createState({ x: 0.3, y: 0.3, left: true }));
             mouseExecutor.reset();
 
             expect(mouseExecutor).toBeDefined();
@@ -467,16 +542,16 @@ describe("MouseExecutor", () => {
         });
 
         test("should clear coordinate state on reset", () => {
-            mouseExecutor.applyState(createState({ x: 500, y: 500 }));
+            mouseExecutor.applyState(createState({ x: 0.5, y: 0.5 }));
             mouseExecutor.reset();
 
             expect(mouseExecutor).toBeDefined();
         });
 
         test("should allow state application after reset", () => {
-            mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
+            mouseExecutor.applyState(createState({ x: 0.3, y: 0.3, left: true }));
             mouseExecutor.reset();
-            mouseExecutor.applyState(createState({ x: 200, y: 200, right: true }));
+            mouseExecutor.applyState(createState({ x: 0.6, y: 0.6, right: true }));
 
             expect(mouseExecutor).toBeDefined();
         });
@@ -493,7 +568,7 @@ describe("MouseExecutor", () => {
 
     describe("幂等性Test (Idempotency Tests)", () => {
         test("should handle repeated same state applications", () => {
-            const state = createState({ x: 100, y: 100, left: true });
+            const state = createState({ x: 0.3, y: 0.3, left: true });
             for (let i = 0; i < 5; i++) {
                 mouseExecutor.applyState(state);
             }
@@ -502,7 +577,7 @@ describe("MouseExecutor", () => {
         });
 
         test("should handle repeated reset calls", () => {
-            mouseExecutor.applyState(createState({ x: 100, y: 100 }));
+            mouseExecutor.applyState(createState({ x: 0.3, y: 0.3 }));
             for (let i = 0; i < 5; i++) {
                 mouseExecutor.reset();
             }
@@ -512,9 +587,9 @@ describe("MouseExecutor", () => {
 
         test("should maintain state consistency after multiple operations", () => {
             // Apply various states
-            mouseExecutor.applyState(createState({ x: 100, y: 100 }));
-            mouseExecutor.applyState(createState({ x: 200, y: 200, left: true }));
-            mouseExecutor.applyState(createState({ x: 200, y: 200, left: true })); // Same state
+            mouseExecutor.applyState(createState({ x: 0.3, y: 0.3 }));
+            mouseExecutor.applyState(createState({ x: 0.6, y: 0.6, left: true }));
+            mouseExecutor.applyState(createState({ x: 0.6, y: 0.6, left: true })); // Same state
             mouseExecutor.reset();
             mouseExecutor.applyState(createState({ x: 0, y: 0 }));
 
@@ -524,8 +599,8 @@ describe("MouseExecutor", () => {
 
     describe("State跟踪Test (State Tracking Tests)", () => {
         test("should track current mouse position", () => {
-            mouseExecutor.applyState(createState({ x: 100, y: 200 }));
-            mouseExecutor.applyState(createState({ x: 300, y: 400 }));
+            mouseExecutor.applyState(createState({ x: 0.2, y: 0.4 }));
+            mouseExecutor.applyState(createState({ x: 0.6, y: 0.8 }));
 
             expect(mouseExecutor).toBeDefined();
         });
@@ -541,18 +616,70 @@ describe("MouseExecutor", () => {
 
         test("should handle complex interaction sequence", () => {
             // Move to position
-            mouseExecutor.applyState(createState({ x: 100, y: 100 }));
+            mouseExecutor.applyState(createState({ x: 0.2, y: 0.2 }));
             // Press left button
-            mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
+            mouseExecutor.applyState(createState({ x: 0.2, y: 0.2, left: true }));
             // Drag
-            mouseExecutor.applyState(createState({ x: 150, y: 100, left: true }));
-            mouseExecutor.applyState(createState({ x: 200, y: 100, left: true }));
+            mouseExecutor.applyState(createState({ x: 0.3, y: 0.2, left: true }));
+            mouseExecutor.applyState(createState({ x: 0.4, y: 0.2, left: true }));
             // Release
-            mouseExecutor.applyState(createState({ x: 200, y: 100, left: false }));
+            mouseExecutor.applyState(createState({ x: 0.4, y: 0.2, left: false }));
             // Move away
-            mouseExecutor.applyState(createState({ x: 300, y: 300 }));
+            mouseExecutor.applyState(createState({ x: 0.6, y: 0.6 }));
 
             expect(mouseExecutor).toBeDefined();
+        });
+    });
+
+    describe("坐标ValidationTest (Coordinate Validation Tests)", () => {
+        test("should handle NaN coordinates gracefully", () => {
+            const state = createState({ x: NaN, y: 0.5 });
+
+            expect(() => mouseExecutor.applyState(state)).not.toThrow();
+        });
+
+        test("should handle Infinity coordinates gracefully", () => {
+            const state = createState({ x: Infinity, y: 0.5 });
+
+            expect(() => mouseExecutor.applyState(state)).not.toThrow();
+        });
+
+        test("should handle negative Infinity coordinates gracefully", () => {
+            const state = createState({ x: -Infinity, y: 0.5 });
+
+            expect(() => mouseExecutor.applyState(state)).not.toThrow();
+        });
+
+        test("should handle coordinates slightly outside range", () => {
+            const state = createState({ x: 1.1, y: -0.1 });
+
+            expect(() => mouseExecutor.applyState(state)).not.toThrow();
+        });
+
+        test("should handle coordinates far outside range", () => {
+            const state = createState({ x: 999, y: -999 });
+
+            expect(() => mouseExecutor.applyState(state)).not.toThrow();
+        });
+
+        test("should handle non-numeric coordinates", () => {
+            const state: InputState = {
+                keyboard: new Set(),
+                mouse: { x: "invalid" as any, y: 0.5, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+
+            expect(() => mouseExecutor.applyState(state)).not.toThrow();
+        });
+
+        test("should handle null coordinates", () => {
+            const state: InputState = {
+                keyboard: new Set(),
+                mouse: { x: null as any, y: null as any, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+
+            expect(() => mouseExecutor.applyState(state)).not.toThrow();
         });
     });
 
@@ -560,7 +687,7 @@ describe("MouseExecutor", () => {
         test("should handle partial mouse state with missing y", () => {
             const state: InputState = {
                 keyboard: new Set(),
-                mouse: { x: 100, y: undefined as any, left: false, right: false, middle: false },
+                mouse: { x: 0.5, y: undefined as any, left: false, right: false, middle: false },
                 joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
             };
 
@@ -570,7 +697,7 @@ describe("MouseExecutor", () => {
         test("should handle partial mouse state with missing buttons", () => {
             const state: InputState = {
                 keyboard: new Set(),
-                mouse: { x: 100, y: 100, left: undefined as any, right: undefined as any, middle: undefined as any },
+                mouse: { x: 0.5, y: 0.5, left: undefined as any, right: undefined as any, middle: undefined as any },
                 joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
             };
 
@@ -580,7 +707,7 @@ describe("MouseExecutor", () => {
         test("should handle partial mouse state", () => {
             const state: InputState = {
                 keyboard: new Set(),
-                mouse: { x: 100 } as any,
+                mouse: { x: 0.5 } as any,
                 joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
             };
 

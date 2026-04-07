@@ -128,6 +128,7 @@ export interface InputEvent {
         | "key_up"
         | "mouse_move"
         | "mouse_click"
+        | "mouse_scroll"
         | "joystick_move";
     data: any;
     metadata: InputMetadata;

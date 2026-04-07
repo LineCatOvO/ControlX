@@ -14,9 +14,25 @@ const clients: Map<string, any> = new Map(); // Store active WebSocket connectio
 let heartbeatInterval: NodeJS.Timeout | null = null;
 
 // Connection limit configuration
-const MAX_CONNECTIONS = process.env.MAX_WS_CONNECTIONS
+let MAX_CONNECTIONS = process.env.MAX_WS_CONNECTIONS
     ? parseInt(process.env.MAX_WS_CONNECTIONS, 10)
     : 100; // Default max 100 connections
+
+/**
+ * Get current connection limit
+ * @returns number Current maximum connections allowed
+ */
+export function getConnectionLimit(): number {
+    return MAX_CONNECTIONS;
+}
+
+/**
+ * Set connection limit (for testing purposes)
+ * @param limit New connection limit
+ */
+export function setConnectionLimit(limit: number): void {
+    MAX_CONNECTIONS = limit;
+}
 
 // Generate client ID
 function generateClientId(): string {

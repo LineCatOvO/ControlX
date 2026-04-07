@@ -178,11 +178,15 @@ export class MouseExecutor implements InputExecutor {
                 const button = this.mapButtonName(event.data.button || 'left');
                 await mouse.click(button);
                 updateStats('click', 1);
+            } else if (event.type === 'mouse_scroll') {
+                const amount = event.data.amount || 100;
+                const direction = event.data.direction || 'down';
+                await this.scrollMouse(amount, direction);
             }
-            // Note：InputEvent TypeDefineInNoHas 'mouse_scroll' Type
-            // IfRequireScrollFunction，RequireFirstUpdate ws.ts InOf InputEvent TypeDefine
 
-            console.log('🖱️ MouseEvent: Event applied', event.type, event.data);
+            if (LOG_CONFIG.verbose) {
+                console.log('🖱️ MouseEvent: Event applied', event.type, event.data);
+            }
         } catch (error) {
             console.error('❌ MouseExecutor: Error applying event:', error);
             updateStats('error', 1);
@@ -232,6 +236,13 @@ export class MouseExecutor implements InputExecutor {
      */
     private async moveMouse(x: number, y: number): Promise<void> {
         try {
+            // 验证输入值是否有效
+            if (!this.isValidCoordinate(x, y)) {
+                console.warn('⚠️ MouseExecutor: Invalid coordinates received:', { x, y });
+                updateStats('error', 1);
+                return;
+            }
+
             // willRelativeCoordinateConvertForScreenCoordinate
             // AssumeInputCoordinateIs 0-1 OfRelativeValue，ConvertForActualScreenCoordinate
             const screenX = Math.floor(x * this.screenWidth);
@@ -240,6 +251,13 @@ export class MouseExecutor implements InputExecutor {
             // ensureCoordinateInScreenRangeInside
             const clampedX = Math.max(0, Math.min(screenX, this.screenWidth - 1));
             const clampedY = Math.max(0, Math.min(screenY, this.screenHeight - 1));
+
+            // 验证转换后的坐标
+            if (!this.isValidScreenCoordinate(clampedX, clampedY)) {
+                console.warn('⚠️ MouseExecutor: Screen coordinates out of bounds:', { clampedX, clampedY });
+                updateStats('error', 1);
+                return;
+            }
 
             await mouse.setPosition(new Point(clampedX, clampedY));
             updateStats('move', 1);
@@ -251,6 +269,42 @@ export class MouseExecutor implements InputExecutor {
             console.error('❌ MouseExecutor: Error moving mouse:', error);
             updateStats('error', 1);
         }
+    }
+
+    /**
+     * 验证输入坐标是否有效
+     * @param x X 坐标
+     * @param y Y 坐标
+     * @returns 是否有效
+     */
+    private isValidCoordinate(x: number, y: number): boolean {
+        // 检查是否为数字
+        if (typeof x !== 'number' || typeof y !== 'number') {
+            return false;
+        }
+        // 检查是否为有限数
+        if (!isFinite(x) || !isFinite(y)) {
+            return false;
+        }
+        // 检查是否为 NaN
+        if (isNaN(x) || isNaN(y)) {
+            return false;
+        }
+        // 检查是否在有效范围内 (允许稍微超出 0-1 范围，后面会进行边界限制)
+        if (x < -0.5 || x > 1.5 || y < -0.5 || y > 1.5) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 验证屏幕坐标是否有效
+     * @param x X 屏幕坐标
+     * @param y Y 屏幕坐标
+     * @returns 是否有效
+     */
+    private isValidScreenCoordinate(x: number, y: number): boolean {
+        return x >= 0 && x < this.screenWidth && y >= 0 && y < this.screenHeight;
     }
 
     /**
@@ -299,6 +353,13 @@ export class MouseExecutor implements InputExecutor {
      */
     private async scrollMouse(amount: number, direction: string): Promise<void> {
         try {
+            // 验证滚动参数
+            if (!this.isValidScrollParams(amount, direction)) {
+                console.warn('⚠️ MouseExecutor: Invalid scroll parameters:', { amount, direction });
+                updateStats('error', 1);
+                return;
+            }
+
             const scrollAmount = direction === 'up' ? -amount : amount;
             await mouse.scrollDown(scrollAmount);
             updateStats('scroll', 1);
@@ -310,6 +371,32 @@ export class MouseExecutor implements InputExecutor {
             console.error('❌ MouseExecutor: Error scrolling mouse:', error);
             updateStats('error', 1);
         }
+    }
+
+    /**
+     * 验证滚动参数是否有效
+     * @param amount 滚动量
+     * @param direction 滚动方向
+     * @returns 是否有效
+     */
+    private isValidScrollParams(amount: number, direction: string): boolean {
+        // 验证 amount
+        if (typeof amount !== 'number' || !isFinite(amount) || isNaN(amount)) {
+            return false;
+        }
+        // 限制滚动量范围
+        if (amount < 1 || amount > 1000) {
+            return false;
+        }
+        // 验证 direction
+        if (typeof direction !== 'string') {
+            return false;
+        }
+        // 只允许 'up' 或 'down'
+        if (direction !== 'up' && direction !== 'down') {
+            return false;
+        }
+        return true;
     }
 
     /**
