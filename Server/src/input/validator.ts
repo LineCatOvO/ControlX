@@ -1,41 +1,41 @@
 /**
  * ============================================================================
- * 输入验证器模块 (Input Validator Module)
+ * Input validator module (Input Validator Module)
  * ============================================================================
  * 
- * 【模块职责】
- * 本模块是输入系统的质量把关者，负责验证输入状态的合法性、完整性和一致性。
+ * [Module Responsibilities]
+ * This module is the quality gatekeeper of the input system，Responsible for validating legality, completeness and consistency of input states。
  * 
- * 【核心功能】
- * 1. 状态验证：验证键盘、鼠标、摇杆、手柄状态的合法性
- * 2. 范围检查：验证数值范围（摇杆值[-1,1]、扳机值[0,1]等）
- * 3. 序列号验证：验证frameId的单调递增性
- * 4. 错误报告：提供详细的验证错误和警告信息
+ * [Core Functions]
+ * 1. State validation: validate legality of keyboard, mouse, joystick, gamepad states
+ * 2. Range check: validate numeric ranges（joystick value[-1,1]、trigger value[0,1]etc）
+ * 3. Sequence validation: validate monotonic increment of frameId
+ * 4. Error reporting: provide detailed validation errors and warnings
  * 
- * 【模块边界】
- * - ✅ 允许：验证状态合法性、报告验证错误、提供验证结果
- * - ❌ 禁止：修改输入状态、触发安全清零、直接操作执行器
+ * [Module Boundaries]
+ * - ✅ Allowed: validate state legality, report validation errors, provide validation results
+ * - ❌ Prohibited: modify input state, trigger safety clearing, directly operate executors
  * 
- * 【验证规则】
- * 1. 键盘状态 - 验证按键合法性、数量合理性
- * 2. 游戏手柄状态 - 验证按钮、摇杆、扳机值范围
- * 3. 鼠标状态 - 验证坐标和按钮
- * 4. 摇杆状态 - 验证值范围和deadzone
- * 5. 序列号单调性 - 验证frameId递增
+ * [Validation Rules]
+ * 1. Keyboard state - validate key legality, count reasonableness
+ * 2. Gamepad state - validate buttons, joysticks, trigger value ranges
+ * 3. Mouse state - validate coordinates and buttons
+ * 4. Joystick state - validate value ranges and deadzone
+ * 5. Sequence monotonicity - validate frameId increment
  * 
- * 【依赖关系】
- * - 依赖：InputState类型定义
- * - 被依赖：StateStore（状态存储前验证）、WebSocket处理器（接收后验证）
+ * [Dependencies]
+ * - Dependencies: InputState type definitions
+ * - Depended by: StateStore (validation before state storage)、WebSocket handlers (validation after reception)
  * 
- * 【关键设计】
- * - 验证器模式：分离验证逻辑，单一职责
- * - 错误收集：收集所有错误而非遇到第一个错误就返回
- * - 警告机制：区分错误和警告，宽松验证
+ * [Key Design]
+ * - Validator pattern: separate validation logic, single responsibility
+ * - Error collection: collect all errors instead of returning on first error
+ * - Warning mechanism: distinguish errors and warnings, loose validation
  * 
- * 【注意事项】
- * - 验证是只读操作，不会修改状态
- * - 验证失败不会阻止状态存储，由调用方决定处理方式
- * - 序列号验证支持重连场景，允许相同或更大的序列号
+ * [Notes]
+ * - Validation is read-only operation, does not modify state
+ * - Validation failure does not block state storage, caller decides handling
+ * - Sequence validation supports reconnect scenarios, allows equal or larger sequence numbers
  * 
  * @module input/validator
  * @version 2.0.0
@@ -43,66 +43,66 @@
  */
 
 /**
- * 输入验证器
- * 验证输入状态的合法性和完整性
+ * Input validator
+ * Validate legality and completeness of input states
  * 
- * 验证规则：
- * 1. 键盘状态 - 验证按键合法性、数量合理性
- * 2. 游戏手柄状态 - 验证按钮、摇杆、扳机值范围
- * 3. 鼠标状态 - 验证坐标和按钮
- * 4. 摇杆状态 - 验证值范围和 deadzone
- * 5. 序列号单调性 - 验证 frameId 递增
+ * Validation rules：
+ * 1. Keyboard state - validate key legality, count reasonableness
+ * 2. Gamepad state - validate buttons, joysticks, trigger value ranges
+ * 3. Mouse state - validate coordinates and buttons
+ * 4. joystick state - validate value range and deadzone
+ * 5. sequence number monotonicity - validate frameId increment
  */
 
 import { InputState } from '../types/ws';
 
 /**
- * 标准键码列表（合法按键）
+ * Standard key code list（legal keys）
  */
 const VALID_KEY_CODES = new Set([
-    // 字母键
+    // Letter keys
     'KeyA', 'KeyB', 'KeyC', 'KeyD', 'KeyE', 'KeyF', 'KeyG', 'KeyH', 'KeyI', 'KeyJ', 'KeyK', 'KeyL', 'KeyM',
     'KeyN', 'KeyO', 'KeyP', 'KeyQ', 'KeyR', 'KeyS', 'KeyT', 'KeyU', 'KeyV', 'KeyW', 'KeyX', 'KeyY', 'KeyZ',
-    // 数字键
+    // Number keys
     'Digit0', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9',
-    // 功能键
+    // Function keys
     'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
-    // 控制键
+    // Control keys
     'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'ShiftLeft', 'ShiftRight',
-    // 导航键
+    // Navigation keys
     'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Backspace', 'Tab', 'Escape',
-    // 特殊键
+    // Special keys
     'Space', 'CapsLock', 'MetaLeft', 'MetaRight', 'ContextMenu',
-    // 游戏常用键（简化表示）
+    // Common gaming keys（Simplified representation）
     'W', 'A', 'S', 'D', 'I', 'J', 'K', 'L', 'U', 'V',
-    // 数字小键盘
+    // Numpad
     'Numpad0', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4', 'Numpad5', 'Numpad6', 'Numpad7', 'Numpad8', 'Numpad9',
     'NumpadAdd', 'NumpadSubtract', 'NumpadMultiply', 'NumpadDivide', 'NumpadEnter',
-    // 其他常用键
+    // Other common keys
     'PageUp', 'PageDown', 'Home', 'End', 'Insert', 'Delete',
     'BracketLeft', 'BracketRight', 'Semicolon', 'Quote', 'Comma', 'Period', 'Slash', 'Backslash', 'Minus', 'Equal'
 ]);
 
 /**
- * 游戏手柄按钮列表
+ * Gamepad button list
  */
 const VALID_GAMEPAD_BUTTONS = new Set([
-    // Xbox 按钮
+    // Xbox buttons
     'A', 'B', 'X', 'Y',
-    // 肩键
+    // Shoulder buttons
     'LB', 'RB',
-    // 扳机（作为按钮）
+    // Triggers（as buttons）
     'LT', 'RT',
-    // 功能键
+    // Function keys
     'Start', 'Back', 'Guide',
-    // 摇杆按下
+    // Stick press
     'L3', 'R3',
-    // 方向键
+    // D-Pad
     'DPadUp', 'DPadDown', 'DPadLeft', 'DPadRight'
 ]);
 
 /**
- * 验证错误
+ * Validation error
  */
 export class ValidationError extends Error {
   constructor(
@@ -117,39 +117,39 @@ export class ValidationError extends Error {
 }
 
 /**
- * 验证结果
+ * Validation result
  */
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
-  warnings?: string[]; // 添加警告信息
+  warnings?: string[]; // Add warning information
 }
 
 /**
- * 输入验证器
+ * Input validator
  */
 export class InputValidator {
-  // 上一次验证的序列号（用于单调性验证）
+  // Last validated sequence number（for monotonicity validation）
   private lastSequenceNumber: number = NaN;
 
   /**
-   * 验证输入状态
-   * @param state 输入状态
-   * @param options 验证选项
-   * @returns 验证结果
+   * Validate input state
+   * @param state Input state
+   * @param options Validation options
+   * @returns Validation result
    */
   validate(state: any, options?: { skipSequenceCheck?: boolean }): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
 
     try {
-      // 验证状态对象存在
+      // Validate state object exists
       if (!state) {
         errors.push(new ValidationError('State object is null or undefined'));
         return { valid: false, errors, warnings };
       }
 
-      // 验证键盘状态
+      // Validate keyboard state
       if (state.keyboard !== undefined) {
         const keyboardResult = this.validateKeyboardState(state.keyboard);
         if (!keyboardResult.valid) {
@@ -158,7 +158,7 @@ export class InputValidator {
         warnings.push(...keyboardResult.warnings || []);
       }
 
-      // 验证游戏手柄状态（可选字段）
+      // Validate gamepad state（Optional field）
       if (state.gamepad !== undefined) {
         const gamepadResult = this.validateGamepadState(state.gamepad);
         if (!gamepadResult.valid) {
@@ -167,7 +167,7 @@ export class InputValidator {
         warnings.push(...gamepadResult.warnings || []);
       }
 
-      // 验证鼠标状态（必需字段）
+      // Validate mouse state（Required field）
       if (!state.mouse) {
         errors.push(new ValidationError('Mouse state is required', 'mouse', 'object', undefined));
       } else {
@@ -177,7 +177,7 @@ export class InputValidator {
         }
       }
 
-      // 验证摇杆状态（必需字段）
+      // Validate joystick state（Required field）
       if (!state.joystick) {
         errors.push(new ValidationError('Joystick state is required', 'joystick', 'object', undefined));
       } else {
@@ -187,7 +187,7 @@ export class InputValidator {
         }
       }
 
-      // 验证序列号单调性（除非跳过）
+      // Validate sequence number monotonicity（Unless skipped）
       if (!options?.skipSequenceCheck && state.frameId !== undefined) {
         const seqResult = this.validateSequenceNumberMonotonicity(state.frameId);
         if (!seqResult.valid) {
@@ -195,7 +195,7 @@ export class InputValidator {
         }
       }
 
-      // 验证 frameId 类型
+      // Validate frameId type
       if (state.frameId !== undefined && typeof state.frameId !== 'number') {
         errors.push(
           new ValidationError(
@@ -222,16 +222,16 @@ export class InputValidator {
   }
 
   /**
-   * 重置验证器状态（用于重新连接场景）
+   * Reset validator state（for reconnect scenarios）
    */
   reset(): void {
     this.lastSequenceNumber = NaN;
   }
 
   /**
-   * 验证键盘状态
-   * @param keyboardState 键盘状态（Set 或数组）
-   * @returns 验证结果
+   * Validate keyboard state
+   * @param keyboardState Keyboard state（Set or array）
+   * @returns Validation result
    */
   private validateKeyboardState(keyboardState: any): ValidationResult {
     const errors: ValidationError[] = [];
@@ -241,7 +241,7 @@ export class InputValidator {
       return { valid: false, errors, warnings };
     }
 
-    // 检查是否为 Set 或数组
+    // Check if it is Set or array
     if (!(keyboardState instanceof Set) && !Array.isArray(keyboardState)) {
       errors.push(
         new ValidationError(
@@ -254,15 +254,15 @@ export class InputValidator {
       return { valid: false, errors, warnings };
     }
 
-    // 转换为数组进行验证
+    // Convert to array for validation
     const keys = Array.isArray(keyboardState) ? keyboardState : [...keyboardState];
 
-    // 验证按键数量（合理上限）
+    // Validate key count（Reasonable upper limit）
     if (keys.length > 20) {
       warnings.push(`Too many keys pressed: ${keys.length} (max recommended: 20)`);
     }
 
-    // 验证每个按键
+    // Validate each key
     for (const key of keys) {
       if (typeof key !== 'string') {
         errors.push(
@@ -276,7 +276,7 @@ export class InputValidator {
         continue;
       }
 
-      // 验证按键合法性（可选，宽松模式只警告）
+      // Validate key legality（Optional, loose mode only warns）
       if (!VALID_KEY_CODES.has(key)) {
         warnings.push(`Unknown key code: "${key}" (may still be valid)`);
       }
@@ -290,13 +290,13 @@ export class InputValidator {
   }
 
   /**
-   * 验证游戏手柄状态
-   * @param gamepadState 游戏手柄状态（支持两种格式：Set/数组或对象）
-   * @returns 验证结果
+   * Validate gamepad state
+   * @param gamepadState Gamepad state（Support two formats：Set/Array or object）
+   * @returns Validation result
    * 
-   * 支持格式：
-   * 1. Set<string> 或 string[] - 简化的按钮集合
-   * 2. { buttons: Set<string>|string[], axes?: ..., triggers?: ... } - 完整格式
+   * Supported formats：
+   * 1. Set<string> or string[] - Simplified button set
+   * 2. { buttons: Set<string>|string[], axes?: ..., triggers?: ... } - Full format
    */
   private validateGamepadState(gamepadState: any): ValidationResult {
     const errors: ValidationError[] = [];
@@ -306,7 +306,7 @@ export class InputValidator {
       return { valid: false, errors, warnings };
     }
 
-    // 支持简化格式：Set<string> 或 string[]
+    // Support simplified format：Set<string> or string[]
     if (gamepadState instanceof Set || Array.isArray(gamepadState)) {
       const buttons = gamepadState instanceof Set 
         ? [...gamepadState] 
@@ -325,7 +325,7 @@ export class InputValidator {
           continue;
         }
 
-        // 验证按钮合法性
+        // Validate button legality
         if (!VALID_GAMEPAD_BUTTONS.has(button)) {
           warnings.push(`Unknown gamepad button: "${button}"`);
         }
@@ -338,9 +338,9 @@ export class InputValidator {
       };
     }
 
-    // 支持完整格式：{ buttons, axes, triggers }
+    // Support full format：{ buttons, axes, triggers }
     if (typeof gamepadState === 'object') {
-      // 验证 buttons 字段（可选）
+      // Validate buttons field（optional）
       if (gamepadState.buttons !== undefined) {
         const buttons = gamepadState.buttons instanceof Set 
           ? [...gamepadState.buttons] 
@@ -371,7 +371,7 @@ export class InputValidator {
               continue;
             }
 
-            // 验证按钮合法性
+            // Validate button legality
             if (!VALID_GAMEPAD_BUTTONS.has(button)) {
               warnings.push(`Unknown gamepad button: "${button}"`);
             }
@@ -379,7 +379,7 @@ export class InputValidator {
         }
       }
 
-      // 验证 axes 字段（可选）
+      // Validate axes field（optional）
       if (gamepadState.axes !== undefined) {
         const axes = gamepadState.axes;
         const axisFields = ['leftX', 'leftY', 'rightX', 'rightY'];
@@ -409,7 +409,7 @@ export class InputValidator {
         }
       }
 
-      // 验证 triggers 字段（可选）
+      // Validate triggers field（optional）
       if (gamepadState.triggers !== undefined) {
         const triggers = gamepadState.triggers;
 
@@ -465,7 +465,7 @@ export class InputValidator {
       };
     }
 
-    // 不支持的格式
+    // Unsupported format
     errors.push(
       new ValidationError(
         'Gamepad state must be a Set, Array, or object',
@@ -483,9 +483,9 @@ export class InputValidator {
   }
 
   /**
-   * 验证鼠标状态
-   * @param mouseState 鼠标状态
-   * @returns 验证结果
+   * Validate mouse state
+   * @param mouseState Mouse state
+   * @returns Validation result
    */
   private validateMouseState(mouseState: any): ValidationResult {
     const errors: ValidationError[] = [];
@@ -495,7 +495,7 @@ export class InputValidator {
       return { valid: false, errors, warnings };
     }
 
-    // 检查必需字段
+    // Check required field
     if (typeof mouseState.x !== 'number') {
       errors.push(
         new ValidationError(
@@ -559,9 +559,9 @@ export class InputValidator {
   }
 
   /**
-   * 验证摇杆状态
-   * @param joystickState 摇杆状态
-   * @returns 验证结果
+   * Validate joystick state
+   * @param joystickState joystick state
+   * @returns Validation result
    */
   private validateJoystickState(joystickState: any): ValidationResult {
     const errors: ValidationError[] = [];
@@ -571,7 +571,7 @@ export class InputValidator {
       return { valid: false, errors, warnings };
     }
 
-    // 检查必需字段
+    // Check required field
     if (typeof joystickState.x !== 'number') {
       errors.push(
         new ValidationError(
@@ -582,7 +582,7 @@ export class InputValidator {
         )
       );
     } else {
-      // 验证摇杆 X 值范围 [-1.0, 1.0]
+      // Validate joystick X value range [-1.0, 1.0]
       if (joystickState.x < -1.0 || joystickState.x > 1.0) {
         errors.push(
           new ValidationError(
@@ -605,7 +605,7 @@ export class InputValidator {
         )
       );
     } else {
-      // 验证摇杆 Y 值范围 [-1.0, 1.0]
+      // Validate joystick Y value range [-1.0, 1.0]
       if (joystickState.y < -1.0 || joystickState.y > 1.0) {
         errors.push(
           new ValidationError(
@@ -618,7 +618,7 @@ export class InputValidator {
       }
     }
 
-    // 验证 deadzone（可选）
+    // Validate deadzone（optional）
     if (joystickState.deadzone !== undefined) {
       if (typeof joystickState.deadzone !== 'number') {
         errors.push(
@@ -641,7 +641,7 @@ export class InputValidator {
       }
     }
 
-    // 验证 smoothing（可选）
+    // Validate smoothing（optional）
     if (joystickState.smoothing !== undefined) {
       if (typeof joystickState.smoothing !== 'number') {
         errors.push(
@@ -672,27 +672,27 @@ export class InputValidator {
   }
 
   /**
-   * 验证序列号单调性（内部方法）
-   * @param newSeq 新序列号
-   * @returns 验证结果
+   * Validate sequence number monotonicity（internal method）
+   * @param newSeq New sequence number
+   * @returns Validation result
    */
   private validateSequenceNumberMonotonicity(newSeq: number): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: string[] = [];
 
-    // 如果序列号不是数字，警告但不报错
+    // If sequence number is not a number，warn but do not error
     if (isNaN(newSeq)) {
       warnings.push('Sequence number is not a number, using timestamp fallback');
       return { valid: true, errors, warnings };
     }
 
-    // 如果没有旧序列号，任何序列号都有效
+    // If no old sequence number，any sequence number is valid
     if (isNaN(this.lastSequenceNumber)) {
       this.lastSequenceNumber = newSeq;
       return { valid: true, errors, warnings };
     }
 
-    // 检查序列号是否递减（错误）
+    // Check if sequence number decreased（error）
     if (newSeq < this.lastSequenceNumber) {
       errors.push(
         new ValidationError(
@@ -704,7 +704,7 @@ export class InputValidator {
       );
     }
 
-    // 更新序列号
+    // Update sequence number
     this.lastSequenceNumber = newSeq;
 
     return {
@@ -715,53 +715,53 @@ export class InputValidator {
   }
 
   /**
-   * 验证轴值范围
-   * @param value 轴值
-   * @param min 最小值
-   * @param max 最大值
-   * @returns 是否在范围内
+   * Validate axis value range
+   * @param value Axis value
+   * @param min Minimum value
+   * @param max Maximum value
+   * @returns Is within range
    */
   clampAxisValue(value: number, min: number = -1.0, max: number = 1.0): number {
     return Math.max(min, Math.min(max, value));
   }
 
   /**
-   * 验证扳机值范围
-   * @param value 扳机值
-   * @param min 最小值
-   * @param max 最大值
-   * @returns 是否在范围内
+   * Validatetrigger valueRange
+   * @param value trigger value
+   * @param min Minimum value
+   * @param max Maximum value
+   * @returns Is within range
    */
   clampTriggerValue(value: number, min: number = 0.0, max: number = 1.0): number {
     return Math.max(min, Math.min(max, value));
   }
 
   /**
-   * 验证序列号（公开方法，用于外部调用）
-   * @param newSeq 新序列号
-   * @param lastSeq 旧序列号
-   * @returns 是否单调递增
-   * @deprecated 使用 validateSequenceNumberMonotonicity 代替
+   * Validatesequence number（public method，Used forOutsidePartcall）
+   * @param newSeq New sequence number
+   * @param lastSeq Old sequence number
+   * @returns Is monotonically increasing
+   * @deprecated use validateSequenceNumberMonotonicity replace
    */
   validateSequenceNumber(newSeq: number, lastSeq: number): boolean {
-    // 如果序列号不是数字，使用当前时间戳作为序列号
+    // If sequence number is not a number，useCurrentTimestampasForsequence number
     if (isNaN(newSeq)) {
       return true;
     }
 
-    // 如果没有旧序列号，任何序列号都有效
+    // If no old sequence number，any sequence number is valid
     if (isNaN(lastSeq)) {
       return true;
     }
 
-    // 允许序列号相同或更大（处理重传和重新连接的情况）
+    // Allowsequence numberSameorLarger（HandleReTransferandRenewConnectOfcase）
     return newSeq >= lastSeq;
   }
 
   /**
-   * 提取序列号
-   * @param state 状态对象
-   * @returns 序列号，如果 frameId 不是数字则返回 NaN
+   * Extract sequence number
+   * @param state State object
+   * @returns sequence number，If frameId notNumberThenReturn NaN
    */
   extractSequenceNumber(state: any): number {
     const frameId = state?.frameId;
@@ -769,8 +769,8 @@ export class InputValidator {
   }
 
   /**
-   * 获取当前序列号（用于测试）
-   * @returns 当前序列号
+   * Get current sequence number（for testing）
+   * @returns Current sequence number
    */
   getCurrentSequenceNumber(): number {
     return this.lastSequenceNumber;

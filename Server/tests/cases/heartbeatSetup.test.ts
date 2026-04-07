@@ -1,12 +1,12 @@
 /**
- * Heartbeat Setup 单元测试
+ * Heartbeat Setup Unit test
  *
- * 测试覆盖：
- * - setupHeartbeat 函数
- * - 心跳定时器
- * - 超时处理
- * - pong 响应处理
- * - 连接关闭清理
+ * Test coverage：
+ * - setupHeartbeat Function
+ * - Heartbeat定时Manager
+ * - Timeout处理
+ * - pong Response处理
+ * - Connection关闭清理
  */
 
 import { setupHeartbeat } from "../../src/heartbeat/heartbeat";

@@ -1,4 +1,4 @@
-// 入口文件，启动服务
+// Entry file, start service
 
 import { startWsServer } from "./ws/server";
 import { startInputExecutor, getExecutorManager, isDryRun, printDryRunSummary, getSafetyController } from "./input/executor";
@@ -10,15 +10,15 @@ import { HeartbeatModule } from "./input/heartbeat";
 import { startWebMonitor } from "./web/webServer";
 import dotenv from "dotenv";
 
-// 加载环境变量
+// Load environment variables
 dotenv.config();
 
-// 检查运行模式
+// Check run mode
 const isTestMode = process.env.TEST_MODE === "true";
 const disableActualInput = process.env.DISABLE_ACTUAL_INPUT === "true";
 const dryRunMode = process.env.DRY_RUN === "true";
 
-// 运行模式下的特殊配置
+// Special configuration for run mode
 if (isTestMode || dryRunMode) {
     console.log("=".repeat(60));
     if (dryRunMode) {
@@ -33,14 +33,14 @@ if (isTestMode || dryRunMode) {
     console.log("=".repeat(60));
 }
 
-// 初始化状态存储
+// Initialize state store
 const stateStore = new StateStore();
 
-// 初始化并启动心跳模块
+// Initialize and start heartbeat module
 const heartbeatModule = new HeartbeatModule();
 heartbeatModule.start();
 
-// 设置心跳超时回调（触发安全清零）
+// Set heartbeat timeout callback (trigger safety clear)
 heartbeatModule.onTimeout(() => {
     console.error("Heartbeat timeout: Triggering safety clear");
     const safetyController = getSafetyController();
@@ -49,33 +49,33 @@ heartbeatModule.onTimeout(() => {
     }
 });
 
-// 导出心跳模块到全局
+// Export heartbeat module to global
 (global as any).heartbeatModule = heartbeatModule;
 
-// 启动WebSocket服务器
+// Start WebSocket server
 startWsServer();
 
-// 启动输入执行器
+// Start input executor
 startInputExecutor();
 
-// 初始化影子模式（如果启用）
+// Initialize shadow mode (if enabled)
 initShadowModeIntegration();
 
 
-// 初始化 Router-only 模式（如果启用）
+// Initialize Router-only mode (if enabled)
 initRouterOnlyMode();
-// 初始化并启动ApplyScheduler
+// Initialize and start ApplyScheduler
 const executorManager = getExecutorManager();
 const applyScheduler = new ApplyScheduler(executorManager, stateStore);
 applyScheduler.start(Date.now());
 
-// 导出全局实例，供其他模块使用
+// Export global instance for other modules
 (global as any).stateStore = stateStore;
 
-// 启动Web监控服务器
+// Start web monitor server
 startWebMonitor();
 
-// 打印启动信息
+// Print startup info
 console.log("=".repeat(60));
 console.log("  ControlX Server");
 console.log("=".repeat(60));
@@ -89,7 +89,7 @@ console.log("    • WebSocket-based state synchronization");
 console.log("    • Keyboard, mouse, gamepad, and joystick support");
 console.log("=".repeat(60));
 
-// 启动日志
+// Startup log
 if (dryRunMode) {
     console.log("🏃 ControlX Server started in DRY RUN MODE");
     console.log("📋 Dry run features:");
@@ -107,12 +107,12 @@ if (dryRunMode) {
     console.log("🎮 ControlX Server started successfully");
 }
 
-// 处理进程终止
+// Handle process termination
 try {
     process.on("SIGINT", () => {
         console.log("\nShutting down server...");
 
-        // 如果是dry run模式，打印摘要
+        // If dry run mode, print summary
         if (isDryRun()) {
             printDryRunSummary();
         }

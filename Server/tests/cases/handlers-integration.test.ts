@@ -1,12 +1,12 @@
 /**
- * WebSocket Handlers 集成测试
+ * WebSocket Handlers Integration test
  *
- * 测试覆盖：
- * - handleInput 处理器
- * - handleInputEvent 处理器
- * - handleWelcome 处理器
- * - handlePing 处理器
- * - handleLatencyProbe 处理器
+ * Test coverage：
+ * - handleInput Handler
+ * - handleInputEvent Handler
+ * - handleWelcome Handler
+ * - handlePing Handler
+ * - handleLatencyProbe Handler
  */
 
 import { handleInput } from '../../src/ws/handlers/input';

@@ -1,7 +1,7 @@
 /**
- * 调试消息处理器
+ * Debug message handler
  * 
- * 处理调试消息的发送、过滤和日志级别控制
+ * Handle debug message sending, filtering and log level control
  */
 
 import { 
@@ -14,8 +14,8 @@ import {
 } from "../messageTypes";
 
 /**
- * 调试管理器类
- * 管理调试消息的发送和过滤
+ * Debug manager class
+ * Manage debug message sending and filtering
  */
 export class DebugManager {
     private config: DebugConfig;
@@ -26,41 +26,41 @@ export class DebugManager {
     }
 
     /**
-     * 注册WebSocket客户端
-     * @param ws WebSocket连接
+     * Register WebSocket client
+     * @param ws WebSocket connection
      */
     registerClient(ws: any): void {
         this.wsClients.add(ws);
     }
 
     /**
-     * 注销WebSocket客户端
-     * @param ws WebSocket连接
+     * Unregister WebSocket client
+     * @param ws WebSocket connection
      */
     unregisterClient(ws: any): void {
         this.wsClients.delete(ws);
     }
 
     /**
-     * 获取当前调试配置
-     * @returns 调试配置
+     * Get current debug configuration
+     * @returns DebugConfig
      */
     getConfig(): DebugConfig {
         return { ...this.config };
     }
 
     /**
-     * 更新调试配置
-     * @param updates 部分配置更新
+     * Update debug configuration
+     * @param updates Partial configuration update
      */
     updateConfig(updates: Partial<DebugConfig>): void {
         this.config = { ...this.config, ...updates };
     }
 
     /**
-     * 检查日志级别是否应该输出
-     * @param level 日志级别
-     * @returns 是否应该输出
+     * Check if log level should output
+     * @param level Log level
+     * @returns WhetherShouldOutput
      */
     private shouldLog(level: LogLevel): boolean {
         if (!this.config.enabled) {
@@ -75,9 +75,9 @@ export class DebugManager {
     }
 
     /**
-     * 检查来源是否应该输出
-     * @param source 来源标识
-     * @returns 是否应该输出
+     * Check if source should output
+     * @param source ComeSourceIdentifier
+     * @returns WhetherShouldOutput
      */
     private shouldIncludeSource(source?: string): boolean {
         if (!source || !this.config.filters || this.config.filters.length === 0) {
@@ -90,8 +90,8 @@ export class DebugManager {
     }
 
     /**
-     * 发送调试消息到所有客户端
-     * @param message 调试消息
+     * SendDebugMessagetoAllClient
+     * @param message DebugMessage
      */
     private broadcast(message: DebugMessage): void {
         const messageStr = JSON.stringify(message);
@@ -100,18 +100,18 @@ export class DebugManager {
             try {
                 ws.send(messageStr);
             } catch (error) {
-                // 客户端可能已断开，移除它
+                // ClientCanCanDisconnected，RemoveIt
                 this.wsClients.delete(ws);
             }
         }
     }
 
     /**
-     * 记录调试消息
-     * @param level 日志级别
-     * @param message 消息内容
-     * @param source 来源标识
-     * @param data 附加数据
+     * RecordDebugMessage
+     * @param level Log level
+     * @param message MessageInside容
+     * @param source ComeSourceIdentifier
+     * @param data AttachNumber据
      */
     log(level: LogLevel, message: string, source?: string, data?: any): void {
         if (!this.shouldLog(level)) {
@@ -129,26 +129,26 @@ export class DebugManager {
             data
         };
 
-        // 添加时间戳
+        // AddTimestamp
         if (this.config.includeTimestamp) {
             debugMessage.timestamp = Date.now();
         }
 
-        // 添加来源
+        // AddComeSource
         if (this.config.includeSource && source) {
             debugMessage.source = source;
         }
 
-        // 广播到客户端
+        // BroadcasttoClient
         this.broadcast(debugMessage);
 
-        // 同时输出到控制台
+        // SameTimeOutputtoConsole
         this.logToConsole(debugMessage);
     }
 
     /**
-     * 输出到控制台
-     * @param message 调试消息
+     * OutputtoConsole
+     * @param message DebugMessage
      */
     private logToConsole(message: DebugMessage): void {
         const timestamp = message.timestamp 
@@ -179,7 +179,7 @@ export class DebugManager {
         }
     }
 
-    // 便捷方法
+    // ConvenientMethod
     debug(message: string, source?: string, data?: any): void {
         this.log("DEBUG", message, source, data);
     }
@@ -197,13 +197,13 @@ export class DebugManager {
     }
 }
 
-// 导出默认实例
+// ExportDefaultInstance
 export const debugManager = new DebugManager();
 
 /**
- * 处理调试配置设置消息
- * @param ws WebSocket连接
- * @param message 调试配置设置消息
+ * HandleDebugConfigSetMessage
+ * @param ws WebSocket connection
+ * @param message DebugConfigSetMessage
  */
 export function handleDebugConfigSet(ws: any, message: DebugConfigSetMessage): void {
     debugManager.updateConfig(message.data);
@@ -217,8 +217,8 @@ export function handleDebugConfigSet(ws: any, message: DebugConfigSetMessage): v
 }
 
 /**
- * 处理调试配置获取消息
- * @param ws WebSocket连接
+ * HandleDebugConfigGetMessage
+ * @param ws WebSocket connection
  */
 export function handleDebugConfigGet(ws: any): void {
     const response: DebugConfigMessage = {
@@ -230,9 +230,9 @@ export function handleDebugConfigGet(ws: any): void {
 }
 
 /**
- * 创建调试日志器
- * @param source 来源标识
- * @returns 调试日志器对象
+ * CreateDebugLogManager
+ * @param source ComeSourceIdentifier
+ * @returns DebugLogManagerObject
  */
 export function createLogger(source: string) {
     return {

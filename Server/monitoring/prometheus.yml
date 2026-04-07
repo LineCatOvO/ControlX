@@ -1,0 +1,37 @@
+# Prometheus 配置示例
+# 用于抓取 ControlX Server 的指标
+
+global:
+  scrape_interval: 15s  # 默认抓取间隔
+  evaluation_interval: 15s  # 告警规则评估间隔
+
+# 告警管理器配置（可选）
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['localhost:9093']
+
+# 告警规则文件（可选）
+# rule_files:
+#   - 'alerting-rules.yml'
+
+# 抓取配置
+scrape_configs:
+  # ControlX Server 指标抓取
+  - job_name: 'controlx-server'
+    static_configs:
+      - targets: ['localhost:8080']  # 健康检查服务器端口
+    metrics_path: '/metrics/prometheus'  # Prometheus 格式端点
+    scheme: http
+
+  # 可选：抓取 Node.js 进程指标
+  - job_name: 'controlx-server-json'
+    static_configs:
+      - targets: ['localhost:8080']
+    metrics_path: '/metrics'  # JSON 格式端点（仅供参考）
+    scheme: http
+
+# 注意：
+# 1. 请根据实际部署修改 targets 地址
+# 2. 如果健康检查服务器端口不是 8080，请修改 targets
+# 3. 建议在生产环境使用 HTTPS（scheme: https）

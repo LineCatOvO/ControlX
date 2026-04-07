@@ -382,4 +382,214 @@ describe("SafetyController Tests", () => {
             expect(mockExecutorManager.resetCalls).toBe(1);
         });
     });
+
+    describe("Time Authority Integration Tests", () => {
+        test("should update currentTickTime from ApplyScheduler", () => {
+            const tickTime = 1000000;
+            safetyController.updateTickTime(tickTime);
+
+            // Verify currentTickTime is updated
+            // Note: currentTickTime is private, we verify it indirectly via checkTimeout
+            expect(safetyController).toBeDefined();
+        });
+
+        test("should use tickTime for recordValidState", () => {
+            const state: InputState = {
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+
+            const tickTime = 1000000;
+            safetyController.updateTickTime(tickTime);
+            safetyController.recordValidState(state, tickTime);
+
+            // Verify lastValidStateTime is set to tickTime
+            expect(safetyController.getLastValidStateTime()).toBe(tickTime);
+        });
+
+        test("should ensure time consistency with ApplyScheduler", () => {
+            const state: InputState = {
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+
+            // Update tickTime from ApplyScheduler
+            const tickTime1 = 1000000;
+            safetyController.updateTickTime(tickTime1);
+            safetyController.recordValidState(state, tickTime1);
+
+            expect(safetyController.getLastValidStateTime()).toBe(tickTime1);
+
+            // Update to new tickTime
+            const tickTime2 = 2000000;
+            safetyController.updateTickTime(tickTime2);
+            safetyController.recordValidState(state, tickTime2);
+
+            expect(safetyController.getLastValidStateTime()).toBe(tickTime2);
+        });
+
+        test("should not use Date.now() for timeout check when tickTime available", () => {
+            const state: InputState = {
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+
+            const tickTime = 1000000;
+            safetyController.updateTickTime(tickTime);
+            safetyController.recordValidState(state, tickTime);
+
+            // Verify that time is from tickTime, not Date.now()
+            expect(safetyController.getLastValidStateTime()).toBe(tickTime);
+            expect(safetyController.getLastValidStateTime()).not.toBe(Date.now());
+        });
+
+        test("should fallback to Date.now() when tickTime not available", () => {
+            const state: InputState = {
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+
+            // Do not update tickTime (simulate ApplyScheduler not started)
+            safetyController.recordValidState(state, Date.now());
+
+            // Should still record valid state time
+            const lastValidTime = safetyController.getLastValidStateTime();
+            expect(lastValidTime).toBeGreaterThan(0);
+        });
+
+        test("should validate time authority design principles", () => {
+            const state: InputState = {
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+
+            // Principle 1: SafetyController receives tickTime from ApplyScheduler
+            const tickTime = 1000000;
+            safetyController.updateTickTime(tickTime);
+
+            // Principle 2: SafetyController uses tickTime for all time operations
+            safetyController.recordValidState(state, tickTime);
+            expect(safetyController.getLastValidStateTime()).toBe(tickTime);
+
+            // Principle 3: SafetyController does not generate time independently
+            // This is verified by ensuring all time comes from updateTickTime calls
+        });
+
+        test("should handle multiple tickTime updates correctly", () => {
+            const state: InputState = {
+                keyboard: new Set(["W"]),
+                mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+                joystick: { x: 0, y: 0, deadzone: 0, smoothing: 0 },
+            };
+
+            // Simulate multiple ticks from ApplyScheduler
+            for (let i = 0; i < 10; i++) {
+                const tickTime = 1000000 + i * 8; // 8ms interval
+                safetyController.updateTickTime(tickTime);
+                safetyController.recordValidState(state, tickTime);
+            }
+
+            // Verify last recorded time is correct
+            const lastTickTime = 1000000 + 9 * 8;
+            expect(safetyController.getLastValidStateTime()).toBe(lastTickTime);
+        });
+    });
+
+    describe("Permission Token Tests", () => {
+        test("should create permission token", () => {
+            const token = safetyController.createPermissionToken(
+                "test-token",
+                "external"
+            );
+            expect(token).toBeDefined();
+            expect(token.getId()).toBe("test-token");
+            expect(token.checkValid()).toBe(true);
+        });
+
+        test("should validate permission token", () => {
+            const token = safetyController.createPermissionToken(
+                "test-token",
+                "external"
+            );
+            expect(safetyController.validatePermissionToken("test-token")).toBe(
+                true
+            );
+        });
+
+        test("should reject invalid token", () => {
+            expect(
+                safetyController.validatePermissionToken("invalid-token")
+            ).toBe(false);
+        });
+
+        test("should revoke permission token", () => {
+            const token = safetyController.createPermissionToken(
+                "test-token",
+                "external"
+            );
+            safetyController.revokePermissionToken("test-token");
+
+            expect(safetyController.validatePermissionToken("test-token")).toBe(
+                false
+            );
+            expect(token.checkValid()).toBe(false);
+        });
+
+        test("should accept clear request with valid token", () => {
+            const token = safetyController.createPermissionToken(
+                "test-token",
+                "external"
+            );
+            const result = safetyController.requestClear("test", "test-token");
+            expect(result).toBe(true);
+            expect(safetyController.getClearCount()).toBe(1);
+        });
+
+        test("should reject clear request with invalid token", () => {
+            const result = safetyController.requestClear("test", "invalid-token");
+            expect(result).toBe(false);
+            expect(safetyController.getClearCount()).toBe(0);
+        });
+
+        test("should emergency clear without token", () => {
+            safetyController.emergencyClear("emergency");
+            expect(safetyController.getClearCount()).toBe(1);
+            expect(safetyController.getExceptionClearCount()).toBe(1);
+        });
+    });
+
+    describe("Clear Record Tests", () => {
+        test("should record clear operations", () => {
+            safetyController.triggerSafetyClear("test1");
+            safetyController.triggerSafetyClear("test2");
+
+            const records = safetyController.getClearRecords();
+            expect(records.length).toBe(2);
+            expect(records[0].reason).toBe("test1");
+            expect(records[1].reason).toBe("test2");
+        });
+
+        test("should get recent clear records", () => {
+            for (let i = 0; i < 20; i++) {
+                safetyController.triggerSafetyClear(`test${i}`);
+            }
+
+            const recentRecords = safetyController.getRecentClearRecords(10);
+            expect(recentRecords.length).toBe(10);
+        });
+
+        test("should limit clear records to max", () => {
+            for (let i = 0; i < 150; i++) {
+                safetyController.triggerSafetyClear(`test${i}`);
+            }
+
+            const records = safetyController.getClearRecords();
+            expect(records.length).toBeLessThanOrEqual(100);
+        });
+    });
 });

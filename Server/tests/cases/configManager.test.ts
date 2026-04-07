@@ -1,12 +1,12 @@
 /**
- * ConfigManager 单元测试
+ * ConfigManager Unit test
  *
- * 测试覆盖：
- * - 配置加载
- * - 配置验证
- * - 配置热更新
- * - 配置持久化
- * - 配置变更监听
+ * Test coverage：
+ * - Config加载
+ * - ConfigVerify
+ * - Config热Update
+ * - Config持久化
+ * - ConfigChange监听
  */
 
 import * as fs from 'fs';

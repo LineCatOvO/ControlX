@@ -1,49 +1,49 @@
 /**
- * WebSocket消息类型定义
+ * WebSocket message type definition
  * 
- * 本文件定义了WebSocket通信中使用的所有消息类型接口
+ * This file defines all message type interfaces used in WebSocket communication
  */
 
 // =========================
-// 基础消息接口
+// Base message interface
 // =========================
 
 /**
- * WebSocket消息基础接口
+ * WebSocket message base interface
  */
 export interface WsMessage {
     type: string;
 }
 
 // =========================
-// 配置消息类型
+// Configuration message type
 // =========================
 
 /**
- * 配置对象接口
+ * Configuration object interface
  */
 export interface Config {
-    inputUpdateInterval: number;    // 输入更新间隔（毫秒）
-    heartbeatInterval: number;      // 心跳间隔（毫秒）
-    pingInterval: number;           // Ping间隔（毫秒）
-    safeStateTimeout: number;       // 安全状态超时（毫秒）
-    enableLogging: boolean;         // 是否启用日志
-    defaultPort: number;            // 默认端口
-    portRange: number;              // 端口尝试范围
-    isTestMode: boolean;            // 是否为测试模式
+    inputUpdateInterval: number;    // Input update interval (ms)
+    heartbeatInterval: number;      // Heartbeat interval (ms)
+    pingInterval: number;           // Ping interval (ms)
+    safeStateTimeout: number;       // Safe state timeout (ms)
+    enableLogging: boolean;         // Whether enable logging
+    defaultPort: number;            // Default port
+    portRange: number;              // Port attempt range
+    isTestMode: boolean;            // Whether is test mode
 }
 
 /**
- * 配置获取消息
- * 客户端发送此消息请求获取当前配置
+ * Configuration get message
+ * Client sends this message to request current configuration
  */
 export interface ConfigGetMessage extends WsMessage {
     type: "config_get";
 }
 
 /**
- * 配置设置消息
- * 客户端发送此消息请求更新配置
+ * Configuration set message
+ * Client sends this message to request configuration update
  */
 export interface ConfigSetMessage extends WsMessage {
     type: "config_set";
@@ -51,8 +51,8 @@ export interface ConfigSetMessage extends WsMessage {
 }
 
 /**
- * 配置返回消息
- * 服务器响应配置获取请求
+ * Configuration return message
+ * Server responds to configuration get request
  */
 export interface ConfigMessage extends WsMessage {
     type: "config";
@@ -60,8 +60,8 @@ export interface ConfigMessage extends WsMessage {
 }
 
 /**
- * 配置更新确认消息
- * 服务器确认配置更新成功
+ * Configuration update confirmation message
+ * Server confirms configuration update success
  */
 export interface ConfigAckMessage extends WsMessage {
     type: "config_ack";
@@ -70,8 +70,8 @@ export interface ConfigAckMessage extends WsMessage {
 }
 
 /**
- * 配置错误消息
- * 服务器报告配置操作失败
+ * Configuration error message
+ * Server reports configuration operation failure
  */
 export interface ConfigErrorMessage extends WsMessage {
     type: "config_error";
@@ -81,17 +81,17 @@ export interface ConfigErrorMessage extends WsMessage {
 }
 
 // =========================
-// 调试消息类型
+// Debug message type
 // =========================
 
 /**
- * 日志级别枚举
+ * Log level enumeration
  */
 export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
 /**
- * 调试消息接口
- * 用于服务器向客户端发送调试信息
+ * Debug message interface
+ * Used for server to send debug information to client
  */
 export interface DebugMessage extends WsMessage {
     type: "debug";
@@ -103,19 +103,19 @@ export interface DebugMessage extends WsMessage {
 }
 
 /**
- * 调试配置接口
- * 用于控制调试消息的输出
+ * Debug configuration interface
+ * Used to control debug message output
  */
 export interface DebugConfig {
-    enabled: boolean;               // 是否启用调试
-    level: LogLevel;                // 最低日志级别
-    filters?: string[];             // 来源过滤器
-    includeTimestamp: boolean;      // 是否包含时间戳
-    includeSource: boolean;         // 是否包含来源
+    enabled: boolean;               // Whether enable debug
+    level: LogLevel;                // Minimum log level
+    filters?: string[];             // Source filter
+    includeTimestamp: boolean;      // Whether include timestamp
+    includeSource: boolean;         // Whether include source
 }
 
 /**
- * 调试配置设置消息
+ * Debug Configuration set message
  */
 export interface DebugConfigSetMessage extends WsMessage {
     type: "debug_config_set";
@@ -123,7 +123,7 @@ export interface DebugConfigSetMessage extends WsMessage {
 }
 
 /**
- * 调试配置返回消息
+ * Debug Configuration return message
  */
 export interface DebugConfigMessage extends WsMessage {
     type: "debug_config";
@@ -131,11 +131,11 @@ export interface DebugConfigMessage extends WsMessage {
 }
 
 // =========================
-// 错误消息类型
+// Error message type
 // =========================
 
 /**
- * 错误消息接口
+ * Error message interface
  */
 export interface ErrorMessage extends WsMessage {
     type: "error";
@@ -145,7 +145,7 @@ export interface ErrorMessage extends WsMessage {
 }
 
 /**
- * 确认消息接口
+ * Acknowledge message interface
  */
 export interface AckMessage extends WsMessage {
     type: "ack";
@@ -155,11 +155,11 @@ export interface AckMessage extends WsMessage {
 }
 
 // =========================
-// 消息类型导出
+// Message type export
 // =========================
 
 /**
- * 配置相关消息联合类型
+ * Configuration related message union type
  */
 export type ConfigMessageType = 
     | ConfigGetMessage 
@@ -169,7 +169,7 @@ export type ConfigMessageType =
     | ConfigErrorMessage;
 
 /**
- * 调试相关消息联合类型
+ * Debug related message union type
  */
 export type DebugMessageType = 
     | DebugMessage 
@@ -177,7 +177,7 @@ export type DebugMessageType =
     | DebugConfigMessage;
 
 /**
- * 默认调试配置
+ * Default debug configuration
  */
 export const DEFAULT_DEBUG_CONFIG: DebugConfig = {
     enabled: true,
@@ -188,7 +188,7 @@ export const DEFAULT_DEBUG_CONFIG: DebugConfig = {
 };
 
 /**
- * 默认配置
+ * Default configuration
  */
 export const DEFAULT_CONFIG: Config = {
     inputUpdateInterval: 8,

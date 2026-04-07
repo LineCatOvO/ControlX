@@ -93,7 +93,7 @@ describe("GamepadExecutor", () => {
         jest.clearAllMocks();
     });
 
-    describe("初始化测试 (Initialization Tests)", () => {
+    describe("InitializeTest (Initialization Tests)", () => {
         test("should initialize successfully when ViGEmBus is available", () => {
             expect(MockedGamepadXInputAdapter).toHaveBeenCalled();
             expect(MockedGamepadAdapter).toHaveBeenCalled();
@@ -120,8 +120,8 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("轴测试 (Axis Tests)", () => {
-        describe("左摇杆 X 轴 (Left Joystick X Axis)", () => {
+    describe("轴Test (Axis Tests)", () => {
+        describe("LeftJoystick X 轴 (Left Joystick X Axis)", () => {
             test("should apply positive LX value", () => {
                 const state = createState([], { x: 0.5, y: 0 });
                 gamepadExecutor.applyState(state);
@@ -151,7 +151,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("左摇杆 Y 轴 (Left Joystick Y Axis)", () => {
+        describe("LeftJoystick Y 轴 (Left Joystick Y Axis)", () => {
             test("should apply positive LY value", () => {
                 const state = createState([], { x: 0, y: 0.5 });
                 gamepadExecutor.applyState(state);
@@ -181,7 +181,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("右摇杆 X 轴 (Right Joystick X Axis)", () => {
+        describe("RightJoystick X 轴 (Right Joystick X Axis)", () => {
             test("should handle RX axis through joystick state", () => {
                 // Note: Current InputState uses single joystick, but we test the interface
                 const state = createState([], { x: 0.7, y: 0 });
@@ -191,7 +191,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("右摇杆 Y 轴 (Right Joystick Y Axis)", () => {
+        describe("RightJoystick Y 轴 (Right Joystick Y Axis)", () => {
             test("should handle RY axis through joystick state", () => {
                 const state = createState([], { x: 0, y: 0.7 });
                 gamepadExecutor.applyState(state);
@@ -200,7 +200,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("组合轴测试 (Combined Axis Tests)", () => {
+        describe("组合轴Test (Combined Axis Tests)", () => {
             test("should apply both LX and LY simultaneously", () => {
                 const state = createState([], { x: 0.5, y: 0.5 });
                 gamepadExecutor.applyState(state);
@@ -231,7 +231,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("扳机测试 (Trigger Tests)", () => {
+    describe("扳机Test (Trigger Tests)", () => {
         test("should handle trigger values in state", () => {
             const state = createState([], { x: 0, y: 0 });
             gamepadExecutor.applyState(state);
@@ -277,8 +277,8 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("按钮测试 (Button Tests)", () => {
-        describe("主要按钮 (Main Buttons)", () => {
+    describe("ButtonTest (Button Tests)", () => {
+        describe("PrimaryButton (Main Buttons)", () => {
             test("should apply A button press", () => {
                 const state = createState(["A"]);
                 gamepadExecutor.applyState(state);
@@ -308,7 +308,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("肩按钮 (Shoulder Buttons)", () => {
+        describe("肩Button (Shoulder Buttons)", () => {
             test("should apply LB button press", () => {
                 const state = createState(["LB"]);
                 gamepadExecutor.applyState(state);
@@ -338,7 +338,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("系统按钮 (System Buttons)", () => {
+        describe("系统Button (System Buttons)", () => {
             test("should apply Start button press", () => {
                 const state = createState(["Start"]);
                 gamepadExecutor.applyState(state);
@@ -375,7 +375,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("摇杆按下按钮 (Stick Press Buttons)", () => {
+        describe("Joystick按UnderButton (Stick Press Buttons)", () => {
             test("should apply L3 button press (Left stick click)", () => {
                 const state = createState(["L3"]);
                 gamepadExecutor.applyState(state);
@@ -421,7 +421,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("组合按钮测试 (Combined Button Tests)", () => {
+        describe("组合ButtonTest (Combined Button Tests)", () => {
             test("should apply multiple buttons simultaneously (A + B)", () => {
                 const state = createState(["A", "B"]);
                 gamepadExecutor.applyState(state);
@@ -466,7 +466,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("状态转换测试 (State Transition Tests)", () => {
+    describe("State转换Test (State Transition Tests)", () => {
         test("should detect new button press", () => {
             // First state: no buttons
             gamepadExecutor.applyState(createState([]));
@@ -546,8 +546,8 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("边界条件测试 (Boundary Condition Tests)", () => {
-        describe("轴值边界 (Axis Value Boundaries)", () => {
+    describe("边界条件Test (Boundary Condition Tests)", () => {
+        describe("轴Value边界 (Axis Value Boundaries)", () => {
             test("should handle axis value at upper boundary (1.0)", () => {
                 const state = createState([], { x: 1.0, y: 1.0 });
                 gamepadExecutor.applyState(state);
@@ -586,7 +586,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("空状态处理 (Empty State Handling)", () => {
+        describe("NullState处理 (Empty State Handling)", () => {
             test("should handle empty gamepad state", () => {
                 const state = createState([]);
                 gamepadExecutor.applyState(state);
@@ -622,7 +622,7 @@ describe("GamepadExecutor", () => {
             });
         });
 
-        describe("极端值测试 (Extreme Value Tests)", () => {
+        describe("极EndValueTest (Extreme Value Tests)", () => {
             test("should handle very small axis values", () => {
                 const state = createState([], { x: 0.001, y: 0.001 });
                 gamepadExecutor.applyState(state);
@@ -662,7 +662,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("applyDelta 方法测试 (applyDelta Method Tests)", () => {
+    describe("applyDelta MethodTest (applyDelta Method Tests)", () => {
         test("should log that delta is not supported", () => {
             const consoleSpy = jest.spyOn(console, "log").mockImplementation();
             const delta = createDelta(["A"], []);
@@ -689,7 +689,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("applyEvent 方法测试 (applyEvent Method Tests)", () => {
+    describe("applyEvent MethodTest (applyEvent Method Tests)", () => {
         test("should log that event is not supported", () => {
             const consoleSpy = jest.spyOn(console, "log").mockImplementation();
             const event = createEvent("gamepad_button", { button: "A" });
@@ -716,7 +716,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("reset 方法测试 (reset Method Tests)", () => {
+    describe("reset MethodTest (reset Method Tests)", () => {
         test("should reset gamepad state", async () => {
             await gamepadExecutor.reset();
 
@@ -755,7 +755,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("isEnabled 方法测试 (isEnabled Method Tests)", () => {
+    describe("isEnabled MethodTest (isEnabled Method Tests)", () => {
         test("should return true when initialized successfully", () => {
             expect(gamepadExecutor.isEnabled()).toBe(true);
         });
@@ -769,7 +769,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("cleanup 方法测试 (cleanup Method Tests)", () => {
+    describe("cleanup MethodTest (cleanup Method Tests)", () => {
         test("should cleanup adapter when initialized", () => {
             gamepadExecutor.cleanup();
 
@@ -802,7 +802,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("禁用状态测试 (Disabled State Tests)", () => {
+    describe("DisableStateTest (Disabled State Tests)", () => {
         test("should skip applyState when not initialized", () => {
             // Create executor that fails initialization
             mockGamepadAdapter.initialize.mockReturnValue(false);
@@ -851,7 +851,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("日志输出测试 (Logging Tests)", () => {
+    describe("LogOutputTest (Logging Tests)", () => {
         test("should log button state changes", () => {
             const consoleSpy = jest.spyOn(console, "log").mockImplementation();
 
@@ -895,7 +895,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("异步操作测试 (Async Operation Tests)", () => {
+    describe("异步OperationTest (Async Operation Tests)", () => {
         test("applyState should be callable as async", async () => {
             const state = createState(["A"]);
             await gamepadExecutor.applyState(state);
@@ -925,7 +925,7 @@ describe("GamepadExecutor", () => {
         });
     });
 
-    describe("错误处理测试 (Error Handling Tests)", () => {
+    describe("Error处理Test (Error Handling Tests)", () => {
         test("should propagate adapter applyState errors (no error handling in source)", async () => {
             mockGamepadAdapter.applyState.mockImplementation(() => {
                 throw new Error("Adapter error");

@@ -1,12 +1,12 @@
 /**
- * Event Handler 单元测试
+ * Event Handler Unit test
  *
- * 测试覆盖：
- * - handleEvent 处理器
- * - StateStore 可用性检查
- * - baseStateId 匹配验证
- * - EventAck 消息发送
- * - 错误处理
+ * Test coverage：
+ * - handleEvent Handler
+ * - StateStore Available性检查
+ * - baseStateId 匹配Verify
+ * - EventAck MessageSend
+ * - Error处理
  */
 
 import { handleEvent } from "../../src/ws/handlers/event";

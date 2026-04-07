@@ -1,14 +1,19 @@
-// 键盘适配器实现
+// Keyboard adapter implementation
 
-import { KeyboardAdapter as IKeyboardAdapter } from './InputAdapter';
+import { InputAdapter } from './InputAdapter';
 import { KeyboardExecutor } from '../keyboard';
-import { InputState } from '../../types/ws';
+import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
- * 键盘适配器
- * 封装 KeyboardExecutor 的调用逻辑，实现 KeyboardAdapter 接口
+ * Keyboard adapter
+ * Encapsulates KeyboardExecutor calling logic，implements InputAdapter interface
+ *
+ * Design notes：
+ * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
+ * - Internally delegates to KeyboardExecutor for actual keyboard operations
+ * - Provides keyboard-specific methods（applyKeyboardState, getKeyboardState）
  */
-export class KeyboardAdapter implements IKeyboardAdapter {
+export class KeyboardAdapter implements InputAdapter {
     private executor: KeyboardExecutor;
 
     constructor(executor: KeyboardExecutor) {
@@ -16,16 +21,39 @@ export class KeyboardAdapter implements IKeyboardAdapter {
     }
 
     /**
-     * 应用输入状态（适配器基类方法）
-     * @param state 输入状态
+     * Apply complete input state（InputAdapter interface method）
+     * @param state Input state
      */
     applyState(state: InputState): void {
         this.executor.applyState(state);
     }
 
     /**
-     * 应用键盘状态（KeyboardAdapter 特定方法）
-     * @param pressedKeys 按下的键集合
+     * Apply input delta（InputAdapter interface method）
+     * @param delta Input delta
+     */
+    applyDelta(delta: InputDelta): void {
+        this.executor.applyDelta(delta);
+    }
+
+    /**
+     * Apply input event（InputAdapter interface method）
+     * @param event Input event
+     */
+    applyEvent(event: InputEvent): void {
+        this.executor.applyEvent(event);
+    }
+
+    /**
+     * ResetInput state（InputAdapter interface method）
+     */
+    reset(): void {
+        this.executor.reset();
+    }
+
+    /**
+     * Apply keyboard state（Keyboard-specific method）
+     * @param pressedKeys Set of pressed keys
      */
     applyKeyboardState(pressedKeys: Set<string> | string[]): void {
         const keys = Array.isArray(pressedKeys) ? pressedKeys : Array.from(pressedKeys);
@@ -37,18 +65,11 @@ export class KeyboardAdapter implements IKeyboardAdapter {
     }
 
     /**
-     * 重置输入状态（适配器基类方法）
-     */
-    reset(): void {
-        this.executor.reset();
-    }
-
-    /**
-     * 获取当前键盘状态
-     * @returns 当前按下的键集合
+     * Get current keyboard state
+     * @returns CurrentSet of pressed keys
      */
     getKeyboardState(): Set<string> {
-        // KeyboardExecutor 不暴露内部状态，返回空集合
+        // KeyboardExecutor does not expose internal state，Return empty set
         return new Set<string>();
     }
 }

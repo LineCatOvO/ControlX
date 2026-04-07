@@ -2,8 +2,8 @@ import { InputExecutor } from "./interfaces";
 import { InputState, InputDelta, InputEvent } from "../types/ws";
 
 /**
- * 测试模式键盘执行器
- * 在测试模式下记录键盘事件但不产生实际的系统输入
+ * Test mode keyboard executor
+ * Record keyboard events in test mode but do not produce actual system input
  */
 export class TestModeKeyboardExecutor implements InputExecutor {
     private currentKeyboardState: Set<string> = new Set();
@@ -22,7 +22,7 @@ export class TestModeKeyboardExecutor implements InputExecutor {
     }
 
     /**
-     * 应用完整输入状态
+     * Apply complete input state
      */
     applyState(state: InputState): void {
         this.logTestEvent("applyState", {
@@ -34,7 +34,7 @@ export class TestModeKeyboardExecutor implements InputExecutor {
     }
 
     /**
-     * 应用输入增量
+     * Apply input delta
      */
     applyDelta(delta: InputDelta): void {
         this.logTestEvent("applyDelta", {
@@ -62,7 +62,7 @@ export class TestModeKeyboardExecutor implements InputExecutor {
     }
 
     /**
-     * 应用输入事件
+     * Apply input event
      */
     applyEvent(event: InputEvent): void {
         this.logTestEvent("applyEvent", {
@@ -87,7 +87,7 @@ export class TestModeKeyboardExecutor implements InputExecutor {
     }
 
     /**
-     * 重置输入状态
+     * Reset input state
      */
     reset(): void {
         this.logTestEvent("reset", {});
@@ -97,7 +97,7 @@ export class TestModeKeyboardExecutor implements InputExecutor {
     }
 
     /**
-     * 更新键盘状态（仅在不禁用实际输入时执行）
+     * Update keyboard state (only execute when actual input is not disabled)
      */
     private updateKeyboardState(newState: Set<string>): void {
         const keysToPress = new Set(
@@ -115,13 +115,13 @@ export class TestModeKeyboardExecutor implements InputExecutor {
                 currentState: Array.from(newState),
             });
 
-            // 在测试模式下仍然更新内部状态以保持一致性
+            // Still update internal state in test mode to maintain consistency
             this.currentKeyboardState = newState;
         }
     }
 
     /**
-     * 记录测试事件
+     * Record test event
      */
     private logTestEvent(action: string, data: any): void {
         const logEntry = {
@@ -134,7 +134,7 @@ export class TestModeKeyboardExecutor implements InputExecutor {
 
         this.testLog.push(logEntry);
 
-        // 在测试模式下打印详细日志
+        // Print detailed log in test mode
         if (this.TEST_MODE) {
             console.log(
                 `[TEST_KEYBOARD] ${action}:`,
@@ -144,35 +144,35 @@ export class TestModeKeyboardExecutor implements InputExecutor {
     }
 
     /**
-     * 获取测试日志
+     * Get test log
      */
     getTestLog(): any[] {
         return [...this.testLog];
     }
 
     /**
-     * 清空测试日志
+     * Clear test log
      */
     clearTestLog(): void {
         this.testLog = [];
     }
 
     /**
-     * 获取当前键盘状态
+     * Get current keyboard state
      */
     getCurrentState(): string[] {
         return Array.from(this.currentKeyboardState);
     }
 
     /**
-     * 验证测试模式状态
+     * Validate test mode status
      */
     isTestMode(): boolean {
         return this.TEST_MODE;
     }
 
     /**
-     * 验证实际输入是否被禁用
+     * Validate if actual input is disabled
      */
     isActualInputDisabled(): boolean {
         return this.DISABLE_ACTUAL_INPUT;

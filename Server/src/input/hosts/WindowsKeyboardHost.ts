@@ -1,18 +1,18 @@
 /**
- * Windows 键盘宿主实现
+ * Windows keyboard host implementation
  * 
- * 使用 node-key-sender 库实现 Windows 键盘输入
+ * Implement Windows keyboard input using node-key-sender library
  * 
- * 降级策略：
- * - 模块加载失败：记录错误，禁用宿主
- * - 执行失败：记录错误，不影响其他宿主
+ * Degradation strategy：
+ * - Module load failed: log error, disable host
+ * - Execution failed: log error, does not affect other hosts
  */
 
 import { InputHost } from './InputHost';
 import { InputDeviceType } from './types';
 
 /**
- * 键盘按键事件
+ * Keyboard key event
  */
 interface KeyboardKeyEvent {
     key: string;
@@ -20,16 +20,16 @@ interface KeyboardKeyEvent {
 }
 
 /**
- * Windows 键盘宿主
+ * Windows keyboard host
  */
 export class WindowsKeyboardHost extends InputHost {
-    /** node-key-sender 实例 */
+    /** node-key-sender instance */
     private driver: any = null;
     
-    /** 当前活动的按键 */
+    /** Currently active keys */
     private activeKeys: Set<string> = new Set();
     
-    /** 按键顺序（用于保持幂等性） */
+    /** Key order (for maintaining idempotency) */
     private keyOrder: string[] = [];
 
     constructor() {
@@ -37,12 +37,12 @@ export class WindowsKeyboardHost extends InputHost {
     }
 
     /**
-     * 初始化：加载 node-key-sender 驱动
-     * @returns 是否初始化成功
+     * Initialize：Load node-key-sender Driver
+     * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
         try {
-            // 动态导入，避免启动时报错
+            // Dynamic import to avoid startup errors
             const KeySender = require('node-key-sender');
             this.driver = new KeySender();
             this.isEnabled = true;
@@ -59,14 +59,14 @@ export class WindowsKeyboardHost extends InputHost {
     }
 
     /**
-     * 应用键盘状态
+     * Apply keyboard state
      * 
-     * 算法：差集计算 + 幂等性保证
-     * 1. 计算需要释放的按键：activeKeys - pressedKeys
-     * 2. 计算需要按下的按键：pressedKeys - activeKeys
-     * 3. 先释放后按下，确保顺序正确
+     * Algorithm: set difference calculation + idempotency guarantee
+     * 1. Calculate keys to release：activeKeys - pressedKeys
+     * 2. Calculate keys to press：pressedKeys - activeKeys
+     * 3. Release first then press, ensure correct order
      * 
-     * @param pressedKeys 当前按下的键集合
+     * @param pressedKeys Currently pressed key set
      */
     applyState(pressedKeys: Set<string>): void {
         if (!this.isEnabled || !this.driver) {
@@ -74,16 +74,16 @@ export class WindowsKeyboardHost extends InputHost {
         }
 
         try {
-            // 差集算法：最小化系统调用
+            // Set difference algorithm: minimize system calls
             const toRelease = [...this.activeKeys].filter(key => !pressedKeys.has(key));
             const toPress = [...pressedKeys].filter(key => !this.activeKeys.has(key));
 
-            // 只在状态变化时执行
+            // Execute only when state changes
             if (toRelease.length === 0 && toPress.length === 0) {
                 return;
             }
 
-            // 先释放不需要的键
+            // Release unneeded keys first
             if (toRelease.length > 0) {
                 const releaseEvents: KeyboardKeyEvent[] = toRelease.map(key => ({
                     key,
@@ -92,11 +92,11 @@ export class WindowsKeyboardHost extends InputHost {
                 this.driver.sendKey(releaseEvents);
                 console.log(`[WinKB] Released ${toRelease.length} key(s): [${toRelease.join(', ')}]`);
                 
-                // 从顺序列表中移除
+                // Remove from order list
                 this.keyOrder = this.keyOrder.filter(k => !toRelease.includes(k));
             }
 
-            // 再按下新增的键
+            // Press new keys
             if (toPress.length > 0) {
                 const pressEvents: KeyboardKeyEvent[] = toPress.map(key => ({
                     key,
@@ -105,11 +105,11 @@ export class WindowsKeyboardHost extends InputHost {
                 this.driver.sendKey(pressEvents);
                 console.log(`[WinKB] Pressed ${toPress.length} key(s): [${toPress.join(', ')}]`);
                 
-                // 添加到顺序列表
+                // Add to order list
                 toPress.forEach(key => this.keyOrder.push(key));
             }
 
-            // 更新活动按键状态
+            // Update active key state
             this.activeKeys = new Set(pressedKeys);
 
         } catch (error) {
@@ -119,8 +119,8 @@ export class WindowsKeyboardHost extends InputHost {
     }
 
     /**
-     * 重置键盘状态
-     * 释放所有按下的按键
+     * Reset keyboard state
+     * Release all pressed keys
      */
     reset(): void {
         if (!this.isEnabled || !this.driver) {
@@ -145,8 +145,8 @@ export class WindowsKeyboardHost extends InputHost {
     }
 
     /**
-     * 销毁宿主
-     * 清理资源，重置状态
+     * Destroy host
+     * Cleanup resources, reset state
      */
     destroy(): void {
         this.reset();
@@ -158,16 +158,16 @@ export class WindowsKeyboardHost extends InputHost {
     }
 
     /**
-     * 获取当前活动按键数量
-     * @returns 活动按键数量
+     * Get current active key count
+     * @returns ActiveKeyNumberAmount
      */
     getActiveKeyCount(): number {
         return this.activeKeys.size;
     }
 
     /**
-     * 获取当前活动按键列表
-     * @returns 活动按键列表
+     * Get current active key list
+     * @returns ActiveKeyList
      */
     getActiveKeys(): string[] {
         return [...this.activeKeys];

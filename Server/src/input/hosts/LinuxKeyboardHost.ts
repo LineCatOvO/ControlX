@@ -1,44 +1,44 @@
 /**
- * Linux 键盘宿主实现（待制作）
+ * Linux KeyboardHostImplementation（PendingMake）
  *
- * TODO: 使用 uinput 实现 Linux 键盘输入
+ * TODO: Use uinput Implementation Linux KeyboardInput
  *
- * 技术选型：
- * - uinput: Linux 内核模块，用于创建虚拟输入设备
- * - 库选择：node-uinput 或 直接调用 evdev
+ * TechStack：
+ * - uinput: Linux InsideCoreModule，ForCreateVirtualInputDevice
+ * - LibSelect：node-uinput or DirectCall evdev
  *
- * 待实现功能：
- * - [ ] 加载 uinput 驱动
- * - [ ] 创建虚拟键盘设备
- * - [ ] 实现按键按下/释放
- * - [ ] 实现差集算法（同 WindowsKeyboardHost）
- * - [ ] 实现重置功能
- * - [ ] 实现资源清理
+ * PendingImplementationFunction：
+ * - [ ] Load uinput Driver
+ * - [ ] CreateVirtualKeyboardDevice
+ * - [ ] ImplementationKeyPressUnder/Release
+ * - [ ] ImplementationDiffAlgorithm（Same WindowsKeyboardHost）
+ * - [ ] ImplementationResetFunction
+ * - [ ] Implementation资SourceClear理
  *
- * 依赖安装：
+ * DepInstall：
  * ```bash
  * sudo apt-get install uinput
- * # 或
+ * # or
  * sudo dnf install uinput
  * ```
  *
- * 权限配置：
+ * PermissionConfig：
  * ```bash
  * sudo usermod -a -G uinput $USER
  * ```
  *
- * @todo 实现 Linux 键盘输入支持
- * @status TODO - 待制作
+ * @todo Implementation Linux KeyboardInputSupport
+ * @status TODO - PendingMake
  */
 
 import { InputHost } from './InputHost';
 import { InputDeviceType } from './types';
 
 export class LinuxKeyboardHost extends InputHost {
-    /** uinput 设备句柄（待实现） */
+    /** uinput DeviceHandle（PendingImplementation） */
     private uinputDevice: any = null;
 
-    /** 当前按下的键集合（待实现） */
+    /** CurrentPressUnderOfKeySet（PendingImplementation） */
     private activeKeys: Set<string> = new Set();
 
     constructor() {
@@ -46,24 +46,24 @@ export class LinuxKeyboardHost extends InputHost {
     }
 
     /**
-     * 初始化：加载 uinput 驱动
-     * @returns 是否初始化成功
+     * Initialize：Load uinput Driver
+     * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
-        // TODO: 实现 uinput 初始化
+        // TODO: Implementation uinput Initialize
         console.warn('[LinuxKB] TODO: Implement uinput initialization');
 
         try {
-            // TODO: 动态导入 uinput 库
+            // TODO: DynamicImport uinput Lib
             // const uinput = require('node-uinput');
 
-            // TODO: 创建虚拟键盘设备
+            // TODO: CreateVirtualKeyboardDevice
             // this.uinputDevice = new uinput.createDevice([...]);
 
-            // TODO: 设置设备能力（支持的按键）
+            // TODO: SetDeviceCapability（SupportOfKey）
             // this.uinputDevice.setKeyEvents(true);
 
-            // TODO: 创建设备
+            // TODO: CreateDevice
             // await this.uinputDevice.create();
 
             this.isEnabled = true;
@@ -78,46 +78,46 @@ export class LinuxKeyboardHost extends InputHost {
     }
 
     /**
-     * 应用状态：使用 uinput 发送键盘事件
-     * @param pressedKeys 按下的键集合
+     * ApplyState：Use uinput SendKeyboardEvent
+     * @param pressedKeys PressUnderOfKeySet
      */
     applyState(pressedKeys: Set<string>): void {
-        // TODO: 实现差集算法
+        // TODO: ImplementationDiffAlgorithm
         if (!this.isEnabled || !this.uinputDevice) {
             console.debug('[LinuxKB] TODO: Device not enabled');
             return;
         }
 
-        // TODO: 计算差集
+        // TODO: CalcDiff
         // const toRelease = [...this.activeKeys].filter(k => !pressedKeys.has(k));
         // const toPress = [...pressedKeys].filter(k => !this.activeKeys.has(k));
 
-        // TODO: 释放按键
+        // TODO: ReleaseKey
         // if (toRelease.length) {
         //     this.uinputDevice.keyEvent(toRelease, false);
         // }
 
-        // TODO: 按下按键
+        // TODO: PressUnderKey
         // if (toPress.length) {
         //     this.uinputDevice.keyEvent(toPress, true);
         // }
 
-        // TODO: 更新活动键集合
+        // TODO: UpdateActiveKeySet
         // this.activeKeys = pressedKeys;
 
         console.debug('[LinuxKB] TODO: applyState stub called');
     }
 
     /**
-     * 重置：释放所有按键
+     * Reset：ReleaseAllKey
      */
     reset(): void {
-        // TODO: 实现重置逻辑
+        // TODO: ImplementationResetLogic
         if (!this.isEnabled || !this.uinputDevice) {
             return;
         }
 
-        // TODO: 释放所有按下的键
+        // TODO: ReleaseAllPressUnderOfKey
         // if (this.activeKeys.size > 0) {
         //     this.uinputDevice.keyEvent([...this.activeKeys], false);
         //     this.activeKeys.clear();
@@ -127,13 +127,13 @@ export class LinuxKeyboardHost extends InputHost {
     }
 
     /**
-     * 销毁：清理 uinput 资源
+     * Destroy：Clear理 uinput 资Source
      */
     destroy(): void {
-        // TODO: 实现销毁逻辑
+        // TODO: ImplementationDestroyLogic
         this.reset();
 
-        // TODO: 关闭 uinput 设备
+        // TODO: Close uinput Device
         // if (this.uinputDevice) {
         //     this.uinputDevice.destroy();
         //     this.uinputDevice = null;

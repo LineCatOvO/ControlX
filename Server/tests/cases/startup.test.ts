@@ -79,32 +79,32 @@ describe('Startup Phase Tests', () => {
     startInputExecutor();
     const executorManager = getExecutorManager();
     stateStore = new StateStore();
-    // 使用较短的间隔以便测试更快完成
+    // 使用较短OfInterval以便Test更快完成
     applyScheduler = new ApplyScheduler(executorManager, stateStore, { applyIntervalMs: 20 });
     
     let tickCount = 0;
     const expectedTicks = 3;
     
-    // 添加tick回调
+    // 添加tickCallback
     const tickCallback = () => {
       tickCount++;
     };
     applyScheduler.addTickCallback(tickCallback);
     
-    // 启动调度器
+    // 启动SchedulerManager
     applyScheduler.start(Date.now());
     
-    // 等待足够的时间让调度器运行预期的tick数
+    // 等待足够Of时间让SchedulerManagerRun预期Oftick数
     await new Promise(resolve => setTimeout(resolve, expectedTicks * 20 + 20)); // 20ms per tick + 20ms buffer
     
-    // 停止调度器
+    // StopSchedulerManager
     applyScheduler.stop();
     
-    // 移除tick回调
+    // RemovetickCallback
     applyScheduler.removeTickCallback(tickCallback);
     
-    // 验证tick计数，应该至少有expectedTicks个tick
+    // Verifytick计数，应该至少有expectedTicks个tick
     expect(tickCount).toBeGreaterThanOrEqual(expectedTicks);
-    expect(tickCount).toBeLessThanOrEqual(expectedTicks + 1); // 允许1个额外的tick
+    expect(tickCount).toBeLessThanOrEqual(expectedTicks + 1); // Allow1个额OutsideOftick
   });
 });

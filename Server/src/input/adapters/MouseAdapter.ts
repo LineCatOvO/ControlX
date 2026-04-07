@@ -1,14 +1,20 @@
-// 鼠标适配器实现
+// Mouse adapterImplementation
 
-import { MouseAdapter as IMouseAdapter } from './InputAdapter';
+import { InputAdapter } from './InputAdapter';
 import { MouseExecutor } from '../mouse';
-import { InputState } from '../../types/ws';
+import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
- * 鼠标适配器
- * 封装 MouseExecutor 的调用逻辑，实现 MouseAdapter 接口
+ * Mouse adapter
+ * Encapsulates MouseExecutor calling logic，implements InputAdapter interface
+ *
+ * Design notes：
+ * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
+ * - MouseExecutor MethodIsAsyncOf，AdapterMethodReturn void（AsyncCallnotBlock）
+ * - InsidePartDelegateTo MouseExecutor ExecuteActualOfMouseOperation
+ * - ProvideMouseSpecificOfMethod（applyMouseState, getMouseState）
  */
-export class MouseAdapter implements IMouseAdapter {
+export class MouseAdapter implements InputAdapter {
     private executor: MouseExecutor;
 
     constructor(executor: MouseExecutor) {
@@ -16,20 +22,47 @@ export class MouseAdapter implements IMouseAdapter {
     }
 
     /**
-     * 应用输入状态（适配器基类方法）
-     * @param state 输入状态
+     * Apply complete input state（InputAdapter InterfaceMethod）
+     * @param state Input state
      */
     applyState(state: InputState): void {
+        // MouseExecutor Of applyState IsAsyncMethod，DirectCallnotBlock
         this.executor.applyState(state);
     }
 
     /**
-     * 应用鼠标状态（MouseAdapter 特定方法）
-     * @param x 鼠标 X 坐标
-     * @param y 鼠标 Y 坐标
-     * @param left 左键状态
-     * @param right 右键状态
-     * @param middle 中键状态
+     * Apply input delta（InputAdapter InterfaceMethod）
+     * @param delta Input delta
+     */
+    applyDelta(delta: InputDelta): void {
+        // MouseExecutor Of applyDelta IsAsyncMethod，DirectCallnotBlock
+        this.executor.applyDelta(delta);
+    }
+
+    /**
+     * Apply input event（InputAdapter InterfaceMethod）
+     * @param event Input event
+     */
+    applyEvent(event: InputEvent): void {
+        // MouseExecutor Of applyEvent IsAsyncMethod，DirectCallnotBlock
+        this.executor.applyEvent(event);
+    }
+
+    /**
+     * ResetInput state（InputAdapter InterfaceMethod）
+     */
+    reset(): void {
+        // MouseExecutor Of reset IsAsyncMethod，DirectCallnotBlock
+        this.executor.reset();
+    }
+
+    /**
+     * ApplyMouseState（MouseSpecificMethod）
+     * @param x Mouse X Coord
+     * @param y Mouse Y Coord
+     * @param left LeftKeyState
+     * @param right RightKeyState
+     * @param middle InKeyState
      */
     applyMouseState(
         x: number,
@@ -46,15 +79,8 @@ export class MouseAdapter implements IMouseAdapter {
     }
 
     /**
-     * 重置输入状态（适配器基类方法）
-     */
-    reset(): void {
-        this.executor.reset();
-    }
-
-    /**
-     * 获取当前鼠标状态
-     * @returns 当前鼠标状态
+     * GetCurrentMouseState
+     * @returns CurrentMouseState
      */
     getMouseState(): {
         x: number;
@@ -63,7 +89,7 @@ export class MouseAdapter implements IMouseAdapter {
         right: boolean;
         middle: boolean;
     } {
-        // MouseExecutor 不暴露内部状态，返回默认值
+        // MouseExecutor notExposeInsidePartState，ReturnDefaultValue
         return { x: 0, y: 0, left: false, right: false, middle: false };
     }
 }

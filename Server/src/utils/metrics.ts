@@ -1,23 +1,23 @@
 /**
  * ============================================================================
- * 可观测性指标模块 (Metrics Module)
+ * Observability Metrics Module (Metrics Module)
  * ============================================================================
  *
- * 【模块职责】
- * 本模块提供统一的指标收集、聚合和导出功能，用于系统可观测性。
+ * 【Module responsibility】
+ * This module provides unified metric collection, aggregation and export functionality for system observability。
  *
- * 【核心功能】
- * 1. 指标注册：支持计数器、仪表盘、直方图等指标类型
- * 2. 指标收集：自动收集和更新指标值
- * 3. 指标聚合：支持时间窗口聚合和统计计算
- * 4. 指标导出：提供 JSON 格式的指标导出
+ * 【Core functionality】
+ * 1. Metric registration: support counter, gauge, histogram and other metric types
+ * 2. Metric collection: automatically collect and update metric values
+ * 3. Metric aggregation: support time window aggregation and statistical calculation
+ * 4. Metric export: provide JSON format metric export
  *
- * 【指标类型】
- * - Counter: 单调递增计数器，用于请求数、错误数等
- * - Gauge: 可增可减的仪表盘，用于连接数、内存使用等
- * - Histogram: 直方图，用于延迟分布、请求大小等
+ * 【Metric types】
+ * - Counter: Monotonically increasing counter, used for request count, error count, etc.
+ * - Gauge: Gauge that can increase or decrease, used for connection count, memory usage, etc.
+ * - Histogram: Histogram, used for latency distribution, request size, etc.
  *
- * 【使用示例】
+ * 【Usage example】
  * ```typescript
  * const metrics = MetricsCollector.getInstance();
  * metrics.registerCounter('requests_total', 'Total number of requests');
@@ -32,7 +32,7 @@
  */
 
 /**
- * 指标类型枚举
+ * Metric typesenum
  */
 export enum MetricType {
     COUNTER = 'counter',
@@ -41,7 +41,7 @@ export enum MetricType {
 }
 
 /**
- * 指标元数据接口
+ * Metric metadata interface
  */
 export interface MetricMetadata {
     name: string;
@@ -52,7 +52,7 @@ export interface MetricMetadata {
 }
 
 /**
- * 计数器指标
+ * Counter metric
  */
 export interface CounterMetric {
     type: MetricType.COUNTER;
@@ -61,7 +61,7 @@ export interface CounterMetric {
 }
 
 /**
- * 仪表盘指标
+ * Gauge metric
  */
 export interface GaugeMetric {
     type: MetricType.GAUGE;
@@ -70,7 +70,7 @@ export interface GaugeMetric {
 }
 
 /**
- * 直方图指标
+ * Histogram metric
  */
 export interface HistogramMetric {
     type: MetricType.HISTOGRAM;
@@ -81,12 +81,12 @@ export interface HistogramMetric {
 }
 
 /**
- * 指标联合类型
+ * Metric union type
  */
 export type Metric = CounterMetric | GaugeMetric | HistogramMetric;
 
 /**
- * 指标快照接口
+ * Metric snapshot interface
  */
 export interface MetricSnapshot {
     name: string;
@@ -97,7 +97,7 @@ export interface MetricSnapshot {
 }
 
 /**
- * 连接状态记录
+ * Connection status record
  */
 export interface ConnectionRecord {
     clientId: string;
@@ -109,7 +109,7 @@ export interface ConnectionRecord {
 }
 
 /**
- * 输入统计记录
+ * Input statistics record
  */
 export interface InputStats {
     keyboardEvents: number;
@@ -122,7 +122,7 @@ export interface InputStats {
 }
 
 /**
- * 系统资源统计
+ * System资Sourcestatistics
  */
 export interface SystemResourceStats {
     cpuUsage: number;
@@ -137,8 +137,8 @@ export interface SystemResourceStats {
 }
 
 /**
- * 指标收集器类
- * 单例模式，提供全局指标管理
+ * metricCollectManagerClass
+ * singletonMode，provideGlobalmetricManage
  */
 export class MetricsCollector {
     private static instance: MetricsCollector | null = null;
@@ -154,12 +154,12 @@ export class MetricsCollector {
         lastEventTime: 0,
     };
     private inputEventHistory: { timestamp: number; count: number }[] = [];
-    private readonly historyWindowMs = 60000; // 1分钟窗口
+    private readonly historyWindowMs = 60000; // 1Divide钟窗Port
 
     private constructor() {}
 
     /**
-     * 获取单例实例
+     * GetsingletonInstance
      */
     public static getInstance(): MetricsCollector {
         if (!MetricsCollector.instance) {
@@ -169,19 +169,19 @@ export class MetricsCollector {
     }
 
     /**
-     * 重置单例（仅用于测试）
+     * Resetsingleton（onlyUsed forTest）
      */
     public static resetInstance(): void {
         MetricsCollector.instance = null;
     }
 
-    // ==================== 指标注册 ====================
+    // ==================== metricregister ====================
 
     /**
-     * 注册计数器指标
-     * @param name 指标名称
-     * @param description 描述
-     * @param unit 单位（可选）
+     * registerCounter metric
+     * @param name metricName
+     * @param description description
+     * @param unit unit（optional）
      */
     public registerCounter(name: string, description: string, unit?: string): void {
         if (this.metrics.has(name)) {
@@ -202,10 +202,10 @@ export class MetricsCollector {
     }
 
     /**
-     * 注册仪表盘指标
-     * @param name 指标名称
-     * @param description 描述
-     * @param unit 单位（可选）
+     * registerGauge metric
+     * @param name metricName
+     * @param description description
+     * @param unit unit（optional）
      */
     public registerGauge(name: string, description: string, unit?: string): void {
         if (this.metrics.has(name)) {
@@ -226,11 +226,11 @@ export class MetricsCollector {
     }
 
     /**
-     * 注册直方图指标
-     * @param name 指标名称
-     * @param description 描述
-     * @param buckets 桶边界
-     * @param unit 单位（可选）
+     * registerHistogram metric
+     * @param name metricName
+     * @param description description
+     * @param buckets bucketboundary
+     * @param unit unit（optional）
      */
     public registerHistogram(
         name: string,
@@ -263,12 +263,12 @@ export class MetricsCollector {
         });
     }
 
-    // ==================== 指标操作 ====================
+    // ==================== metricOperation ====================
 
     /**
-     * 递增计数器
-     * @param name 指标名称
-     * @param value 递增值（默认1）
+     * increment计NumberManager
+     * @param name metricName
+     * @param value incrementValue（Default1）
      */
     public incrementCounter(name: string, value: number = 1): void {
         const metric = this.metrics.get(name);
@@ -284,9 +284,9 @@ export class MetricsCollector {
     }
 
     /**
-     * 递减计数器（仅用于特殊场景）
-     * @param name 指标名称
-     * @param value 递减值（默认1）
+     * decrement计NumberManager（onlyUsed forSpecialscenario）
+     * @param name metricName
+     * @param value decrementValue（Default1）
      */
     public decrementCounter(name: string, value: number = 1): void {
         const metric = this.metrics.get(name);
@@ -298,14 +298,14 @@ export class MetricsCollector {
             console.warn(`Metric ${name} is not a counter`);
             return;
         }
-        // 计数器允许递减（用于重置场景）
+        // 计NumberManagerAllowdecrement（Used forResetscenario）
         metric.value -= value;
     }
 
     /**
-     * 设置仪表盘值
-     * @param name 指标名称
-     * @param value 值
+     * SetDashboardValue
+     * @param name metricName
+     * @param value Value
      */
     public setGauge(name: string, value: number): void {
         const metric = this.metrics.get(name);
@@ -321,9 +321,9 @@ export class MetricsCollector {
     }
 
     /**
-     * 递增仪表盘值
-     * @param name 指标名称
-     * @param value 递增值（默认1）
+     * incrementDashboardValue
+     * @param name metricName
+     * @param value incrementValue（Default1）
      */
     public incrementGauge(name: string, value: number = 1): void {
         const metric = this.metrics.get(name);
@@ -339,9 +339,9 @@ export class MetricsCollector {
     }
 
     /**
-     * 递减仪表盘值
-     * @param name 指标名称
-     * @param value 递减值（默认1）
+     * decrementDashboardValue
+     * @param name metricName
+     * @param value decrementValue（Default1）
      */
     public decrementGauge(name: string, value: number = 1): void {
         const metric = this.metrics.get(name);
@@ -357,9 +357,9 @@ export class MetricsCollector {
     }
 
     /**
-     * 观察直方图值
-     * @param name 指标名称
-     * @param value 观察值
+     * ObservehistogramValue
+     * @param name metricName
+     * @param value ObserveValue
      */
     public observeHistogram(name: string, value: number): void {
         const metric = this.metrics.get(name);
@@ -375,9 +375,9 @@ export class MetricsCollector {
         metric.sum += value;
         metric.count++;
 
-        // 更新桶计数
+        // Updatebucket计Number
         const buckets = metric.metadata.unit
-            ? [0.1, 0.5, 1, 2.5, 5, 10] // 默认桶
+            ? [0.1, 0.5, 1, 2.5, 5, 10] // Defaultbucket
             : [0.1, 0.5, 1, 2.5, 5, 10];
 
         let foundBucket = false;
@@ -391,18 +391,18 @@ export class MetricsCollector {
             }
         }
 
-        // 如果超过所有桶，放入 +Inf
+        // IfExceedAllbucket，PutInto +Inf
         if (!foundBucket) {
             const infCount = metric.buckets.get('le_+Inf') || 0;
             metric.buckets.set('le_+Inf', infCount + 1);
         }
     }
 
-    // ==================== 连接状态监控 ====================
+    // ==================== ConnectionStateMonitor ====================
 
     /**
-     * 记录连接建立
-     * @param clientId 客户端ID
+     * recordConnectionEstablish
+     * @param clientId ClientID
      */
     public recordConnection(clientId: string): void {
         const record: ConnectionRecord = {
@@ -417,8 +417,8 @@ export class MetricsCollector {
     }
 
     /**
-     * 记录连接断开
-     * @param clientId 客户端ID
+     * recordConnectionDisconnect
+     * @param clientId ClientID
      */
     public recordDisconnection(clientId: string): void {
         const record = this.connectionRecords.get(clientId);
@@ -428,14 +428,14 @@ export class MetricsCollector {
             this.incrementCounter('disconnections_total');
             this.decrementGauge('active_connections');
 
-            // 记录连接持续时间
+            // recordConnectiondurationTime
             this.observeHistogram('connection_duration_seconds', record.duration / 1000);
         }
     }
 
     /**
-     * 记录消息接收
-     * @param clientId 客户端ID
+     * recordMessageReceive
+     * @param clientId ClientID
      */
     public recordMessage(clientId: string): void {
         const record = this.connectionRecords.get(clientId);
@@ -446,8 +446,8 @@ export class MetricsCollector {
     }
 
     /**
-     * 记录错误
-     * @param clientId 客户端ID
+     * recorderror
+     * @param clientId ClientID
      */
     public recordError(clientId: string): void {
         const record = this.connectionRecords.get(clientId);
@@ -458,15 +458,15 @@ export class MetricsCollector {
     }
 
     /**
-     * 获取连接记录
-     * @param clientId 客户端ID
+     * GetConnectionrecord
+     * @param clientId ClientID
      */
     public getConnectionRecord(clientId: string): ConnectionRecord | undefined {
         return this.connectionRecords.get(clientId);
     }
 
     /**
-     * 获取所有活跃连接
+     * GetAllActiveConnection
      */
     public getActiveConnections(): ConnectionRecord[] {
         return Array.from(this.connectionRecords.values()).filter(
@@ -474,11 +474,11 @@ export class MetricsCollector {
         );
     }
 
-    // ==================== 输入统计 ====================
+    // ==================== Inputstatistics ====================
 
     /**
-     * 记录输入事件
-     * @param type 输入类型
+     * recordInputEvent
+     * @param type InputType
      */
     public recordInputEvent(type: 'keyboard' | 'mouse' | 'gamepad' | 'joystick'): void {
         const now = Date.now();
@@ -501,22 +501,22 @@ export class MetricsCollector {
         this.inputStats.totalEvents++;
         this.inputStats.lastEventTime = now;
 
-        // 记录到历史
+        // recordtoHistory
         this.inputEventHistory.push({ timestamp: now, count: 1 });
 
-        // 清理过期历史
+        // Clear理ExpireHistory
         this.cleanupInputHistory();
 
-        // 计算每秒事件数
+        // calculateEachSecondEventNumber
         this.calculateEventsPerSecond();
 
-        // 更新指标
+        // Updatemetric
         this.incrementCounter(`input_${type}_events_total`);
         this.incrementCounter('input_events_total');
     }
 
     /**
-     * 清理过期的输入历史
+     * Clear理ExpireOfInputHistory
      */
     private cleanupInputHistory(): void {
         const cutoff = Date.now() - this.historyWindowMs;
@@ -526,7 +526,7 @@ export class MetricsCollector {
     }
 
     /**
-     * 计算每秒事件数
+     * calculateEachSecondEventNumber
      */
     private calculateEventsPerSecond(): void {
         if (this.inputEventHistory.length === 0) {
@@ -540,7 +540,7 @@ export class MetricsCollector {
             .filter((h) => h.timestamp >= windowStart)
             .reduce((sum, h) => sum + h.count, 0);
 
-        // 计算实际窗口大小（秒）
+        // calculateActual窗PortSize（Second）
         const oldestEvent = this.inputEventHistory[0]?.timestamp || now;
         const windowSize = Math.max((now - oldestEvent) / 1000, 1);
 
@@ -548,14 +548,14 @@ export class MetricsCollector {
     }
 
     /**
-     * 获取输入统计
+     * GetInputstatistics
      */
     public getInputStats(): InputStats {
         return { ...this.inputStats };
     }
 
     /**
-     * 重置输入统计
+     * ResetInputstatistics
      */
     public resetInputStats(): void {
         this.inputStats = {
@@ -570,25 +570,25 @@ export class MetricsCollector {
         this.inputEventHistory = [];
     }
 
-    // ==================== 指标导出 ====================
+    // ==================== metricExport ====================
 
     /**
-     * 获取指标值
-     * @param name 指标名称
+     * GetmetricValue
+     * @param name metricName
      */
     public getMetric(name: string): number | undefined {
         const metric = this.metrics.get(name);
         if (!metric) return undefined;
 
         if (metric.type === MetricType.HISTOGRAM) {
-            return undefined; // 直方图需要特殊处理
+            return undefined; // histogramRequireSpecialHandle
         }
 
         return metric.value;
     }
 
     /**
-     * 获取所有指标快照
+     * GetAllmetricSnapshot
      */
     public getSnapshot(): MetricSnapshot[] {
         const snapshots: MetricSnapshot[] = [];
@@ -626,7 +626,7 @@ export class MetricsCollector {
     }
 
     /**
-     * 导出为 JSON 格式
+     * ExportFor JSON format
      */
     public toJSON(): Record<string, any> {
         const result: Record<string, any> = {
@@ -665,7 +665,60 @@ export class MetricsCollector {
     }
 
     /**
-     * 重置所有指标
+     * ExportFor Prometheus format
+     * formatStandard：https://prometheus.io/docs/instrumenting/exposition_formats/
+     */
+    public toPrometheus(): string {
+        const lines: string[] = [];
+        const prefix = 'controlx_server_';
+
+        this.metrics.forEach((metric, name) => {
+            const fullMetricName = prefix + name;
+            const description = metric.metadata.description || '';
+            const unit = metric.metadata.unit || '';
+
+            // HELP declare
+            lines.push(`# HELP ${fullMetricName} ${description}${unit ? ` (${unit})` : ''}`);
+
+            if (metric.type === MetricType.COUNTER) {
+                // TYPE declare
+                lines.push(`# TYPE ${fullMetricName} counter`);
+                // metricValue
+                lines.push(`${fullMetricName} ${metric.value}`);
+            } else if (metric.type === MetricType.GAUGE) {
+                // TYPE declare
+                lines.push(`# TYPE ${fullMetricName} gauge`);
+                // metricValue
+                lines.push(`${fullMetricName} ${metric.value}`);
+            } else if (metric.type === MetricType.HISTOGRAM) {
+                // TYPE declare
+                lines.push(`# TYPE ${fullMetricName} histogram`);
+
+                // bucketValue（累积计Number）
+                const bucketBoundaries = [0.1, 0.5, 1, 2.5, 5, 10, '+Inf'];
+                let cumulativeCount = 0;
+
+                bucketBoundaries.forEach((boundary) => {
+                    const bucketKey = `le_${boundary}`;
+                    const count = metric.buckets.get(bucketKey) || 0;
+                    cumulativeCount += count;
+                    const le = boundary === '+Inf' ? '+Inf' : boundary;
+                    lines.push(`${fullMetricName}_bucket{le="${le}"} ${cumulativeCount}`);
+                });
+
+                // sum and count
+                lines.push(`${fullMetricName}_sum ${metric.sum}`);
+                lines.push(`${fullMetricName}_count ${metric.count}`);
+            }
+
+            lines.push(''); // NullLineDivide隔
+        });
+
+        return lines.join('\n');
+    }
+
+    /**
+     * ResetAllmetric
      */
     public reset(): void {
         this.metrics.forEach((metric) => {
@@ -687,33 +740,134 @@ export class MetricsCollector {
     }
 
     /**
-     * 初始化默认指标
+     * InitializeDefaultmetric
      */
     public initializeDefaultMetrics(): void {
-        // 连接相关指标
+        // ConnectionRelatedmetric
         this.registerCounter('connections_total', 'Total number of connections');
         this.registerCounter('disconnections_total', 'Total number of disconnections');
         this.registerCounter('messages_received_total', 'Total number of messages received');
         this.registerCounter('errors_total', 'Total number of errors');
         this.registerGauge('active_connections', 'Number of active connections');
 
-        // 输入相关指标
+        // InputRelatedmetric
         this.registerCounter('input_events_total', 'Total number of input events');
         this.registerCounter('input_keyboard_events_total', 'Total number of keyboard events');
         this.registerCounter('input_mouse_events_total', 'Total number of mouse events');
         this.registerCounter('input_gamepad_events_total', 'Total number of gamepad events');
         this.registerCounter('input_joystick_events_total', 'Total number of joystick events');
 
-        // 连接持续时间直方图
+        // ConnectiondurationTimehistogram
         this.registerHistogram(
             'connection_duration_seconds',
             'Duration of connections in seconds',
             [1, 5, 10, 30, 60, 300, 600, 1800, 3600]
         );
+
+        // LatencyRelatedmetric（Add）
+        this.registerHistogram(
+            'latency_rtt_seconds',
+            'Round-trip time latency in seconds',
+            [0.001, 0.005, 0.010, 0.025, 0.050, 0.100, 0.250, 0.500, 1],
+            'seconds'
+        );
+        this.registerGauge('latency_rtt_current_ms', 'Current RTT latency in milliseconds', 'milliseconds');
+        this.registerGauge('latency_rtt_average_ms', 'Average RTT latency in milliseconds', 'milliseconds');
+        this.registerGauge('latency_rtt_min_ms', 'Minimum RTT latency in milliseconds', 'milliseconds');
+        this.registerGauge('latency_rtt_max_ms', 'Maximum RTT latency in milliseconds', 'milliseconds');
+        this.registerGauge('latency_rtt_p95_ms', 'P95 RTT latency in milliseconds', 'milliseconds');
+
+        // throughputRelatedmetric（Add）
+        this.registerGauge('input_events_per_second', 'Current input events per second');
+        this.registerGauge('input_events_per_second_1m', '1-minute average input events per second');
+        this.registerGauge('input_events_per_second_5m', '5-minute average input events per second');
+
+        // errorrateRelatedmetric（Add）
+        this.registerCounter('errors_validation_total', 'Total number of validation errors');
+        this.registerCounter('errors_network_total', 'Total number of network errors');
+        this.registerCounter('errors_system_total', 'Total number of system errors');
+        this.registerCounter('errors_timeout_total', 'Total number of timeout errors');
+        this.registerGauge('errors_rate_current', 'Current error rate (errors per second)');
+    }
+
+    /**
+     * record RTT Latency（Integrate latencyProbe）
+     * @param rttMs RTT Latency（MilliSecond）
+     */
+    public recordRttLatency(rttMs: number): void {
+        const rttSeconds = rttMs / 1000;
+
+        // recordtoLatencyhistogram
+        this.observeHistogram('latency_rtt_seconds', rttSeconds);
+
+        // UpdateCurrentLatency
+        this.setGauge('latency_rtt_current_ms', rttMs);
+    }
+
+    /**
+     * Update RTT Statisticsmetric
+     * @param stats RTT StatisticsObject
+     */
+    public updateRttStats(stats: { average: number; min: number; max: number; p95: number }): void {
+        this.setGauge('latency_rtt_average_ms', stats.average);
+        this.setGauge('latency_rtt_min_ms', stats.min);
+        this.setGauge('latency_rtt_max_ms', stats.max);
+        this.setGauge('latency_rtt_p95_ms', stats.p95);
+    }
+
+    /**
+     * Updatethroughputmetric
+     */
+    private throughputHistory: { timestamp: number; count: number }[] = [];
+
+    public updateThroughput(): void {
+        const now = Date.now();
+        const currentEPS = this.inputStats.eventsPerSecond;
+
+        // UpdateCurrentthroughput
+        this.setGauge('input_events_per_second', currentEPS);
+
+        // recordtoHistory
+        this.throughputHistory.push({ timestamp: now, count: currentEPS });
+
+        // Clear理ExpireHistory（keep 5 Divide钟）
+        const cutoff5m = now - 300000;
+        this.throughputHistory = this.throughputHistory.filter(h => h.timestamp >= cutoff5m);
+
+        // calculate 1 MinuteAvg
+        const cutoff1m = now - 60000;
+        const history1m = this.throughputHistory.filter(h => h.timestamp >= cutoff1m);
+        const avg1m = history1m.length > 0
+            ? history1m.reduce((sum, h) => sum + h.count, 0) / history1m.length
+            : 0;
+        this.setGauge('input_events_per_second_1m', avg1m);
+
+        // calculate 5 MinuteAvg
+        const avg5m = this.throughputHistory.length > 0
+            ? this.throughputHistory.reduce((sum, h) => sum + h.count, 0) / this.throughputHistory.length
+            : 0;
+        this.setGauge('input_events_per_second_5m', avg5m);
+    }
+
+    /**
+     * recordDivideClasserror
+     * @param category errorDivideClass
+     */
+    public recordErrorByCategory(category: 'validation' | 'network' | 'system' | 'timeout'): void {
+        const metricName = `errors_${category}_total`;
+        this.incrementCounter(metricName);
+    }
+
+    /**
+     * Updateerrorrate
+     * @param errorsPerSecond EachSeconderrorNumber
+     */
+    public updateErrorRate(errorsPerSecond: number): void {
+        this.setGauge('errors_rate_current', errorsPerSecond);
     }
 }
 
-// 导出单例获取函数
+// ExportsingletonGetFunction
 export function getMetricsCollector(): MetricsCollector {
     return MetricsCollector.getInstance();
 }

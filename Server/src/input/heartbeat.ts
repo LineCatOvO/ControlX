@@ -1,56 +1,56 @@
-// 心跳模块
+// HeartbeatModule
 
 import { InputState } from "../types/ws";
 
 /**
- * 心跳配置
+ * HeartbeatConfig
  */
 interface HeartbeatConfig {
-    intervalMs: number; // 心跳间隔，默认30秒
-    timeoutMs: number; // 心跳超时时间，默认60秒
+    intervalMs: number; // HeartbeatInterval，Default30Second
+    timeoutMs: number; // HeartbeatTimeoutTime，Default60Second
 }
 
 /**
- * 心跳状态
+ * HeartbeatState
  */
 interface HeartbeatState {
-    lastSendTime: number; // 最后发送心跳时间
-    lastReceiveTime: number; // 最后接收心跳时间
-    consecutiveFailures: number; // 连续失败次数
-    isAlive: boolean; // 是否存活
+    lastSendTime: number; // mostAfterSendHeartbeatTime
+    lastReceiveTime: number; // mostAfterReceiveHeartbeatTime
+    consecutiveFailures: number; // ContinuousFailureTimecount
+    isAlive: boolean; // WhetherStore活
 }
 
 /**
- * 心跳模块
- * 负责客户端心跳检测和超时处理
+ * HeartbeatModule
+ * ResponsibleClientHeartbeatDetectionandTimeoutHandle
  */
 export class HeartbeatModule {
-    // 配置
+    // Config
     private readonly config: HeartbeatConfig;
 
-    // 心跳状态
+    // HeartbeatState
     private state: HeartbeatState;
 
-    // 心跳定时器
+    // HeartbeatFixedTimeManager
     private timer: NodeJS.Timeout | null = null;
 
-    // 心跳回调
+    // HeartbeatCallback
     private onTimeoutCallback: (() => void) | null = null;
 
-    // 超时计数器
+    // Timeout计countManager
     private consecutiveTimeouts: number = 0;
 
-    // 最大连续超时次数
+    // MaximumContinuousTimeoutTimecount
     private readonly maxConsecutiveTimeouts: number = 3;
 
     /**
-     * 构造函数
-     * @param config 心跳配置
+     * ConstructFunction
+     * @param config HeartbeatConfig
      */
     constructor(config?: Partial<HeartbeatConfig>) {
         this.config = {
-            intervalMs: 30000, // 默认30秒
-            timeoutMs: 60000, // 默认60秒
+            intervalMs: 30000, // Default30Second
+            timeoutMs: 60000, // Default60Second
             ...config,
         };
 
@@ -63,18 +63,18 @@ export class HeartbeatModule {
     }
 
     /**
-     * 启动心跳模块
+     * StartHeartbeatModule
      */
     start(): void {
-        // 如果已经在运行，先停止
+        // IfAlreadyThroughInRun，FirstStop
         if (this.timer) {
             clearInterval(this.timer);
         }
 
-        // 发送第一个心跳
+        // SendFirstOneHeartbeat
         this.sendHeartbeat();
 
-        // 启动心跳定时器
+        // StartHeartbeatFixedTimeManager
         this.timer = setInterval(() => {
             this.sendHeartbeat();
         }, this.config.intervalMs);
@@ -85,7 +85,7 @@ export class HeartbeatModule {
     }
 
     /**
-     * 停止心跳模块
+     * StopHeartbeatModule
      */
     stop(): void {
         if (this.timer) {
@@ -97,59 +97,59 @@ export class HeartbeatModule {
     }
 
     /**
-     * 发送心跳
+     * SendHeartbeat
      */
     private sendHeartbeat(): void {
         const now = Date.now();
 
-        // 更新发送时间
+        // UpdateSendTime
         this.state.lastSendTime = now;
 
-        // 发送心跳消息
+        // SendHeartbeatMessage
         this.dispatchHeartbeat(now);
 
         console.log(`Heartbeat: Sent at ${now}`);
     }
 
     /**
-     * 分发心跳消息（由WebSocket模块调用）
-     * @param timestamp 心跳时间戳
+     * DistributeHeartbeatMessage（ByWebSocketModuleCall）
+     * @param timestamp HeartbeatTimestamp
      */
     dispatchHeartbeat(timestamp: number): void {
-        // 由WebSocket模块实现，这里留空
-        // 格式: { type: 'ping', timestamp }
+        // ByWebSocketModuleImplementation，Here留Null
+        // format: { type: 'ping', timestamp }
     }
 
     /**
-     * 处理心跳响应（由WebSocket模块调用）
-     * @param timestamp 响应时间戳
+     * Handle heartbeat response（ByWebSocketModuleCall）
+     * @param timestamp ResponseTimestamp
      */
     handlePong(timestamp: number): void {
         const now = Date.now();
 
-        // 更新接收时间
+        // UpdateReceiveTime
         this.state.lastReceiveTime = now;
         this.state.isAlive = true;
 
-        // 重置连续失败计数
+        // ResetContinuousFailure计count
         this.state.consecutiveFailures = 0;
         this.consecutiveTimeouts = 0;
 
-        // 计算RTT
+        // calculateRTT
         const rtt = now - timestamp;
 
-        // 记录心跳响应
+        // recordHeartbeatResponse
         console.log(`Heartbeat: Received pong, RTT = ${rtt}ms`);
 
-        // 每10次心跳输出一次统计
+        // Each10TimeHeartbeatOutputOncestatistics
         if (this.state.consecutiveFailures % 10 === 0) {
             console.log("Heartbeat Stats:", this.getStats());
         }
     }
 
     /**
-     * 检查心跳超时
-     * @returns 是否超时
+     * CheckHeartbeatTimeout
+     * @returns WhetherTimeout
      */
     checkTimeout(): boolean {
         const now = Date.now();
@@ -162,12 +162,12 @@ export class HeartbeatModule {
                 `Heartbeat: Timeout detected, elapsed: ${elapsed}ms, consecutive timeouts: ${this.consecutiveTimeouts}`
             );
 
-            // 触发超时回调
+            // TriggerTimeoutCallback
             if (this.onTimeoutCallback) {
                 this.onTimeoutCallback();
             }
 
-            // 每 5 次连续超时输出一次警告
+            // Each 5 TimeContinuousTimeoutOutputOnceWarning
             if (this.consecutiveTimeouts % 5 === 0) {
                 console.warn(
                     `Heartbeat: High consecutive timeouts (${this.consecutiveTimeouts}), triggering safety clear`
@@ -181,24 +181,24 @@ export class HeartbeatModule {
     }
 
     /**
-     * 设置超时回调
-     * @param callback 回调函数
+     * SetTimeoutCallback
+     * @param callback CallbackFunction
      */
     onTimeout(callback: () => void): void {
         this.onTimeoutCallback = callback;
     }
 
     /**
-     * 获取心跳状态
-     * @returns 心跳状态
+     * GetHeartbeatState
+     * @returns HeartbeatState
      */
     getState(): HeartbeatState {
         return { ...this.state };
     }
 
     /**
-     * 获取心跳统计
-     * @returns 心跳统计
+     * GetHeartbeatstatistics
+     * @returns Heartbeatstatistics
      */
     getStats() {
         return {
@@ -213,7 +213,7 @@ export class HeartbeatModule {
     }
 
     /**
-     * 重置心跳状态
+     * ResetHeartbeatState
      */
     reset(): void {
         this.state = {
@@ -227,8 +227,8 @@ export class HeartbeatModule {
     }
 
     /**
-     * 获取RTT（往返时间）
-     * @returns RTT，如果没有收到响应则返回-1
+     * GetRTT（往返Time）
+     * @returns RTT，IfNoHas收toResponseThenReturn-1
      */
     getRTT(): number {
         if (this.state.lastReceiveTime === 0 || this.state.lastSendTime === 0) {
@@ -238,16 +238,16 @@ export class HeartbeatModule {
     }
 
     /**
-     * 获取心跳间隔
-     * @returns 心跳间隔
+     * GetHeartbeatInterval
+     * @returns HeartbeatInterval
      */
     getInterval(): number {
         return this.config.intervalMs;
     }
 
     /**
-     * 获取心跳超时时间
-     * @returns 心跳超时时间
+     * GetHeartbeatTimeoutTime
+     * @returns HeartbeatTimeoutTime
      */
     getTimeout(): number {
         return this.config.timeoutMs;

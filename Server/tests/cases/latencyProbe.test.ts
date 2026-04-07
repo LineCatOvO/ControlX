@@ -1,12 +1,12 @@
 /**
- * latencyProbe 延迟探测测试
+ * latencyProbe Latency探测Test
  * 
- * 测试覆盖：
- * - handleLatencyProbe() 处理延迟探测
- * - updateRttStats() 更新 RTT 统计
- * - getRttStats() 获取 RTT 统计
- * - resetRttStats() 重置 RTT 统计
- * - getLatencyMonitor() 获取延迟监控 API
+ * Test coverage：
+ * - handleLatencyProbe() 处理Latency探测
+ * - updateRttStats() Update RTT 统计
+ * - getRttStats() Get RTT 统计
+ * - resetRttStats() Reset RTT 统计
+ * - getLatencyMonitor() GetLatency监控 API
  */
 
 import {

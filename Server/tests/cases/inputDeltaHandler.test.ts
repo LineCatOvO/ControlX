@@ -1,13 +1,13 @@
 /**
- * InputDelta Handler 单元测试
+ * InputDelta Handler Unit test
  *
- * 测试覆盖：
- * - handleInputDelta 处理器
- * - 键盘增量处理
- * - 鼠标增量处理
- * - 摇杆增量处理
- * - ACK 消息发送
- * - 错误处理
+ * Test coverage：
+ * - handleInputDelta Handler
+ * - Keyboard增量处理
+ * - Mouse增量处理
+ * - Joystick增量处理
+ * - ACK MessageSend
+ * - Error处理
  */
 
 import { handleInputDelta } from "../../src/ws/handlers/inputDelta";

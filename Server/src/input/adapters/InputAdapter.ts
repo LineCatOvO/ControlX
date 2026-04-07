@@ -1,50 +1,67 @@
-// 输入适配器接口定义
+// Input adapter interface definition
 
-import { InputState } from '../../types/ws';
+import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
- * 输入适配器基类接口
- * 定义所有输入适配器必须实现的方法
+ * Input adapter base interface
+ * Extends InputExecutor interface，Ensure compatibility with executorManager
+ *
+ * Design notes：
+ * - InputAdapter InterfaceExtendForExtends InputExecutor interface
+ * - All adapters must implement applyState, applyDelta, applyEvent, reset methods
+ * - Ensure adapters can be directly used by executorManager
  */
 export interface InputAdapter {
     /**
-     * 应用输入状态
-     * @param state 输入状态
+     * Apply complete input state
+     * @param state Input state
      */
     applyState(state: InputState): void;
 
     /**
-     * 重置输入状态
+     * Apply input delta
+     * @param delta Input delta
+     */
+    applyDelta(delta: InputDelta): void;
+
+    /**
+     * Apply input event
+     * @param event Input event
+     */
+    applyEvent(event: InputEvent): void;
+
+    /**
+     * ResetInput state
      */
     reset(): void;
 }
 
 /**
- * 键盘适配器接口
+ * Keyboard adapter interface
  */
 export interface KeyboardAdapter extends InputAdapter {
     /**
-     * 应用键盘状态
-     * @param pressedKeys 按下的键集合
+     * Apply keyboard state
+     * @param pressedKeys Set of pressed keys
      */
     applyKeyboardState(pressedKeys: Set<string> | string[]): void;
 
     /**
-     * 获取当前键盘状态
-     * @returns 当前按下的键集合
+     * Get current keyboard state
+     * @returns CurrentSet of pressed keys
      */
     getKeyboardState(): Set<string>;
 }
 
 /**
- * 游戏手柄适配器接口
+ * Gamepad adapter interface
  */
 export interface GamepadAdapter extends InputAdapter {
     /**
-     * 应用游戏手柄状态
-     * @param buttons 按钮状态
-     * @param axes 摇杆轴值
-     * @param triggers 扳机值
+     * Apply gamepad state
+     * @param buttons Button state
+     * @param axes Joystick axis values
+     * @param triggers Trigger values
      */
     applyGamepadState(
         buttons: Set<string> | string[],
@@ -53,8 +70,8 @@ export interface GamepadAdapter extends InputAdapter {
     ): void;
 
     /**
-     * 获取当前游戏手柄状态
-     * @returns 当前游戏手柄状态
+     * Get current gamepad state
+     * @returns Current gamepad state
      */
     getGamepadState(): {
         buttons: Set<string>;
@@ -64,16 +81,16 @@ export interface GamepadAdapter extends InputAdapter {
 }
 
 /**
- * 鼠标适配器接口
+ * Mouse adapter interface
  */
 export interface MouseAdapter extends InputAdapter {
     /**
-     * 应用鼠标状态
-     * @param x 鼠标X坐标
-     * @param y 鼠标Y坐标
-     * @param left 左键状态
-     * @param right 右键状态
-     * @param middle 中键状态
+     * Apply mouse state
+     * @param x Mouse X coordinate
+     * @param y Mouse Y coordinate
+     * @param left Left button state
+     * @param right Right button state
+     * @param middle Middle button state
      */
     applyMouseState(
         x: number,
@@ -84,8 +101,8 @@ export interface MouseAdapter extends InputAdapter {
     ): void;
 
     /**
-     * 获取当前鼠标状态
-     * @returns 当前鼠标状态
+     * Get current mouse state
+     * @returns Current mouse state
      */
     getMouseState(): {
         x: number;
@@ -97,15 +114,15 @@ export interface MouseAdapter extends InputAdapter {
 }
 
 /**
- * 摇杆适配器接口
+ * Joystick adapter interface
  */
 export interface JoystickAdapter extends InputAdapter {
     /**
-     * 应用摇杆状态
-     * @param x X轴值
-     * @param y Y轴值
-     * @param deadzone 死区
-     * @param smoothing 平滑系数
+     * Apply joystick state
+     * @param x X axis value
+     * @param y Y axis value
+     * @param deadzone Deadzone
+     * @param smoothing Smoothing coefficient
      */
     applyJoystickState(
         x: number,
@@ -115,8 +132,8 @@ export interface JoystickAdapter extends InputAdapter {
     ): void;
 
     /**
-     * 获取当前摇杆状态
-     * @returns 当前摇杆状态
+     * Get current joystick state
+     * @returns Current joystick state
      */
     getJoystickState(): {
         x: number;

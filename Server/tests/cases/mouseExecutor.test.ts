@@ -57,7 +57,7 @@ describe("MouseExecutor", () => {
         jest.clearAllMocks();
     });
 
-    describe("移动测试 (Movement Tests)", () => {
+    describe("移动Test (Movement Tests)", () => {
         describe("坐标移动 (Coordinate Movement)", () => {
             test("should apply positive X coordinate movement", () => {
                 const state = createState({ x: 100, y: 0 });
@@ -123,8 +123,8 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("点击测试 (Click Tests)", () => {
-        describe("左键点击 (Left Button Click)", () => {
+    describe("点击Test (Click Tests)", () => {
+        describe("Left键点击 (Left Button Click)", () => {
             test("should apply left button press", () => {
                 const state = createState({ x: 0, y: 0, left: true });
                 mouseExecutor.applyState(state);
@@ -142,7 +142,7 @@ describe("MouseExecutor", () => {
             });
         });
 
-        describe("右键点击 (Right Button Click)", () => {
+        describe("Right键点击 (Right Button Click)", () => {
             test("should apply right button press", () => {
                 const state = createState({ x: 0, y: 0, right: true });
                 mouseExecutor.applyState(state);
@@ -160,7 +160,7 @@ describe("MouseExecutor", () => {
             });
         });
 
-        describe("中键点击 (Middle Button Click)", () => {
+        describe("In键点击 (Middle Button Click)", () => {
             test("should apply middle button press", () => {
                 const state = createState({ x: 0, y: 0, middle: true });
                 mouseExecutor.applyState(state);
@@ -178,7 +178,7 @@ describe("MouseExecutor", () => {
             });
         });
 
-        describe("组合按键测试 (Combined Button Tests)", () => {
+        describe("组合KeyTest (Combined Button Tests)", () => {
             test("should apply left + right button combination", () => {
                 const state = createState({ x: 0, y: 0, left: true, right: true });
                 mouseExecutor.applyState(state);
@@ -208,7 +208,7 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("状态变化检测测试 (State Change Detection Tests)", () => {
+    describe("State变化DetectionTest (State Change Detection Tests)", () => {
         test("should detect coordinate change", () => {
             // Initial state
             mouseExecutor.applyState(createState({ x: 0, y: 0 }));
@@ -245,8 +245,8 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("组合操作测试 (Combined Operation Tests)", () => {
-        describe("拖拽操作 (Drag Operations)", () => {
+    describe("组合OperationTest (Combined Operation Tests)", () => {
+        describe("拖拽Operation (Drag Operations)", () => {
             test("should handle drag with left button", () => {
                 // Start position with left button pressed
                 mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
@@ -271,7 +271,7 @@ describe("MouseExecutor", () => {
             });
         });
 
-        describe("点击+移动操作 (Click + Move Operations)", () => {
+        describe("点击+移动Operation (Click + Move Operations)", () => {
             test("should handle click then move", () => {
                 // Click at position
                 mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
@@ -294,7 +294,7 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("边界条件测试 (Boundary Condition Tests)", () => {
+    describe("边界条件Test (Boundary Condition Tests)", () => {
         describe("坐标边界 (Coordinate Boundaries)", () => {
             test("should handle maximum positive coordinates", () => {
                 const state = createState({ x: Number.MAX_SAFE_INTEGER, y: Number.MAX_SAFE_INTEGER });
@@ -325,7 +325,7 @@ describe("MouseExecutor", () => {
             });
         });
 
-        describe("空状态处理 (Empty State Handling)", () => {
+        describe("NullState处理 (Empty State Handling)", () => {
             test("should handle initial empty state", () => {
                 const state = createState({ x: 0, y: 0 });
                 mouseExecutor.applyState(state);
@@ -356,7 +356,7 @@ describe("MouseExecutor", () => {
             });
         });
 
-        describe("极端值测试 (Extreme Value Tests)", () => {
+        describe("极EndValueTest (Extreme Value Tests)", () => {
             test("should handle NaN coordinates", () => {
                 const state = createState({ x: NaN, y: NaN });
                 mouseExecutor.applyState(state);
@@ -380,7 +380,7 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("applyDelta 方法测试 (applyDelta Method Tests)", () => {
+    describe("applyDelta MethodTest (applyDelta Method Tests)", () => {
         test("should apply mouse delta with coordinate changes", () => {
             const delta = createDelta({ x: 50, y: 50 });
             mouseExecutor.applyDelta(delta);
@@ -417,7 +417,7 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("applyEvent 方法测试 (applyEvent Method Tests)", () => {
+    describe("applyEvent MethodTest (applyEvent Method Tests)", () => {
         test("should handle mouse_move event", () => {
             const event = createEvent("mouse_move", { x: 100, y: 200 });
             mouseExecutor.applyEvent(event);
@@ -451,7 +451,7 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("reset 方法测试 (reset Method Tests)", () => {
+    describe("reset MethodTest (reset Method Tests)", () => {
         test("should reset to default state", () => {
             mouseExecutor.applyState(createState({ x: 100, y: 100, left: true }));
             mouseExecutor.reset();
@@ -491,7 +491,7 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("幂等性测试 (Idempotency Tests)", () => {
+    describe("幂等性Test (Idempotency Tests)", () => {
         test("should handle repeated same state applications", () => {
             const state = createState({ x: 100, y: 100, left: true });
             for (let i = 0; i < 5; i++) {
@@ -522,7 +522,7 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("状态跟踪测试 (State Tracking Tests)", () => {
+    describe("State跟踪Test (State Tracking Tests)", () => {
         test("should track current mouse position", () => {
             mouseExecutor.applyState(createState({ x: 100, y: 200 }));
             mouseExecutor.applyState(createState({ x: 300, y: 400 }));
@@ -556,7 +556,7 @@ describe("MouseExecutor", () => {
         });
     });
 
-    describe("错误处理测试 (Error Handling Tests)", () => {
+    describe("Error处理Test (Error Handling Tests)", () => {
         test("should handle partial mouse state with missing y", () => {
             const state: InputState = {
                 keyboard: new Set(),

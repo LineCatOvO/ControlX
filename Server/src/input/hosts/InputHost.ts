@@ -1,35 +1,35 @@
 /**
- * 输入宿主抽象基类
+ * InputHostAbstractBaseClass
  * 
- * 职责：屏蔽底层驱动差异，提供统一的 lifecycle 和 execution 接口
+ * Responsibility：ShieldUnderlyingDriverDifference，ProvideUnifiedOf lifecycle and execution Interface
  * 
- * 设计模式：策略模式 (Strategy Pattern)
- * - 定义一族算法（不同平台的输入实现）
- * - 封装每个算法（每个具体 Host 类）
- * - 使它们可以互换（通过统一接口）
+ * Design pattern：StrategyMode (Strategy Pattern)
+ * - Define一族Algorithm（DifferentPlatformOfInputImplementation）
+ * - EncapsulateEachOneAlgorithm（EachOneSpecific Host Class）
+ * - 使It们CanWith互换（PassUnifiedInterface）
  */
 
 import { InputDeviceType, HostStatus, PlatformType, detectPlatform } from './types';
 
 /**
- * 输入宿主抽象基类
+ * InputHostAbstractBaseClass
  */
 export abstract class InputHost {
-    /** 设备类型 */
+    /** Device type */
     protected readonly deviceType: InputDeviceType;
     
-    /** 运行平台 */
+    /** RunPlatform */
     protected readonly platform: PlatformType;
     
-    /** 是否已启用 */
+    /** WhetherAlreadyEnable */
     protected isEnabled: boolean = false;
     
-    /** 最后错误信息 */
+    /** MaxAftererrorInfo */
     protected lastError?: string;
 
     /**
-     * 构造函数
-     * @param deviceType 设备类型
+     * Constructor
+     * @param deviceType Device type
      */
     constructor(deviceType: InputDeviceType) {
         this.deviceType = deviceType;
@@ -37,31 +37,31 @@ export abstract class InputHost {
     }
 
     /**
-     * 初始化：加载驱动/库
-     * 异步执行，避免阻塞启动流程
-     * @returns 是否初始化成功
+     * Initialize：LoadDriver/Lib
+     * AsyncExecute，AvoidBlockStartProcess
+     * @returns WhetherInitializeSuccess
      */
     abstract initialize(): Promise<boolean>;
 
     /**
-     * 应用状态：核心执行逻辑
-     * @param state 输入状态
+     * Apply state：Core心ExecuteLogic
+     * @param state Input state
      */
     abstract applyState(state: any): void;
 
     /**
-     * 重置：释放所有按键/摇杆归零
+     * Reset：ReleaseAllKey/JoystickResetToZero
      */
     abstract reset(): void;
 
     /**
-     * 销毁：清理资源
+     * Destroy：Clear理资Source
      */
     abstract destroy(): void;
 
     /**
-     * 获取宿主状态
-     * @returns 宿主状态
+     * GetHostState
+     * @returns HostState
      */
     getStatus(): HostStatus {
         return {
@@ -73,24 +73,24 @@ export abstract class InputHost {
     }
 
     /**
-     * 获取设备类型
-     * @returns 设备类型
+     * GetDevice type
+     * @returns Device type
      */
     getDeviceType(): InputDeviceType {
         return this.deviceType;
     }
 
     /**
-     * 检查是否已启用
-     * @returns 是否已启用
+     * CheckWhetherAlreadyEnable
+     * @returns WhetherAlreadyEnable
      */
     isHostEnabled(): boolean {
         return this.isEnabled;
     }
 
     /**
-     * 获取最后错误信息
-     * @returns 错误信息
+     * GetMaxAftererrorInfo
+     * @returns errorInfo
      */
     getLastError(): string | undefined {
         return this.lastError;

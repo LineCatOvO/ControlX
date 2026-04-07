@@ -1,19 +1,19 @@
-// Web监控服务器模块
-// 提供HTTP静态文件服务和WebSocket状态推送
+// Web monitoring server module
+// Provide HTTP static file service and WebSocket status push
 
 import { createServer } from 'http';
 import { readFileSync, existsSync } from 'fs';
 import { join, extname } from 'path';
 import { inputState } from '../input/state';
 
-// 使用 require 导入 ws 模块（与项目中其他文件保持一致）
+// Use require to import ws module (consistent with other files in project)
 const WebSocket = require('ws');
 
-// 配置
+// Configuration
 const WEB_PORT = parseInt(process.env.WEB_PORT || '8080', 10);
 const STATIC_DIR = join(__dirname, 'static');
 
-// MIME类型映射
+// MIME type mapping
 const MIME_TYPES: Record<string, string> = {
     '.html': 'text/html; charset=utf-8',
     '.css': 'text/css; charset=utf-8',
@@ -26,42 +26,42 @@ const MIME_TYPES: Record<string, string> = {
     '.ico': 'image/x-icon',
 };
 
-// WebSocket客户端集合
+// WebSocket client set
 const wsClients: Set<any> = new Set();
 
-// HTTP服务器
+// HTTP server
 let httpServer: ReturnType<typeof createServer> | null = null;
 let wsServer: any = null;
 let statusInterval: ReturnType<typeof setInterval> | null = null;
 
 /**
- * 启动Web监控服务器
+ * Start web monitoring server
  */
 export function startWebMonitor(): void {
-    // 创建HTTP服务器
+    // CreateHTTP server
     httpServer = createServer((req, res) => {
         handleHttpRequest(req, res);
     });
 
-    // 创建WebSocket服务器
+    // Create WebSocket server
     wsServer = new WebSocket.WebSocketServer({ server: httpServer });
     wsServer.on('connection', (ws: any) => {
         handleWsConnection(ws);
     });
 
-    // 启动HTTP服务器
+    // StartHTTP server
     httpServer.listen(WEB_PORT, () => {
         console.log(`🌐 Web Monitor Server started`);
         console.log(`📊 Dashboard: http://localhost:${WEB_PORT}`);
         console.log(`🔌 WebSocket: ws://localhost:${WEB_PORT}/ws`);
     });
 
-    // 启动状态推送定时器（10 FPS）
+    // Start status push timer (10 FPS)
     statusInterval = setInterval(broadcastStatus, 100);
 }
 
 /**
- * 停止Web监控服务器
+ * Stop web monitoring server
  */
 export function stopWebMonitor(): void {
     if (statusInterval) {
@@ -83,27 +83,27 @@ export function stopWebMonitor(): void {
 }
 
 /**
- * 处理HTTP请求
+ * Handle HTTP request
  */
 function handleHttpRequest(req: any, res: any): void {
     const url = req.url === '/' ? '/index.html' : req.url;
     const filePath = join(STATIC_DIR, url);
 
-    // 安全检查：防止目录遍历攻击
+    // Security check: prevent directory traversal attack
     if (!filePath.startsWith(STATIC_DIR)) {
         res.writeHead(403);
         res.end('Forbidden');
         return;
     }
 
-    // 检查文件是否存在
+    // Check if file exists
     if (!existsSync(filePath)) {
         res.writeHead(404);
         res.end('Not Found');
         return;
     }
 
-    // 读取并返回文件
+    // Read and return file
     try {
         const content = readFileSync(filePath);
         const ext = extname(filePath);
@@ -121,13 +121,13 @@ function handleHttpRequest(req: any, res: any): void {
 }
 
 /**
- * 处理WebSocket连接
+ * Handle WebSocket connection
  */
 function handleWsConnection(ws: any): void {
     wsClients.add(ws);
     console.log(`WebSocket client connected. Total: ${wsClients.size}`);
 
-    // 发送当前状态
+    // Send current status
     sendStatus(ws);
 
     ws.on('close', () => {
@@ -142,7 +142,7 @@ function handleWsConnection(ws: any): void {
 }
 
 /**
- * 广播状态到所有客户端
+ * Broadcast status to all clients
  */
 function broadcastStatus(): void {
     if (wsClients.size === 0) return;
@@ -158,7 +158,7 @@ function broadcastStatus(): void {
 }
 
 /**
- * 发送状态到单个客户端
+ * Send status to single client
  */
 function sendStatus(ws: any): void {
     if (ws.readyState === WebSocket.OPEN) {
@@ -168,7 +168,7 @@ function sendStatus(ws: any): void {
 }
 
 /**
- * 获取状态数据
+ * Get status data
  */
 function getStatusPayload(): object {
     const { keyboard, gamepad, mouse, joystick } = inputState;
@@ -196,5 +196,5 @@ function getStatusPayload(): object {
     };
 }
 
-// 导出端口信息
+// Export port information
 export { WEB_PORT };

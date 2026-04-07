@@ -1,24 +1,24 @@
 /**
- * 输入宿主模块统一导出
+ * InputHostModuleUnifiedExport
  */
 
-// 类型定义
+// TypeDefine
 export { InputDeviceType, HostStatus, PlatformType, detectPlatform } from './types';
 
-// 抽象基类
+// AbstractBaseClass
 export { InputHost } from './InputHost';
 
-// Windows 平台实现
+// Windows PlatformImplementation
 export { WindowsKeyboardHost } from './WindowsKeyboardHost';
 export { WindowsGamepadHost } from './WindowsGamepadHost';
 
-// Linux 平台实现（待制作）
+// Linux PlatformImplementation（PendingMake）
 export { LinuxKeyboardHost } from './LinuxKeyboardHost';
 export { LinuxGamepadHost } from './LinuxGamepadHost';
 
-// MacOS 平台实现（待制作）
+// MacOS PlatformImplementation（PendingMake）
 export { MacOSKeyboardHost } from './MacOSKeyboardHost';
 export { MacOSGamepadHost } from './MacOSGamepadHost';
 
-// 路由器（从 router 目录导入）
+// RouterManager（From router DirectoryImport）
 export { InputRouter } from '../router/InputRouter';

@@ -1,16 +1,16 @@
 /**
- * Router-only 模式执行器
+ * Router-only Mode Executor
  *
- * 阶段 3：流量切换到 InputRouter
+ * Stage 3: Traffic switching to InputRouter
  *
- * 职责：
- * 1. 直接使用 InputRouter 执行输入，绕过旧 Executor
- * 2. 保持与旧 Executor 相同的接口，便于切换
- * 3. 提供降级回 Executor 的能力
+ * Responsibilities：
+ * 1. Directly use InputRouter for input execution，Bypass old Executor
+ * 2. Maintain same interface as old Executor，easy to switch
+ * 3. Provide fallback to Executor capability
  *
- * 设计模式：适配器模式
- * - 将 InputRouter 适配为 InputExecutorManager 接口
- * - 便于在现有代码中无缝替换
+ * Design pattern: Adapter pattern
+ * - Adapt InputRouter to InputExecutorManager interface
+ * - Easy to seamlessly replace in existing code
  */
 
 import { InputExecutorManager } from './interfaces';
@@ -20,34 +20,34 @@ import { getExecutorManager, getSafetyController } from './executor';
 import { inputState } from './state';
 
 /**
- * Router-only 配置
+ * Router-only config
  */
 interface RouterOnlyConfig {
-    /** 是否启用 Router-only 模式 */
+    /** Whether Router-only mode is enabled */
     enabled: boolean;
-    /** 失败时是否回退到 Executor */
+    /** Whether to fallback to Executor on failure */
     fallbackToExecutor: boolean;
-    /** 连续失败阈值 */
+    /** Consecutive failure threshold */
     failureThreshold: number;
 }
 
 /**
- * Router-only 执行器管理器
+ * Router-only executor manager
  */
 export class RouterOnlyExecutorManager implements InputExecutorManager {
-    /** 输入路由器 */
+    /** Input router */
     private readonly router: InputRouter;
 
-    /** 配置 */
+    /** Config */
     private readonly config: RouterOnlyConfig;
 
-    /** 连续失败计数 */
+    /** Consecutive failure count */
     private consecutiveFailures = 0;
 
-    /** 是否已降级到 Executor */
+    /** Whether already fallback to Executor */
     private isFallback = false;
 
-    /** 统计信息 */
+    /** Statistics */
     private stats = {
         totalExecutions: 0,
         successes: 0,
@@ -56,9 +56,9 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
     };
 
     /**
-     * 构造函数
-     * @param router 输入路由器
-     * @param config 配置
+     * Constructor
+     * @param router Input router
+     * @param config Config
      */
     constructor(router: InputRouter, config?: Partial<RouterOnlyConfig>) {
         this.router = router;
@@ -73,30 +73,30 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 添加输入执行器（Router 模式不需要）
+     * Add input executor（Router mode does not need）
      */
     addExecutor(executor: any): void {
-        // Router 模式不使用 Executor
+        // Router ModeNot use Executor
         console.debug('[RouterOnly] addExecutor called but ignored (Router mode)');
     }
 
     /**
-     * 移除输入执行器（Router 模式不需要）
+     * Remove input executor（Router mode does not need）
      */
     removeExecutor(executor: any): void {
-        // Router 模式不使用 Executor
+        // Router ModeNot use Executor
         console.debug('[RouterOnly] removeExecutor called but ignored (Router mode)');
     }
 
     /**
-     * 应用完整输入状态
-     * @param state 输入状态
+     * Apply complete input state
+     * @param state InputState
      */
     applyState(state: InputState): void {
         this.stats.totalExecutions++;
 
         try {
-            // 直接使用 Router 执行
+            // Directly use Router for execution
             this.router.applyState(state);
             this.stats.successes++;
             this.consecutiveFailures = 0;
@@ -106,7 +106,7 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
 
             console.error('[RouterOnly] Execution error:', error);
 
-            // 检查是否需要降级
+            // Check if need to fallback
             if (this.config.fallbackToExecutor && !this.isFallback) {
                 if (this.consecutiveFailures >= this.config.failureThreshold) {
                     console.error('[RouterOnly] Triggering fallback to Executor');
@@ -117,7 +117,7 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
                 }
             }
 
-            // 如果已降级，使用 Executor
+            // If already fallback, use Executor
             if (this.isFallback) {
                 console.warn('[RouterOnly] Falling back to Executor');
                 getExecutorManager().applyState(state);
@@ -126,21 +126,21 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 应用输入增量（暂不支持）
+     * Apply input delta（Temporarily not supported）
      */
     applyDelta(delta: InputDelta): void {
         console.debug('[RouterOnly] Delta execution not supported');
     }
 
     /**
-     * 应用输入事件（暂不支持）
+     * Apply input event（Temporarily not supported）
      */
     applyEvent(event: InputEvent): void {
         console.debug('[RouterOnly] Event execution not supported');
     }
 
     /**
-     * 重置所有执行器
+     * Reset all executors
      */
     reset(): void {
         this.router.resetAll();
@@ -148,28 +148,28 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
     }
 
     /**
-     * 获取路由器
+     * Get router
      */
     getRouter(): InputRouter {
         return this.router;
     }
 
     /**
-     * 检查是否已降级
+     * Check if already fallback
      */
     isFallbackMode(): boolean {
         return this.isFallback;
     }
 
     /**
-     * 获取统计信息
+     * GetStatistics
      */
     getStats() {
         return { ...this.stats };
     }
 
     /**
-     * 清除统计
+     * Clear statistics
      */
     clearStats(): void {
         this.stats = {
@@ -183,11 +183,11 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
 }
 
 /**
- * 创建 Router-only 执行器管理器
+ * Create Router-only executor manager
  *
- * @param router 输入路由器
- * @param enabled 是否启用
- * @returns Router-only 执行器管理器
+ * @param router Input router
+ * @param enabled WhetherEnable
+ * @returns Router-only executor manager
  */
 export function createRouterOnlyExecutorManager(
     router: InputRouter,
@@ -201,20 +201,20 @@ export function createRouterOnlyExecutorManager(
 }
 
 /**
- * Router-only 模式集成
+ * Router-only mode integration
  *
- * 提供简化的初始化和执行接口
+ * Provide simplified initialization and execution interface
  */
 
-// Router-only 模式配置
+// Router-only mode config
 const isRouterOnlyMode = process.env.ROUTER_ONLY === 'true';
 
-// Router-only 实例
+// Router-only Instance
 let routerOnlyManager: RouterOnlyExecutorManager | null = null;
 let inputRouter: InputRouter | null = null;
 
 /**
- * 初始化 Router-only 模式
+ * Initialize Router-only Mode
  */
 export function initRouterOnlyMode(): void {
     if (!isRouterOnlyMode) {
@@ -224,10 +224,10 @@ export function initRouterOnlyMode(): void {
 
     console.log('🎯 Initializing router-only mode...');
 
-    // 创建路由器
+    // CreateRouterManager
     inputRouter = new InputRouter();
 
-    // 注册 Host
+    // register Host
     const { WindowsKeyboardHost } = require('./hosts/WindowsKeyboardHost');
     const { WindowsGamepadHost } = require('./hosts/WindowsGamepadHost');
     const { InputDeviceType } = require('./hosts/types');
@@ -237,14 +237,14 @@ export function initRouterOnlyMode(): void {
     inputRouter.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
     inputRouter.registerHost(InputDeviceType.GAMEPAD, gamepadHost);
 
-    // 创建 Router-only 执行器管理器
+    // Create Router-only executor manager
     routerOnlyManager = createRouterOnlyExecutorManager(inputRouter, true);
 
     console.log('🎯 Router-only mode: INITIALIZED');
 }
 
 /**
- * Router-only 模式执行输入
+ * Router-only ModeExecuteInput
  */
 export function executeInputRouterOnly(): void {
     if (routerOnlyManager && isRouterOnlyMode) {
@@ -254,27 +254,27 @@ export function executeInputRouterOnly(): void {
         getExecutorManager().applyState(inputState);
     }
 
-    // 记录有效状态时间
+    // recordValidStateTime
     const applyTime = Date.now();
     getSafetyController().recordValidState(inputState, applyTime);
 }
 
 /**
- * 获取 Router-only 管理器
+ * Get Router-only ManageManager
  */
 export function getRouterOnlyManager(): RouterOnlyExecutorManager | null {
     return routerOnlyManager;
 }
 
 /**
- * 获取输入路由器
+ * GetInput router
  */
 export function getInputRouter(): InputRouter | null {
     return inputRouter;
 }
 
 /**
- * 检查是否为 Router-only 模式
+ * CheckWhetherFor Router-only Mode
  */
 export function isRouterOnlyModeEnabled(): boolean {
     return isRouterOnlyMode && routerOnlyManager !== null;

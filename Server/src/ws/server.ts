@@ -1,53 +1,59 @@
-// 使用正确的 ws 导入方式
+// Use correct ws import method
 const WebSocket = require('ws');
 import { handleConnection } from './connection';
 import { handleMessage } from './router';
 import { loadConfigFromFile, getConfigPathFromArgs } from '../config/loadConfig';
 import { getMetricsCollector } from '../utils/metrics';
+import { authManager } from '../auth/auth';
 
 let wss: any = null;
 let actualPort: number = 0;
 
-// WebSocket 连接管理
-const clients: Map<string, any> = new Map(); // 存储活跃的 WebSocket 连接
+// WebSocket connection management
+const clients: Map<string, any> = new Map(); // Store active WebSocket connections
 let heartbeatInterval: NodeJS.Timeout | null = null;
 
-// 生成客户端 ID
+// Connection limit configuration
+const MAX_CONNECTIONS = process.env.MAX_WS_CONNECTIONS
+    ? parseInt(process.env.MAX_WS_CONNECTIONS, 10)
+    : 100; // Default max 100 connections
+
+// Generate client ID
 function generateClientId(): string {
     return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// 加载配置
+// Load config
 const config = loadConfigFromFile(getConfigPathFromArgs());
 
-// 初始化指标收集器
+// Initialize metrics collector
 const metricsCollector = getMetricsCollector();
 metricsCollector.initializeDefaultMetrics();
 
 /**
- * 启动心跳检测
+ * Start heartbeat detection
  */
 function startHeartbeat() {
     if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
     }
     
-    const interval = config.heartbeatInterval || 30000; // 默认 30 秒
+    const interval = config.heartbeatInterval || 30000; // Default 30 seconds
     
     heartbeatInterval = setInterval(() => {
         wss.clients.forEach((ws: any) => {
-            // 如果客户端没有响应心跳，终止连接
+            // If client does not respond to heartbeat, terminate connection
             if (ws.isAlive === false) {
                 console.log(`Heartbeat timeout, terminating client: ${ws.clientId}`);
                 return ws.terminate();
             }
             
-            // 标记为未响应，发送心跳
+            // Mark as not responding, send heartbeat
             ws.isAlive = false;
             ws.ping();
         });
         
-        // 输出连接统计
+        // Output connection statistics
         console.log(`WebSocket connections: ${wss.clients.size} active`);
     }, interval);
     
@@ -55,7 +61,7 @@ function startHeartbeat() {
 }
 
 /**
- * 停止心跳检测
+ * Stop heartbeat detection
  */
 function stopHeartbeat() {
     if (heartbeatInterval) {
@@ -66,26 +72,26 @@ function stopHeartbeat() {
 }
 
 /**
- * 创建并启动 WebSocket 服务器
- * @returns Promise<number> 解析为实际使用的端口，表示服务器成功启动，拒绝表示服务器启动失败
+ * Create and start WebSocket server
+ * @returns Promise<number> Resolves to actual port used, indicates server started successfully; rejects if server fails to start
  */
 export function startWsServer(): Promise<number> {
     return new Promise((resolve, reject) => {
         try {
             let startPort: number;
 
-            // 根据配置决定起始端口策略
+            // Decide start port strategy based on config
             if (config.isTestMode) {
-                // 测试模式：随机选择端口范围（10000-60000 之间）
+                // Test mode: Random port range selection (between 10000-60000)
                 startPort = Math.floor(Math.random() * 50000) + 10000;
                 console.log(`Test mode: Using random start port ${startPort}`);
             } else {
-                // 生产模式：使用配置的默认端口
+                // Production mode: Use configured default port
                 startPort = process.env.PORT ? parseInt(process.env.PORT, 10) : config.defaultPort;
                 console.log(`Production mode: Using configured start port ${startPort}`);
             }
 
-            // 尝试启动服务器，如果端口被占用则自动重试
+            // Try to start server, auto retry if port is occupied
             const tryStartServer = (currentPort: number, attempt: number = 0) => {
                 wss = new WebSocket.WebSocketServer({ port: currentPort });
 
@@ -93,18 +99,18 @@ export function startWsServer(): Promise<number> {
                     actualPort = currentPort;
                     console.log(`ControlX Server is running on ws://localhost:${currentPort}`);
                     
-                    // 启动心跳检测
+                    // Start heartbeat detection
                     startHeartbeat();
                     
                     resolve(currentPort);
                 });
 
                 wss.on('error', (error: any) => {
-                    // 如果是端口被占用错误，尝试下一个端口
+                    // If port is occupied error, try next port
                     if (error.code === 'EADDRINUSE') {
                         console.debug(`Port ${currentPort} is already in use, trying port ${currentPort + 1}`);
                         wss.close();
-                        // 尝试下一个端口，最多尝试配置的端口范围次数
+                        // Try next port, max attempts based on port range config
                         if (attempt < config.portRange) {
                             tryStartServer(currentPort + 1, attempt + 1);
                         } else {
@@ -117,45 +123,79 @@ export function startWsServer(): Promise<number> {
                     }
                 });
 
-                wss.on('connection', (ws: any) => {
-                    // 初始化连接状态
-                    const clientId = generateClientId();
+                wss.on('connection', (ws: any, req: any) => {
+                    // Check connection limit
+                    if (clients.size >= MAX_CONNECTIONS) {
+                        console.warn(`Connection limit reached (${MAX_CONNECTIONS}), rejecting new connection`);
+                        ws.send(JSON.stringify({
+                            type: 'error',
+                            code: 'MAX_CONNECTIONS_REACHED',
+                            message: 'Server connection limit reached'
+                        }));
+                        ws.close(1013, 'Server connection limit reached');
+                        return;
+                    }
+
+                    // Get client IP address
+                    const clientIp = req.socket.remoteAddress || 'unknown';
+
+                    // Get token from URL params or first message (get from URL params first)
+                    const url = new URL(req.url, `http://${req.headers.host}`);
+                    const token = url.searchParams.get('token') || '';
+
+                    // Execute authentication check
+                    const authResult = authManager.authenticate(token, clientIp);
+
+                    if (!authResult.success) {
+                        // Authentication failed, reject connection
+                        console.warn(`Authentication failed for IP ${clientIp}: ${authResult.error}`);
+                        ws.send(JSON.stringify({
+                            type: 'error',
+                            code: authResult.errorCode || 'AUTH_FAILED',
+                            message: authResult.error || 'Authentication failed'
+                        }));
+                        ws.close(1008, 'Authentication failed');
+                        return;
+                    }
+                    // Initialize connection state
+                    const clientId = authResult.clientId || generateClientId();
                     ws.clientId = clientId;
                     ws.isAlive = true;
-                    ws.connectedAt = Date.now(); // 记录连接时间
+                    ws.connectedAt = Date.now(); // Record connection time
+                    ws.authToken = token; // Store token for subsequent permission check
                     
-                    // 存储连接
+                    // Store connection
                     clients.set(clientId, ws);
-                    // 记录连接指标
+                    // Record connection metrics
                     metricsCollector.recordConnection(clientId);
                     
-                    console.log(`Client connected: ${clientId}, total: ${clients.size}`);
+                    console.log(`Client connected: ${clientId} (IP: ${clientIp}), total: ${clients.size}`);
                     
-                    // 连接关闭时的处理
+                    // Handle connection close
                     ws.on('close', () => {
                         clients.delete(clientId);
                         
-                        // 记录断开连接指标
+                        // Record disconnection metrics
                         metricsCollector.recordDisconnection(clientId);
                         console.log(`Client disconnected: ${clientId}, total: ${clients.size}`);
                         
-                        // 通知连接管理器
+                        // Notify connection manager
                         handleConnection(ws, 'close');
                     });
                     
-                    // 连接错误处理
+                    // Handle connection error
                     ws.on('error', (error: any) => {
                         console.error(`Client error: ${clientId}`, error);
-                        // 记录错误指标
+                        // Record error metrics
                         metricsCollector.recordError(clientId);
                     });
                     
-                    // 心跳响应
+                    // Heartbeat response
                     ws.on('pong', () => {
                         ws.isAlive = true;
                     });
 
-                    // 处理消息
+                    // Handle message
                     ws.on('message', (data: any) => {
                         try {
                             const message = JSON.parse(data.toString());
@@ -165,18 +205,18 @@ export function startWsServer(): Promise<number> {
                         }
                     });
 
-                    // 处理连接
+                    // Handle connection
                     handleConnection(ws);
                 });
 
                 wss.on('close', () => {
-                    // 停止心跳检测
+                    // Stop heartbeat detection
                     stopHeartbeat();
                     
-                    // 清空客户端列表
+                    // Clear client list
                     clients.clear();
                     
-                    // 避免在测试环境销毁后执行日志
+                    // Avoid logging after test environment teardown
                     if (typeof console !== 'undefined') {
                         console.log('WebSocket server closed');
                     }
@@ -192,39 +232,39 @@ export function startWsServer(): Promise<number> {
 }
 
 /**
- * 获取实际使用的端口
- * @returns number 实际使用的端口号，如果服务器未启动则返回 0
+ * Get actual port used
+ * @returns number Actual port number used, returns 0 if server is not started
  */
 export function getActualPort(): number {
     return actualPort;
 }
 
 /**
- * 获取活跃客户端数量
- * @returns number 活跃客户端数量
+ * Get active client count
+ * @returns number Active client count
  */
 export function getActiveClientCount(): number {
     return clients.size;
 }
 
 /**
- * 获取所有客户端 ID 列表
- * @returns string[] 客户端 ID 列表
+ * Get all client IDs list
+ * @returns string[] Client ID list
  */
 export function getClientIds(): string[] {
     return Array.from(clients.keys());
 }
 
 /**
- * 关闭 WebSocket 服务器
- * @returns Promise<void> 解析表示服务器成功关闭
+ * Close WebSocket server
+ * @returns Promise<void> Resolves when server is successfully closed
  */
 export function stopWsServer(): Promise<void> {
     return new Promise((resolve) => {
         if (wss) {
-            // 添加关闭事件监听器，确保服务器完全关闭后再 resolve
+            // Add close event listener to ensure server is fully closed before resolve
             wss.once('close', () => {
-                // 避免在测试环境销毁后执行日志
+                // Avoid logging after test environment teardown
                 if (typeof console !== 'undefined') {
                     console.log('WebSocket server closed');
                 }
@@ -234,7 +274,7 @@ export function stopWsServer(): Promise<void> {
             });
             wss.close();
         } else {
-            // 如果服务器已经关闭，直接 resolve
+            // If server is already closed, resolve directly
             resolve();
         }
     });

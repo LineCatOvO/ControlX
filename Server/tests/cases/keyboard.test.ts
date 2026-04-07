@@ -117,7 +117,7 @@ describe("Keyboard Output Tests", () => {
         });
     });
 
-    describe("正确的按键顺序 (Key Order)", () => {
+    describe("正确OfKey顺序 (Key Order)", () => {
         test("should release keys before pressing new keys", () => {
             // Start with W pressed
             keyboardExecutor.applyState(createState(["W"]));
@@ -132,7 +132,7 @@ describe("Keyboard Output Tests", () => {
         });
     });
 
-    describe("清零时的键盘行为 (Clear on Reset)", () => {
+    describe("清零时OfKeyboard行For (Clear on Reset)", () => {
         test("should release all keys on reset", () => {
             keyboardExecutor.applyState(createState(["W", "A", "S"]));
             keyboardExecutor.reset();
@@ -304,7 +304,7 @@ describe("Keyboard Output Tests", () => {
         });
     });
 
-    describe("错误处理 (Error Handling)", () => {
+    describe("Error处理 (Error Handling)", () => {
         test("should handle keySender.sendKey errors gracefully", () => {
             sendKeyMock.mockImplementationOnce(() => {
                 throw new Error("Mock sendKey error");
@@ -391,7 +391,7 @@ describe("Keyboard Output Tests", () => {
     });
 
     // New tests for coverage improvement
-    describe("applyDelta 方法 (applyDelta Method)", () => {
+    describe("applyDelta Method (applyDelta Method)", () => {
         test("should apply delta with pressed keys", () => {
             const delta: InputDelta = {
                 keyboard: {
@@ -463,7 +463,7 @@ describe("Keyboard Output Tests", () => {
         });
     });
 
-    describe("applyEvent 方法 (applyEvent Method)", () => {
+    describe("applyEvent Method (applyEvent Method)", () => {
         test("should handle key_down event", () => {
             const event: InputEvent = {
                 type: "key_down",
@@ -506,7 +506,7 @@ describe("Keyboard Output Tests", () => {
         });
     });
 
-    describe("统计和日志功能 (Stats and Logging)", () => {
+    describe("统计和LogFunction (Stats and Logging)", () => {
         test("getKeyboardStats should return current stats", () => {
             const stats = getKeyboardStats();
 
@@ -543,7 +543,7 @@ describe("Keyboard Output Tests", () => {
         });
     });
 
-    describe("冗余按键日志 (Redundant Key Logging)", () => {
+    describe("冗余KeyLog (Redundant Key Logging)", () => {
         test("should log redundant keys when verbose is enabled", () => {
             setKeyboardLogConfig({ verbose: true });
 
@@ -559,7 +559,7 @@ describe("Keyboard Output Tests", () => {
         });
     });
 
-    describe("按键错误处理 (Key Press Error Handling)", () => {
+    describe("KeyError处理 (Key Press Error Handling)", () => {
         test("should handle errors when pressing keys", () => {
             sendKeyMock.mockImplementationOnce(() => {
                 throw new Error("Press error");

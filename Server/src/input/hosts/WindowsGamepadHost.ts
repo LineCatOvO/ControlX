@@ -1,14 +1,14 @@
 /**
- * Windows 游戏手柄宿主实现
+ * Windows gamepad host implementation
  * 
- * 使用 ViGEmBus + node-vigemclient 实现虚拟 Xbox 360 控制器
+ * Implement virtual Xbox 360 controller using ViGEmBus + node-vigemclient
  * 
- * 降级策略：
- * - ViGEmBus 驱动未安装：记录错误，禁用宿主
- * - 模块加载失败：记录错误，禁用宿主
- * - 执行失败：记录错误，不影响其他宿主
+ * FallbackStrategy：
+ * - ViGEmBus DriverNotYetInstall：Recorderror，DisableHost
+ * - ModuleLoadFailure：Recorderror，DisableHost
+ * - ExecuteFailure：Recorderror，notInfluenceOtherHost
  * 
- * XInput 按钮映射：
+ * XInput ButtonMap：
  * - A: 0x0001, B: 0x0002, X: 0x0004, Y: 0x0008
  * - LB: 0x0100, RB: 0x0200
  * - Start: 0x0010, Back: 0x0020, Guide: 0x0400
@@ -21,7 +21,7 @@ import { InputHost } from './InputHost';
 import { InputDeviceType } from './types';
 
 /**
- * XInput 按钮映射表
+ * XInput button mapping table
  */
 const XINPUT_BUTTON_MAP: Record<string, number> = {
     A: 0x0001,
@@ -42,7 +42,7 @@ const XINPUT_BUTTON_MAP: Record<string, number> = {
 };
 
 /**
- * 游戏手柄状态接口
+ * Gamepad state interface
  */
 interface GamepadState {
     buttons: Set<string>;
@@ -59,19 +59,19 @@ interface GamepadState {
 }
 
 /**
- * Windows 游戏手柄宿主
+ * Windows gamepad host
  */
 export class WindowsGamepadHost extends InputHost {
-    /** ViGEmClient 实例 */
+    /** ViGEmClient instance */
     private vigemClient: any = null;
     
-    /** 虚拟控制器实例 */
+    /** Virtual controller instance */
     private controller: any = null;
     
-    /** 当前活动的按钮 */
+    /** Currently active buttons */
     private activeButtons: Set<string> = new Set();
     
-    /** 当前摇杆轴值 */
+    /** Current joystick axis values */
     private currentAxes: {
         leftX: number;
         leftY: number;
@@ -79,7 +79,7 @@ export class WindowsGamepadHost extends InputHost {
         rightY: number;
     } = { leftX: 0, leftY: 0, rightX: 0, rightY: 0 };
     
-    /** 当前扳机值 */
+    /** Current trigger values */
     private currentTriggers: {
         left: number;
         right: number;
@@ -90,15 +90,15 @@ export class WindowsGamepadHost extends InputHost {
     }
 
     /**
-     * 初始化：加载 ViGEmClient 驱动
-     * @returns 是否初始化成功
+     * Initialize：Load ViGEmClient Driver
+     * @returns WhetherInitializeSuccess
      */
     async initialize(): Promise<boolean> {
         try {
-            // 动态导入，避免启动时报错
+            // Dynamic import to avoid startup errors
             this.vigemClient = require('vigemclient');
             
-            // 创建虚拟 Xbox 360 控制器
+            // Create virtual Xbox 360 controller
             this.controller = this.vigemClient.createX360Controller();
             
             this.isEnabled = true;
@@ -119,11 +119,11 @@ export class WindowsGamepadHost extends InputHost {
     }
 
     /**
-     * 应用游戏手柄状态
+     * Apply gamepad state
      * 
-     * 构建完整的 XInput 状态并一次性提交
+     * Build complete XInput state and submit once
      * 
-     * @param state 游戏手柄状态
+     * @param state Gamepad state
      */
     applyState(state: GamepadState): void {
         if (!this.isEnabled || !this.controller) {
@@ -131,13 +131,13 @@ export class WindowsGamepadHost extends InputHost {
         }
 
         try {
-            // 构建 XInput 状态
+            // Build XInput state
             const xinputState = this.buildXInputState(state);
             
-            // 提交状态到虚拟控制器
+            // SubmitStatetoVirtualController
             this.controller.sendState(xinputState);
             
-            // 更新本地状态
+            // UpdateLocalState
             this.activeButtons = new Set(state.buttons);
             if (state.axes) {
                 this.currentAxes = {
@@ -161,22 +161,22 @@ export class WindowsGamepadHost extends InputHost {
     }
 
     /**
-     * 构建 XInput 状态
+     * Build XInput state
      * 
-     * XInput 状态结构：
-     * - wButtons: 按钮位掩码
-     * - bLeftTrigger: 左扳机 (0-255)
-     * - bRightTrigger: 右扳机 (0-255)
-     * - sThumbLX: 左摇杆 X 轴 (-32768 到 32767)
-     * - sThumbLY: 左摇杆 Y 轴 (-32768 到 32767)
-     * - sThumbRX: 右摇杆 X 轴 (-32768 到 32767)
-     * - sThumbRY: 右摇杆 Y 轴 (-32768 到 32767)
+     * XInput StateStructure：
+     * - wButtons: Button位掩Code
+     * - bLeftTrigger: LeftTrigger (0-255)
+     * - bRightTrigger: RightTrigger (0-255)
+     * - sThumbLX: LeftJoystick X Axis (-32768 to 32767)
+     * - sThumbLY: LeftJoystick Y Axis (-32768 to 32767)
+     * - sThumbRX: RightJoystick X Axis (-32768 to 32767)
+     * - sThumbRY: RightJoystick Y Axis (-32768 to 32767)
      * 
-     * @param state 游戏手柄状态
-     * @returns XInput 状态对象
+     * @param state Gamepad state
+     * @returns XInput StateObject
      */
     private buildXInputState(state: GamepadState): any {
-        // 计算按钮位掩码
+        // Calculate button bitmask
         let wButtons = 0;
         state.buttons.forEach(buttonId => {
             const buttonMask = XINPUT_BUTTON_MAP[buttonId];
@@ -185,7 +185,7 @@ export class WindowsGamepadHost extends InputHost {
             }
         });
 
-        // 转换摇杆轴值（-1.0~1.0 到 -32768~32767）
+        // Convert joystick axis values（-1.0~1.0 to -32768~32767）
         const leftX = state.axes?.leftX ?? 0;
         const leftY = state.axes?.leftY ?? 0;
         const rightX = state.axes?.rightX ?? 0;
@@ -196,7 +196,7 @@ export class WindowsGamepadHost extends InputHost {
         const sThumbRX = Math.round(this.clamp(rightX, -1, 1) * 32767);
         const sThumbRY = Math.round(this.clamp(rightY, -1, 1) * 32767);
 
-        // 转换扳机值（0.0~1.0 到 0~255）
+        // Convert trigger values（0.0~1.0 to 0~255）
         const leftTrigger = state.triggers?.left ?? 0;
         const rightTrigger = state.triggers?.right ?? 0;
 
@@ -215,19 +215,19 @@ export class WindowsGamepadHost extends InputHost {
     }
 
     /**
-     * 限制值范围
-     * @param value 值
-     * @param min 最小值
-     * @param max 最大值
-     * @returns 限制后的值
+     * Clamp value range
+     * @param value Value
+     * @param min MinimumValue
+     * @param max MaximumValue
+     * @returns LimitAfterOfValue
      */
     private clamp(value: number, min: number, max: number): number {
         return Math.max(min, Math.min(max, value));
     }
 
     /**
-     * 重置游戏手柄状态
-     * 发送零状态
+     * ResetGamepad state
+     * Send zero state
      */
     reset(): void {
         if (!this.isEnabled || !this.controller) {
@@ -235,7 +235,7 @@ export class WindowsGamepadHost extends InputHost {
         }
 
         try {
-            // 发送零状态
+            // Send zero state
             const zeroState = {
                 wButtons: 0,
                 bLeftTrigger: 0,
@@ -258,8 +258,8 @@ export class WindowsGamepadHost extends InputHost {
     }
 
     /**
-     * 销毁宿主
-     * 断开控制器连接，清理资源
+     * DestroyHost
+     * Disconnect controller, cleanup resources
      */
     destroy(): void {
         this.reset();
@@ -281,16 +281,16 @@ export class WindowsGamepadHost extends InputHost {
     }
 
     /**
-     * 获取当前活动按钮数量
-     * @returns 活动按钮数量
+     * Get current active button count
+     * @returns ActiveButtonNumberAmount
      */
     getActiveButtonCount(): number {
         return this.activeButtons.size;
     }
 
     /**
-     * 获取当前活动按钮列表
-     * @returns 活动按钮列表
+     * Get current active button list
+     * @returns ActiveButtonList
      */
     getActiveButtons(): string[] {
         return [...this.activeButtons];

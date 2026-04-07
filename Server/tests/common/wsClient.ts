@@ -13,7 +13,7 @@ export class WsClient {
   private messageHandlers: ((message: any) => void)[] = [];
   private closeHandlers: (() => void)[] = [];
   private errorHandlers: ((error: Error) => void)[] = [];
-  private pendingMessages: any[] = []; // 存储已接收但未处理的消息
+  private pendingMessages: any[] = []; // Store received but unprocessed messages
 
   constructor(options?: WsClientOptions) {
     this.url = options?.url || 'ws://localhost:3000';
@@ -35,9 +35,9 @@ export class WsClient {
 
       this.ws.on('message', (data: any) => {
         const message = JSON.parse(data.toString());
-        // 先存储消息
+        // First store the message
         this.pendingMessages.push(message);
-        // 然后调用处理器
+        // Then call handlers
         this.messageHandlers.forEach(handler => handler(message));
       });
 
@@ -92,10 +92,10 @@ export class WsClient {
 
   waitForMessage(type: string, timeout?: number): Promise<any> {
     return new Promise((resolve, reject) => {
-      // 先检查是否有已接收的消息
+      // First check for already received messages
       const existingMessage = this.pendingMessages.find(m => m.type === type);
       if (existingMessage) {
-        // 移除已处理的消息
+        // Remove processed message
         this.pendingMessages = this.pendingMessages.filter(m => m !== existingMessage);
         resolve(existingMessage);
         return;
@@ -109,7 +109,7 @@ export class WsClient {
       const handler = (message: any) => {
         if (message.type === type) {
           clearTimeout(timeoutId);
-          // 从待处理列表中移除
+          // Remove from pending list
           this.pendingMessages = this.pendingMessages.filter(m => m !== message);
           resolve(message);
         }

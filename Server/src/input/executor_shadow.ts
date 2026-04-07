@@ -1,7 +1,7 @@
 /**
- * 影子模式集成模块
+ * ShadowModeIntegrateModule
  * 
- * 此文件提供影子模式集成，修改 executeInput 逻辑以支持双写
+ * ThisFileprovideShadowModeIntegrate，Modify executeInput LogicWithSupportDualWrite
  */
 
 import { inputState } from "./state";
@@ -12,15 +12,15 @@ import { WindowsKeyboardHost } from "./hosts/WindowsKeyboardHost";
 import { WindowsGamepadHost } from "./hosts/WindowsGamepadHost";
 import { InputDeviceType } from "./hosts/types";
 
-// 影子模式配置
+// ShadowModeConfig
 const isShadowMode = process.env.SHADOW_MODE === "true";
 
-// 影子模式实例
+// ShadowModeInstance
 let shadowModeManager: ShadowModeManager | null = null;
 let inputRouter: InputRouter | null = null;
 
 /**
- * 初始化影子模式
+ * InitializeShadowMode
  */
 export function initShadowModeIntegration(): void {
     if (!isShadowMode) {
@@ -30,16 +30,16 @@ export function initShadowModeIntegration(): void {
 
     console.log("👻 Initializing shadow mode (dual-write to Executor and Router)");
 
-    // 创建路由器
+    // CreateRouterManager
     inputRouter = new InputRouter();
 
-    // 注册 Host
+    // register Host
     const keyboardHost = new WindowsKeyboardHost();
     const gamepadHost = new WindowsGamepadHost();
     inputRouter.registerHost(InputDeviceType.KEYBOARD, keyboardHost);
     inputRouter.registerHost(InputDeviceType.GAMEPAD, gamepadHost);
 
-    // 创建影子模式管理器
+    // CreateShadowModeManageManager
     shadowModeManager = new ShadowModeManager(
         getExecutorManager(),
         inputRouter,
@@ -57,40 +57,40 @@ export function initShadowModeIntegration(): void {
 }
 
 /**
- * 影子模式执行输入
+ * ShadowModeExecuteInput
  * 
- * 替代原有的 executeInput 函数，实现双写逻辑
+ * ReplaceOriginalHasOf executeInput Function，ImplementationDualWriteLogic
  */
 export function executeInputWithShadow(): void {
     if (shadowModeManager && isShadowMode) {
-        // 影子模式：双写到 Executor 和 Router
+        // ShadowMode：DualWriteto Executor and Router
         shadowModeManager.applyState(inputState);
     } else {
-        // 非影子模式：只写 Executor
+        // NonShadowMode：OnlyWrite Executor
         getExecutorManager().applyState(inputState);
     }
 
-    // 记录有效状态时间
+    // recordValidStateTime
     const applyTime = Date.now();
     getSafetyController().recordValidState(inputState, applyTime);
 }
 
 /**
- * 获取影子模式管理器
+ * GetShadowModeManageManager
  */
 export function getShadowModeManager(): ShadowModeManager | null {
     return shadowModeManager;
 }
 
 /**
- * 获取输入路由器
+ * GetInputRouterManager
  */
 export function getInputRouter(): InputRouter | null {
     return inputRouter;
 }
 
 /**
- * 检查是否为影子模式
+ * CheckWhetherForShadowMode
  */
 export function isShadowModeEnabled(): boolean {
     return isShadowMode && shadowModeManager !== null;

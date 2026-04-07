@@ -1,5 +1,5 @@
 /**
- * 影子模式模块统一导出
+ * ShadowModeModuleUnifiedExport
  */
 
 export { ShadowModeManager } from './ShadowModeManager';

@@ -1,0 +1,335 @@
+{
+  "dashboard": {
+    "title": "ControlX Server Monitoring",
+    "uid": "controlx-server",
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "连接状态",
+        "type": "stat",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 4,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "controlx_server_active_connections",
+            "legendFormat": "活跃连接"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area"
+        }
+      },
+      {
+        "id": 2,
+        "title": "输入吞吐量",
+        "type": "stat",
+        "gridPos": {
+          "x": 4,
+          "y": 0,
+          "w": 4,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "controlx_server_input_events_per_second",
+            "legendFormat": "当前 EPS"
+          },
+          {
+            "expr": "controlx_server_input_events_per_second_1m",
+            "legendFormat": "1分钟平均"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area"
+        }
+      },
+      {
+        "id": 3,
+        "title": "RTT 延迟",
+        "type": "stat",
+        "gridPos": {
+          "x": 8,
+          "y": 0,
+          "w": 4,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "controlx_server_latency_rtt_current_ms",
+            "legendFormat": "当前延迟"
+          },
+          {
+            "expr": "controlx_server_latency_rtt_p95_ms",
+            "legendFormat": "P95 延迟"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "unit": "ms"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 100 },
+                { "color": "red", "value": 250 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "错误统计",
+        "type": "stat",
+        "gridPos": {
+          "x": 12,
+          "y": 0,
+          "w": 4,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "controlx_server_errors_total",
+            "legendFormat": "总错误数"
+          },
+          {
+            "expr": "rate(controlx_server_errors_total[5m])",
+            "legendFormat": "错误率"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 50 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "CPU 使用率",
+        "type": "gauge",
+        "gridPos": {
+          "x": 16,
+          "y": 0,
+          "w": 4,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "controlx_server_cpu_usage_percent",
+            "legendFormat": "CPU"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 80 },
+                { "color": "red", "value": 95 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "内存使用率",
+        "type": "gauge",
+        "gridPos": {
+          "x": 20,
+          "y": 0,
+          "w": 4,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "(controlx_server_memory_heap_used_bytes / controlx_server_memory_heap_total_bytes) * 100",
+            "legendFormat": "内存"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 80 },
+                { "color": "red", "value": 95 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "延迟分布",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 4,
+          "w": 12,
+          "h": 6
+        },
+        "targets": [
+          {
+            "expr": "controlx_server_latency_rtt_average_ms",
+            "legendFormat": "平均延迟"
+          },
+          {
+            "expr": "controlx_server_latency_rtt_min_ms",
+            "legendFormat": "最小延迟"
+          },
+          {
+            "expr": "controlx_server_latency_rtt_max_ms",
+            "legendFormat": "最大延迟"
+          },
+          {
+            "expr": "controlx_server_latency_rtt_p95_ms",
+            "legendFormat": "P95 延迟"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ms",
+            "label": "延迟"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "吞吐量趋势",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 4,
+          "w": 12,
+          "h": 6
+        },
+        "targets": [
+          {
+            "expr": "controlx_server_input_events_per_second",
+            "legendFormat": "当前吞吐量"
+          },
+          {
+            "expr": "controlx_server_input_events_per_second_1m",
+            "legendFormat": "1分钟平均"
+          },
+          {
+            "expr": "controlx_server_input_events_per_second_5m",
+            "legendFormat": "5分钟平均"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "事件/秒"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "连接数趋势",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 10,
+          "w": 12,
+          "h": 6
+        },
+        "targets": [
+          {
+            "expr": "controlx_server_active_connections",
+            "legendFormat": "活跃连接数"
+          },
+          {
+            "expr": "rate(controlx_server_connections_total[5m])",
+            "legendFormat": "连接速率"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "连接数"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "错误分类",
+        "type": "piechart",
+        "gridPos": {
+          "x": 12,
+          "y": 10,
+          "w": 12,
+          "h": 6
+        },
+        "targets": [
+          {
+            "expr": "controlx_server_errors_validation_total",
+            "legendFormat": "验证错误"
+          },
+          {
+            "expr": "controlx_server_errors_network_total",
+            "legendFormat": "网络错误"
+          },
+          {
+            "expr": "controlx_server_errors_system_total",
+            "legendFormat": "系统错误"
+          },
+          {
+            "expr": "controlx_server_errors_timeout_total",
+            "legendFormat": "超时错误"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    }
+  }
+}

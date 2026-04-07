@@ -1,19 +1,19 @@
-// 事件消息处理器
+// Event message handler
 
 import { EventMessage, EventAckMessage } from '../../types/ws';
 
 /**
- * 处理事件通道消息
- * @param ws WebSocket连接
- * @param message 事件消息
+ * Handle event channel message
+ * @param ws WebSocket connection
+ * @param message Event message
  */
 export function handleEvent(ws: any, message: EventMessage) {
-    // 获取全局状态存储实例
+    // Get global state store instance
     const stateStore = (global as any).stateStore;
 
-    // 检查状态存储是否可用
+    // Check if state store is available
     if (!stateStore) {
-        // 发送错误ACK消息
+        // Send error ACK message
         const errorAckMessage: EventAckMessage = {
             type: 'eventAck',
             ackEventId: message.eventId,
@@ -31,13 +31,13 @@ export function handleEvent(ws: any, message: EventMessage) {
     }
 
     try {
-        // 获取最新状态，检查baseStateId是否匹配
+        // Get latest state, check if baseStateId matches
         const latestState = stateStore.getLatestState();
         const latestStateId = latestState?.frameId || 0;
         
-        // 检查baseStateId是否与执行端当前权威状态匹配
+        // Check if baseStateId matches executor current authoritative state
         if (message.baseStateId !== latestStateId) {
-            // 直接丢弃该Event
+            // Discard the event directly
             const errorAckMessage: EventAckMessage = {
                 type: 'eventAck',
                 ackEventId: message.eventId,
@@ -54,10 +54,10 @@ export function handleEvent(ws: any, message: EventMessage) {
             return;
         }
 
-        // TODO: 应用事件delta变化
-        // 目前暂时只确认事件，后续实现delta应用逻辑
+        // TODO: ApplyEventdeltaChange化
+        // Currently only confirm event, implement delta application logic later
         
-        // 发送成功ACK消息
+        // Send success ACK message
         const ackMessage: EventAckMessage = {
             type: 'eventAck',
             ackEventId: message.eventId,
@@ -73,7 +73,7 @@ export function handleEvent(ws: any, message: EventMessage) {
     } catch (error) {
         console.error('Error handling event message:', error);
         
-        // 发送错误ACK消息
+        // Send error ACK message
         const errorAckMessage: EventAckMessage = {
             type: 'eventAck',
             ackEventId: message.eventId,

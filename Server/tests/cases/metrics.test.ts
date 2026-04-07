@@ -1,5 +1,5 @@
 /**
- * Metrics 模块单元测试
+ * Metrics ModuleUnit test
  */
 
 import {
@@ -12,7 +12,7 @@ describe("MetricsCollector Tests", () => {
     let metricsCollector: MetricsCollector;
 
     beforeEach(() => {
-        // 重置单例以获得干净的实例
+        // Reset单例以获得干净Of实例
         MetricsCollector.resetInstance();
         metricsCollector = MetricsCollector.getInstance();
     });
@@ -213,7 +213,7 @@ describe("MetricsCollector Tests", () => {
         });
 
         test("should calculate events per second", () => {
-            // 记录多个事件
+            // 记录多个Event
             for (let i = 0; i < 10; i++) {
                 metricsCollector.recordInputEvent("keyboard");
             }
@@ -304,7 +304,7 @@ describe("MetricsCollector Tests", () => {
             metricsCollector.initializeDefaultMetrics();
             metricsCollector.initializeDefaultMetrics();
 
-            // 第二次初始化应该警告
+            // 第二次Initialize应该Warning
             expect(warnSpy).toHaveBeenCalled();
             warnSpy.mockRestore();
         });
@@ -327,18 +327,18 @@ describe("MetricsCollector Integration Tests", () => {
     test("should track complete connection lifecycle", () => {
         metricsCollector.initializeDefaultMetrics();
 
-        // 连接建立
+        // Connection建立
         metricsCollector.recordConnection("client1");
         expect(metricsCollector.getMetric("connections_total")).toBe(1);
         expect(metricsCollector.getMetric("active_connections")).toBe(1);
 
-        // 消息处理
+        // Message处理
         metricsCollector.recordMessage("client1");
         metricsCollector.recordMessage("client1");
         const record = metricsCollector.getConnectionRecord("client1");
         expect(record?.messageCount).toBe(2);
 
-        // 断开连接
+        // 断开Connection
         metricsCollector.recordDisconnection("client1");
         expect(metricsCollector.getMetric("disconnections_total")).toBe(1);
         expect(metricsCollector.getMetric("active_connections")).toBe(0);

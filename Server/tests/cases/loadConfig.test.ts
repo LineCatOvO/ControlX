@@ -1,10 +1,10 @@
 /**
- * loadConfig 单元测试
+ * loadConfig Unit test
  * 
- * 测试覆盖：
- * - loadConfigFromFile() 从文件加载配置
- * - getConfigPathFromArgs() 解析命令行参数
- * - config 默认配置
+ * Test coverage：
+ * - loadConfigFromFile() 从File加载Config
+ * - getConfigPathFromArgs() 解析命令行Parameter
+ * - config DefaultConfig
  */
 
 import * as fs from 'fs';

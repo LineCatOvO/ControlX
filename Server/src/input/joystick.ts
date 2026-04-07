@@ -2,11 +2,11 @@ import { InputExecutor } from './interfaces';
 import { InputState, InputDelta, InputEvent } from '../types/ws';
 
 /**
- * Xbox 360手柄输入执行器
- * 负责将手柄输入状态转换为系统输入事件
+ * Xbox 360GamepadInputExecutor
+ * ResponsibleWillGamepadInputStateConvertForSystemInputEvent
  */
 export class JoystickExecutor implements InputExecutor {
-  // 记录当前手柄状态
+  // RecordCurrentGamepadState
   private currentJoystickState = {
     axes: {
       lx: 0, ly: 0, rx: 0, ry: 0
@@ -22,59 +22,59 @@ export class JoystickExecutor implements InputExecutor {
     }
   };
   
-  // 虚拟设备连接状态
+  // VirtualDeviceConnectionState
   private isDeviceConnected = false;
   
   /**
-   * 应用完整输入状态
-   * @param state 输入状态
+   * ApplyCompleteInputState
+   * @param state InputState
    */
   applyState(state: InputState): void {
     if (state.joystick) {
-      // 更新轴状态
+      // UpdateAxisState
       this.updateAxes(state.joystick);
       
-      // 这里可以添加按钮和扳机的处理
+      // HereCanWithAddButtonandTriggerOfHandle
       
-      // 提交整帧状态到虚拟设备
+      // SubmitFullFrameStatetoVirtualDevice
       this.submitFullState();
     }
   }
   
   /**
-   * 应用输入增量
-   * @param delta 输入增量
+   * ApplyInputDelta
+   * @param delta InputDelta
    */
   applyDelta(delta: InputDelta): void {
     if (delta.joystick) {
       console.log('JoystickEvent: Applying delta', delta.joystick);
-      // 增量处理（待实现）
+      // DeltaHandle（PendingImplementation）
     }
   }
   
   /**
-   * 应用输入事件
-   * @param event 输入事件
+   * ApplyInputEvent
+   * @param event InputEvent
    */
   applyEvent(event: InputEvent): void {
     if (event.type === 'joystick_move') {
       console.log('JoystickEvent: Applying event', event.type, event.data);
-      // 事件处理（待实现）
+      // EventHandle（PendingImplementation）
     }
   }
   
   /**
-   * 重置输入状态
+   * ResetInputState
    */
   reset(): void {
-    // 只在当前状态非默认时记录重置事件
+    // OnlyInCurrentStateNonDefaultTimeRecordResetEvent
     if (!this.isDefaultState()) {
-      // 所有轴归零
+      // AllAxisResetToZero
       this.currentJoystickState.axes = {
         lx: 0, ly: 0, rx: 0, ry: 0
       };
       
-      // 所有按钮释放
+      // AllButtonRelease
       this.currentJoystickState.buttons = {
         a: false, b: false, x: false, y: false,
         lb: false, rb: false, back: false, start: false,
@@ -82,12 +82,12 @@ export class JoystickExecutor implements InputExecutor {
         up: false, down: false, left: false, right: false
       };
       
-      // 所有扳机归零
+      // AllTriggerResetToZero
       this.currentJoystickState.triggers = {
         lt: 0, rt: 0
       };
       
-      // 提交归零状态
+      // SubmitResetToZeroState
       this.submitFullState();
       
       console.log('JoystickEvent: Resetting to zero state');
@@ -95,8 +95,8 @@ export class JoystickExecutor implements InputExecutor {
   }
   
   /**
-   * 检查当前状态是否为默认状态
-   * @returns 是否为默认状态
+   * CheckCurrentStateWhetherForDefaultState
+   * @returns WhetherForDefaultState
    */
   private isDefaultState(): boolean {
     return this.currentJoystickState.axes.lx === 0 &&
@@ -109,14 +109,14 @@ export class JoystickExecutor implements InputExecutor {
   }
   
   /**
-   * 更新轴状态
-   * @param joystickState 摇杆状态
+   * UpdateAxisState
+   * @param joystickState JoystickState
    */
   private updateAxes(joystickState: any): void {
-    // 记录轴值变化
+    // RecordAxisValueChange化
     const axisChanges: any = {};
     
-    // 处理摇杆轴状态
+    // HandleJoystickAxisState
     if (joystickState.x !== undefined) {
       const oldValue = this.currentJoystickState.axes.lx;
       const newValue = this.clampAxisValue(joystickState.x);
@@ -134,39 +134,39 @@ export class JoystickExecutor implements InputExecutor {
       }
     }
     
-    // 只在有轴值变化时记录日志
+    // OnlyInHasAxisValueChange化TimeRecordLog
     if (Object.keys(axisChanges).length > 0) {
       console.log('JoystickEvent: Axis values changed', axisChanges);
     }
     
-    // 这里可以添加更多轴的处理
+    // HereCanWithAddMoreAxisOfHandle
   }
   
   /**
-   * 限制轴值范围在[-1.0, 1.0]
-   * @param value 原始值
-   * @returns 限制后的值
+   * LimitAxisValueRangeIn[-1.0, 1.0]
+   * @param value OriginalValue
+   * @returns LimitAfterOfValue
    */
   private clampAxisValue(value: number): number {
     return Math.max(-1.0, Math.min(1.0, value));
   }
   
   /**
-   * 限制扳机值范围在[0.0, 1.0]
-   * @param value 原始值
-   * @returns 限制后的值
+   * LimitTriggerValueRangeIn[0.0, 1.0]
+   * @param value OriginalValue
+   * @returns LimitAfterOfValue
    */
   private clampTriggerValue(value: number): number {
     return Math.max(0.0, Math.min(1.0, value));
   }
   
   /**
-   * 提交整帧状态到虚拟设备
+   * SubmitFullFrameStatetoVirtualDevice
    */
   private submitFullState(): void {
     try {
-      // 这里将在有vigemclient环境时替换为真实的vigemclient调用
-      // 例如：
+      // HereWillInHasvigemclientEnvTimeReplaceForRealOfvigemclientCall
+      // Example：
       // vigemclient.setAxis(0, this.currentJoystickState.axes.lx);
       // vigemclient.setAxis(1, this.currentJoystickState.axes.ly);
       // ...

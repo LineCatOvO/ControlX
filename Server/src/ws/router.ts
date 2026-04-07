@@ -20,7 +20,7 @@ import { handleLatencyProbe } from "./handlers/latencyProbe";
 import { handleState } from "./handlers/state";
 import { handleEvent } from "./handlers/event";
 
-// 消息处理器映射
+// Message handler mapping
 const handlers: Record<string, (ws: any, message: any) => void> = {
     welcome: handleWelcome,
     input: handleInput,
@@ -40,9 +40,9 @@ const handlers: Record<string, (ws: any, message: any) => void> = {
 };
 
 /**
- * 处理WebSocket消息
- * @param ws WebSocket连接
- * @param message 消息对象
+ * Handle WebSocket message
+ * @param ws WebSocket connection
+ * @param message Message object
  */
 export function handleMessage(ws: any, message: WsMessage) {
     try {
@@ -53,7 +53,7 @@ export function handleMessage(ws: any, message: WsMessage) {
             return;
         }
 
-        // 记录接收到的消息（已注释，减少日志输出）
+        // Log received message (commented, reduce log output)
         // console.log("Received message from client:", JSON.stringify(message));
 
         const handler = handlers[message.type];
@@ -66,7 +66,7 @@ export function handleMessage(ws: any, message: WsMessage) {
                     `Error handling message type ${message.type}:`,
                     error
                 );
-                // 发送错误消息给客户端
+                // Send error message to client
                 const errorMsg = {
                     type: "error",
                     code: "INTERNAL_ERROR",
@@ -80,7 +80,7 @@ export function handleMessage(ws: any, message: WsMessage) {
             }
         } else {
             console.log("Unknown message type:", message.type);
-            // 发送错误消息
+            // Send error message
             const errorMsg = {
                 type: "error",
                 code: "UNSUPPORTED_MESSAGE_TYPE",
@@ -99,7 +99,7 @@ export function handleMessage(ws: any, message: WsMessage) {
             "Original message:",
             message
         );
-        // 发送通用错误消息给客户端
+        // Send generic error message to client
         const errorMsg = {
             type: "error",
             code: "INVALID_MESSAGE",

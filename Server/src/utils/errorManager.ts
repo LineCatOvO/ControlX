@@ -1,7 +1,7 @@
-// 错误事件管理器，用于收集和分发服务器错误
+// Error event manager, used to collect and distribute server errors
 
 /**
- * 错误类型定义
+ * Error type definition
  */
 export interface ServerError {
     type: string;
@@ -10,46 +10,46 @@ export interface ServerError {
     details?: any;
 }
 
-// 存储WebSocket连接的集合
+// Store WebSocket connection set
 const wsConnections = new Set<any>();
 
 /**
- * 注册WebSocket连接
- * @param ws WebSocket连接对象
+ * Register WebSocket connection
+ * @param ws WebSocket connection object
  */
 export function registerWsConnection(ws: any) {
     wsConnections.add(ws);
     
-    // 连接关闭时移除
+    // Remove when connection closes
     ws.on('close', () => {
         wsConnections.delete(ws);
     });
 }
 
 /**
- * 发送错误消息给所有连接的客户端
- * @param error 错误对象
+ * Send error message to all connected clients
+ * @param error Error object
  */
 export function broadcastError(error: ServerError) {
     const errorMsg = JSON.stringify(error);
     console.log("Broadcasting error to all clients:", errorMsg);
     
-    // 遍历所有连接，发送错误消息
+    // Iterate all connections, send error message
     wsConnections.forEach((ws) => {
         try {
             ws.send(errorMsg);
         } catch (sendError) {
             console.error("Error sending error message to client:", sendError);
-            // 移除无效连接
+            // Remove invalid connection
             wsConnections.delete(ws);
         }
     });
 }
 
 /**
- * 发送游戏手柄错误
- * @param message 错误消息
- * @param details 错误详情
+ * Send gamepad error
+ * @param message Error message
+ * @param details Error details
  */
 export function sendGamepadError(message: string, details?: any) {
     const error: ServerError = {

@@ -1,5 +1,101 @@
 # Changelog
 
+## [2026-04-05] docs: 添加构建文档和多客户端架构设计 (task-P2-build-docs, task-P2-optimization-enhancement)
+
+### Changes
+- **BUILDING.md**: 新建项目构建指南文档
+  - 项目结构说明
+  - 服务端和客户端系统要求
+  - 构建命令和流程说明
+  - ARM64 环境配置指南
+
+- **Server/BUILD_CONFIG.md**: 新建服务端构建配置文档
+  - 构建环境要求
+  - TypeScript 配置说明
+  - 开发和生产构建命令
+  - 环境变量配置
+
+- **Server/docs/ci-cd-setup.md**: 新建 CI/CD 配置文档
+  - GitHub Actions 配置示例
+  - 服务端和客户端构建流程
+  - 发布和部署配置
+
+- **Server/docs/multi-client-architecture.md**: 新建多客户端支持架构设计文档
+  - 背景与问题分析
+  - 现状分析和架构目标
+  - 核心组件设计（会话管理器、状态同步管理器、输入仲裁器）
+  - 数据流设计和接口定义
+  - 实现方案和风险评估
+  - 实施计划和时间规划
+
+- **TASKS.md**: 更新任务文档，标记 P2 文档任务为已完成
+
+### Impact
+- 构建文档完善，降低新开发者上手难度
+- CI/CD 配置文档为自动化构建提供指导
+- 多客户端架构设计为后续功能开发提供技术蓝图
+- 文档质量高，结构完整，内容详细
+
+## [2026-04-05] test: 补充 WebSocket Handlers 测试 (task-P2-integration-tests)
+
+### Changes
+- **Server/tests/ws/handlers/config.test.ts**: 新建 Config Handler 单元测试（多个测试用例）
+  - handleConfigGet 测试：配置获取、敏感信息过滤
+  - handleConfigSet 测试：权限验证、配置修改
+  - handleConfigSave 测试：配置保存
+  - handleConfigReset 测试：配置重置
+  - handleConfigValidate 测试：配置验证
+  - ConfigChangeCallback 测试：回调注册和管理
+  - 集成测试：完整配置工作流
+
+- **Server/tests/ws/handlers/state.test.ts**: 新建 State Handler 单元测试（多个测试用例）
+  - handleState 基础功能测试：状态处理、ACK 响应
+  - StateStore 集成测试：状态存储、缺失处理
+  - 输入验证测试：键盘状态、游戏手柄状态、验证失败处理
+  - 键盘状态转换测试：按键状态转换、过滤释放键
+  - 游戏手柄状态转换测试：按钮转换、摇杆状态
+  - SafetyController 集成测试：安全清零触发
+  - 统计功能测试：ACK 统计、验证统计
+  - 错误处理测试：WebSocket 发送错误、内部错误、格式错误
+  - ACK 消息格式测试：正确结构、拒绝原因
+  - 性能测试：高频状态更新处理
+
+### Impact
+- WebSocket Handlers 测试覆盖率提升
+- 补充了 config 和 state 处理器的完整测试场景
+- 测试用例覆盖正常流程、边界条件、错误处理
+- 为 WebSocket 消息处理提供质量保障
+
+## [2026-04-03] refactor: 优化历史记录内存管理 (task-P2-optimize-history-memory)
+
+### Changes
+- **Server/src/input/stateStore.ts**: 使用环形缓冲区优化历史记录内存管理
+  - 添加环形缓冲区索引字段：historyHead、historyTail、historyFull
+  - 预分配历史记录数组，避免动态扩容
+  - 实现 addToHistoryRingBuffer 方法，替代 push 和 shift 操作
+  - 修改 getStateHistory 方法，从环形缓冲区读取数据
+  - 修改 recordAppliedState 方法，在环形缓冲区中查找条目
+  - 修改 clear 方法，重置环形缓冲区索引
+
+### Impact
+- 高频输入场景下内存占用显著降低
+- 避免了 push 和 shift 操作带来的内存分配和释放开销
+- 减少 GC 压力，提升系统性能
+- 历史记录功能保持原有接口不变，向后兼容
+
+## [2026-04-05] fix: 完善键盘执行器错误传播机制 (task-P1-improve-error-handling)
+
+### Changes
+- **Server/src/input/keyboard.ts**: 在 updateKeyboardState 方法中添加错误抛出
+  - 释放按键失败时抛出 `Failed to release keys` 错误
+  - 按下按键失败时抛出 `Failed to press keys` 错误
+  - 错误消息包含具体的按键列表信息
+
+### Impact
+- 键盘执行器错误现在能够传播到调用者
+- 调用者可以感知操作失败，避免状态不一致
+- 错误日志包含详细的按键信息，便于调试
+
 ## [2026-02-21] feat: 悬浮球添加连接状态指示器
 
 ### Changes

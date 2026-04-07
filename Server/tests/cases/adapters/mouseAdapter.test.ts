@@ -1,12 +1,12 @@
 /**
- * MouseAdapter 单元测试
+ * MouseAdapter Unit test
  *
- * 测试覆盖：
- * - 构造函数
- * - applyState() 应用输入状态
- * - applyMouseState() 应用鼠标状态
- * - reset() 重置状态
- * - getMouseState() 获取鼠标状态
+ * Test coverage：
+ * - 构造Function
+ * - applyState() ApplyInputState
+ * - applyMouseState() ApplyMouseState
+ * - reset() ResetState
+ * - getMouseState() GetMouseState
  */
 
 import { MouseAdapter } from '../../../src/input/adapters/MouseAdapter';

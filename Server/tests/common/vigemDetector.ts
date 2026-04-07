@@ -1,53 +1,53 @@
 /**
- * ViGEmBus 检测工具
- * 
- * 用于检测当前环境是否支持 ViGEmBus 驱动
- * 
+ * ViGEmBus Detection Utility
+ *
+ * Used to detect if the current environment supports ViGEmBus driver
+ *
  * @remarks
- * ViGEmBus 是 Windows 专用的虚拟 Xbox 360 控制器驱动
- * - 仅在 Windows 平台上可用
- * - 需要管理员权限安装
- * - 在非 Windows 环境下测试应自动跳过
+ * ViGEmBus is a Windows-specific virtual Xbox 360 controller driver
+ * - Only available on Windows platform
+ * - Requires administrator privileges to install
+ * - Tests should be automatically skipped in non-Windows environments
  */
 
 /**
- * 检测当前平台是否支持 ViGEmBus
- * @returns true 如果是 Windows 平台，否则 false
+ * Detect if current platform supports ViGEmBus
+ * @returns true if Windows platform, otherwise false
  */
 export function isWindowsPlatform(): boolean {
     return process.platform === 'win32';
 }
 
 /**
- * 检测当前环境是否可能支持 ViGEmBus
- * 
+ * Detect if current environment might support ViGEmBus
+ *
  * @remarks
- * 此函数进行以下检查：
- * 1. 平台是否为 Windows
- * 2. 是否可以 require('vigemclient') 模块
- * 
- * @returns true 如果环境支持 ViGEmBus，否则 false
+ * This function performs the following checks:
+ * 1. Is platform Windows
+ * 2. Can require('vigemclient') module
+ *
+ * @returns true if environment supports ViGEmBus, otherwise false
  */
 export function detectViGEmBusAvailability(): boolean {
-    // 首先检查平台
+    // First check platform
     if (!isWindowsPlatform()) {
         return false;
     }
 
-    // 尝试动态加载 vigemclient 模块
+    // Try to dynamically load vigemclient module
     try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const vigemclient = require('vigemclient');
         return !!vigemclient;
     } catch (error) {
-        // 模块加载失败，说明 vigemclient 未安装或不可用
+        // Module load failed, vigemclient not installed or unavailable
         return false;
     }
 }
 
 /**
- * 获取 ViGEmBus 不可用的原因
- * @returns 描述不可用原因的字符串
+ * Get reason why ViGEmBus is unavailable
+ * @returns String describing the unavailable reason
  */
 export function getViGEmBusUnavailableReason(): string {
     if (process.platform !== 'win32') {
@@ -64,12 +64,12 @@ export function getViGEmBusUnavailableReason(): string {
 }
 
 /**
- * 跳过非 Windows 平台的测试
- * 
- * @param testName 测试名称
- * @param reason 跳过原因（可选）
- * @returns 包含 skip 标记的测试函数
- * 
+ * Skip tests on non-Windows platforms
+ *
+ * @param testName Test name
+ * @param reason Skip reason (optional)
+ * @returns Test function with skip marker
+ *
  * @example
  * ```typescript
  * const skipOnNonWindows = skipOnNonWindows('should connect to ViGEmBus');
@@ -79,28 +79,28 @@ export function getViGEmBusUnavailableReason(): string {
 export function skipOnNonWindows(testName: string, reason?: string) {
     const fullReason = reason || getViGEmBusUnavailableReason();
     const skipTestName = `${testName} [SKIPPED: ${fullReason}]`;
-    
+
     return {
         testName: skipTestName,
         fn: () => {
-            // 空函数，测试已被跳过
+            // Empty function, test has been skipped
         }
     };
 }
 
 /**
- * 条件执行测试
- * 
- * @param condition 执行条件
- * @param testName 测试名称
- * @param fn 测试函数
- * 
+ * Conditional test execution
+ *
+ * @param condition Execution condition
+ * @param testName Test name
+ * @param fn Test function
+ *
  * @example
  * ```typescript
  * conditionalTest(
  *     detectViGEmBusAvailability(),
  *     'should connect to ViGEmBus',
- *     () => { /* 测试逻辑 *\/ }
+ *     () => { /* Test logic *\/ }
  * );
  * ```
  */
@@ -114,7 +114,7 @@ export function conditionalTest(
     } else {
         const reason = getViGEmBusUnavailableReason();
         test.skip(`${testName} [SKIPPED: ${reason}]`, () => {
-            // 测试被跳过
+            // Test skipped
         });
     }
 }

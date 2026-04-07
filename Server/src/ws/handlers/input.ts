@@ -2,21 +2,45 @@ import { InputMessage } from "../../types/ws";
 import { formatInputMessageLog } from "../../utils/logInputData";
 import { getExecutorManager } from "../../input/executor";
 import { inputState } from "../../input/state";
+import { rateLimiter } from "../../utils/rateLimiter";
 
 /**
- * 处理输入消息
- * @param ws WebSocket 连接
- * @param message 输入消息
+ * Handle input message
+ * @param ws WebSocket connection
+ * @param message Input message
  */
 export function handleInput(ws: any, message: InputMessage) {
-    // 获取全局状态存储实例
+    // Rate limit check
+    const clientId = ws.clientId || 'unknown';
+    const rateLimitResult = rateLimiter.checkLimit(clientId);
+
+    if (!rateLimitResult.allowed) {
+        // Exceed rate limit, reject message
+        const errorMsg = {
+            type: "error",
+            code: "RATE_LIMIT_EXCEEDED",
+            message: "Rate limit exceeded",
+            retryAfter: rateLimitResult.retryAfter
+        };
+
+        try {
+            ws.send(JSON.stringify(errorMsg));
+        } catch (error) {
+            console.error("InputHandlerError: Error sending rate limit error:", error);
+        }
+
+        console.warn(`Rate limit exceeded for client ${clientId}, retry after ${rateLimitResult.retryAfter}s`);
+        return;
+    }
+
+    // Get global state store instance
     const stateStore = (global as any).stateStore;
 
-    // 检查状态存储是否可用
+    // Check if state store is available
     if (!stateStore) {
         console.error("InputHandlerError: StateStore not available");
 
-        // 发送错误消息给客户端
+        // Send error message to client
         const errorMsg = {
             type: "error",
             code: "INTERNAL_ERROR",
@@ -31,20 +55,20 @@ export function handleInput(ws: any, message: InputMessage) {
         return;
     }
 
-    // 确保 message.data 存在
+    // Ensure message.data exists
     const inputData = message.data || {};
 
-    // 存储状态
+    // Store state
     const stored = stateStore.storeState(inputData);
 
     if (stored) {
-        // 记录详细的输入数据日志（已注释，减少日志输出）
+        // Log detailed input data (commented, reduce log output)
         // const logMessage = formatInputMessageLog(message);
         // if (logMessage) {
         //     console.log(logMessage);
         // }
 
-        // ✅ 更新全局输入状态
+        // ✅ Update global input state
         if (inputData.keyboard) {
             inputState.keyboard = new Set(inputData.keyboard);
         }
@@ -58,11 +82,11 @@ export function handleInput(ws: any, message: InputMessage) {
             inputState.joystick = { ...inputState.joystick, ...inputData.joystick };
         }
 
-        // ✅ 触发输入执行器
+        // ✅ Trigger input executor
         const executorManager = getExecutorManager();
         executorManager.applyState(inputState);
 
-        // 发送 ACK 消息
+        // Send ACK message
         const ackMessage = {
             type: "ack",
             data: {
@@ -73,15 +97,15 @@ export function handleInput(ws: any, message: InputMessage) {
         };
 
         try {
-            // 已注释，减少日志输出
+            // Commented, reduce log output
             // console.log("Sending ACK to client:", JSON.stringify(ackMessage));
             ws.send(JSON.stringify(ackMessage));
         } catch (error) {
-            // 已注释，减少日志输出
+            // Commented, reduce log output
             // console.error("InputHandlerError: Error sending ACK:", error);
         }
     } else {
-        // 发送错误 ACK 消息
+        // Send error ACK message
         const errorAckMessage = {
             type: "ack",
             data: {
@@ -93,18 +117,18 @@ export function handleInput(ws: any, message: InputMessage) {
         };
 
         try {
-            // 已注释，减少日志输出
+            // Commented, reduce log output
             // console.log(
             //     "Sending error ACK to client:",
             //     JSON.stringify(errorAckMessage)
             // );
             ws.send(JSON.stringify(errorAckMessage));
-            // 已注释，减少日志输出
+            // Commented, reduce log output
             // console.error(
             //     `InputHandlerError: Error ACK sent for sequence ${inputData?.frameId || Date.now()}`
             // );
         } catch (error) {
-            // 已注释，减少日志输出
+            // Commented, reduce log output
             // console.error("InputHandlerError: Error sending error ACK:", error);
         }
     }

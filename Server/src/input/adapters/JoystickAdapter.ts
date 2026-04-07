@@ -1,14 +1,19 @@
-// 摇杆适配器实现
+// Joystick adapterImplementation
 
-import { JoystickAdapter as IJoystickAdapter } from './InputAdapter';
+import { InputAdapter } from './InputAdapter';
 import { JoystickExecutor } from '../joystick';
-import { InputState } from '../../types/ws';
+import { InputState, InputDelta, InputEvent } from '../../types/ws';
 
 /**
- * 摇杆适配器
- * 封装 JoystickExecutor 的调用逻辑，实现 JoystickAdapter 接口
+ * Joystick adapter
+ * Encapsulates JoystickExecutor calling logic，implements InputAdapter interface
+ *
+ * Design notes：
+ * - implements InputAdapter interfaceOfAllMethod（applyState, applyDelta, applyEvent, reset）
+ * - InsidePartDelegateTo JoystickExecutor ExecuteActualOfJoystickOperation
+ * - ProvideJoystickSpecificOfMethod（applyJoystickState, getJoystickState）
  */
-export class JoystickAdapter implements IJoystickAdapter {
+export class JoystickAdapter implements InputAdapter {
     private executor: JoystickExecutor;
 
     constructor(executor: JoystickExecutor) {
@@ -16,19 +21,42 @@ export class JoystickAdapter implements IJoystickAdapter {
     }
 
     /**
-     * 应用输入状态（适配器基类方法）
-     * @param state 输入状态
+     * Apply complete input state（InputAdapter InterfaceMethod）
+     * @param state Input state
      */
     applyState(state: InputState): void {
         this.executor.applyState(state);
     }
 
     /**
-     * 应用摇杆状态（JoystickAdapter 特定方法）
-     * @param x X 轴值
-     * @param y Y 轴值
-     * @param deadzone 死区
-     * @param smoothing 平滑系数
+     * Apply input delta（InputAdapter InterfaceMethod）
+     * @param delta Input delta
+     */
+    applyDelta(delta: InputDelta): void {
+        this.executor.applyDelta(delta);
+    }
+
+    /**
+     * Apply input event（InputAdapter InterfaceMethod）
+     * @param event Input event
+     */
+    applyEvent(event: InputEvent): void {
+        this.executor.applyEvent(event);
+    }
+
+    /**
+     * ResetInput state（InputAdapter InterfaceMethod）
+     */
+    reset(): void {
+        this.executor.reset();
+    }
+
+    /**
+     * ApplyJoystickState（JoystickSpecificMethod）
+     * @param x X AxisValue
+     * @param y Y AxisValue
+     * @param deadzone DeadZone
+     * @param smoothing 平滑系Number
      */
     applyJoystickState(
         x: number,
@@ -44,15 +72,8 @@ export class JoystickAdapter implements IJoystickAdapter {
     }
 
     /**
-     * 重置输入状态（适配器基类方法）
-     */
-    reset(): void {
-        this.executor.reset();
-    }
-
-    /**
-     * 获取当前摇杆状态
-     * @returns 当前摇杆状态
+     * GetCurrentJoystickState
+     * @returns CurrentJoystickState
      */
     getJoystickState(): {
         x: number;
@@ -60,7 +81,7 @@ export class JoystickAdapter implements IJoystickAdapter {
         deadzone: number;
         smoothing: number;
     } {
-        // JoystickExecutor 不暴露内部状态，返回默认值
+        // JoystickExecutor notExposeInsidePartState，ReturnDefaultValue
         return { x: 0, y: 0, deadzone: 0, smoothing: 0 };
     }
 }

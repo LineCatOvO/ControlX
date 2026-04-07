@@ -4,12 +4,12 @@ import { getExecutorManager } from "../../input/executor";
 import { inputState } from "../../input/state";
 
 /**
- * 处理输入增量消息
- * @param ws WebSocket 连接
- * @param message 输入增量消息
+ * HandleInputDeltaMessage
+ * @param ws WebSocket connection
+ * @param message InputDeltaMessage
  */
 export function handleInputDelta(ws: any, message: InputDeltaMessage) {
-    // 检查消息数据
+    // CheckMessageNumber据
     if (!message.data) {
         console.error("InputDeltaHandlerError: Invalid message data");
         
@@ -28,7 +28,7 @@ export function handleInputDelta(ws: any, message: InputDeltaMessage) {
     }
 
     try {
-        // 更新输入状态
+        // UpdateInputState
         if (message.data.keyboard) {
             if (message.data.keyboard.pressed) {
                 message.data.keyboard.pressed.forEach((key) =>
@@ -54,14 +54,14 @@ export function handleInputDelta(ws: any, message: InputDeltaMessage) {
             };
         }
 
-        // ✅ 触发输入执行器
+        // ✅ TriggerInputExecutor
         const executorManager = getExecutorManager();
         executorManager.applyState(inputState);
 
-        // 记录详细的输入增量数据日志
+        // RecordDetailOfInputDeltaNumber据Log
         console.log(formatInputDeltaMessageLog(message));
         
-        // 发送 ACK 消息
+        // Send ACK Message
         const ackMessage = {
             type: "ack",
             data: {
