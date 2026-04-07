@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added (P2 Metrics Documentation)
+- **指标模块文档**: 创建完整的指标模块使用文档
+  - 新增 `Server/src/metrics/README.md` 文档（280+ 行）
+  - 模块概述和功能说明
+  - 支持的指标类型详解（Counter/Gauge/Histogram）
+  - 内置指标列表及详细说明
+    - connections_total / active_connections - 连接相关指标
+    - input_events_total / input_keyboard_events_total - 输入事件指标
+    - http_requests_total / http_request_duration_seconds - HTTP 请求指标
+    - messages_received_total / websocket_messages_total - WebSocket 消息指标
+    - connection_duration_seconds / input_execution_duration_seconds - 执行时间指标
+  - 完整的使用示例代码（注册、记录、标签、中间件）
+  - Prometheus 集成配置示例和 Grafana 查询示例
+  - API 参考文档，包含所有方法说明
+
 ### Changed (P1 Module Boundary Refactoring)
 - **模块边界重构**: 解耦输入系统模块，提取统一接口层
   - 创建 `Server/src/interfaces/` 目录作为接口定义中心
