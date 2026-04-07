@@ -1,7 +1,7 @@
 import { WsMessage } from "../types/ws";
 import { handleInput } from "./handlers/input";
 import { handleInputDelta } from "./handlers/inputDelta";
-import { handleInputEvent } from "./handlers/inputEvent";
+import { handleInputEvent, handleBatchInputEvents } from "./handlers/inputEvent";
 import { 
     handleConfigGet, 
     handleConfigSet, 
@@ -26,6 +26,7 @@ const handlers: Record<string, (ws: any, message: any) => void> = {
     input: handleInput,
     input_delta: handleInputDelta,
     input_event: handleInputEvent,
+    batch_input_event: handleBatchInputEvents,
     state: handleState,
     event: handleEvent,
     config_get: handleConfigGet,

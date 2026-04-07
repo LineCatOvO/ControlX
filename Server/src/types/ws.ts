@@ -228,10 +228,44 @@ export interface InputDeltaMessage extends WsMessage {
     metadata: InputMetadata;
 }
 
-// Input event message
+// Input event message - Enhanced with sequence number and timestamp
 export interface InputEventMessage extends WsMessage {
     type: "input_event";
-    data: InputEvent;
+    eventId: number;              // Client-generated monotonically increasing identifier
+    clientSendTs: number;         // Client send timestamp for RTT measurement
+    data: InputEvent;             // Event data
+    metadata?: InputMetadata;     // Optional metadata
+}
+
+// Batch input event message - for efficient transmission of multiple events
+export interface BatchInputEventMessage extends WsMessage {
+    type: "batch_input_event";
+    batchId: number;              // Client-generated batch identifier
+    clientSendTs: number;         // Client send timestamp
+    events: InputEvent[];         // Array of input events
+    eventIds: number[];           // Array of event IDs corresponding to events
+}
+
+// Input event ACK message - Server acknowledgment for input events
+export interface InputEventAckMessage extends WsMessage {
+    type: "input_event_ack";
+    ackEventId: number;           // Confirmed event ID
+    serverRecvTs: number;         // Server receive timestamp
+    serverApplyTs: number;        // Server apply/execute timestamp
+    status: "success" | "rejected" | "error";  // Status
+    reason?: string;              // Reject/error reason (if any)
+}
+
+// Batch input event ACK message
+export interface BatchInputEventAckMessage extends WsMessage {
+    type: "batch_input_event_ack";
+    ackBatchId: number;           // Confirmed batch ID
+    ackEventIds: number[];        // Array of confirmed event IDs
+    failedEventIds?: number[];    // Array of failed event IDs (if any)
+    serverRecvTs: number;         // Server receive timestamp
+    serverApplyTs: number;        // Server apply/execute timestamp
+    status: "success" | "partial" | "rejected" | "error";
+    reason?: string;              // Reject/error reason (if any)
 }
 
 // Latency measurement message
@@ -333,6 +367,7 @@ export type ClientMessage =
     | InputMessage
     | InputDeltaMessage
     | InputEventMessage
+    | BatchInputEventMessage
     | ConfigGetMessage
     | ConfigSetMessage
     | LatencyProbeMessage
@@ -353,4 +388,6 @@ export type ServerMessage =
     | AckMessage
     | PongMessage
     | StateAckMessage
-    | EventAckMessage;
+    | EventAckMessage
+    | InputEventAckMessage
+    | BatchInputEventAckMessage;
