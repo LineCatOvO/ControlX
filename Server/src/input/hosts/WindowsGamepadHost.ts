@@ -61,7 +61,7 @@ interface GamepadState {
 /**
  * Windows gamepad host
  */
-export class Windows gamepad host extends InputHost {
+export class WindowsGamepadHost extends InputHost {
     /** ViGEmClient instance */
     private vigemClient: any = null;
     

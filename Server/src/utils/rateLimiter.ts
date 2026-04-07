@@ -17,7 +17,7 @@
  * 【UseExample】
  * ```typescript
  * // IP rate limiting
- * const ipLimiter = new SlidingWindowRate limiter({ windowSizeMs: 60000, maxRequests: 100 });
+ * const ipLimiter = new SlidingWindowRateLimiter({ windowSizeMs: 60000, maxRequests: 100 });
  * const result = ipLimiter.checkLimit('192.168.1.1');
  *
  * // User rate limiting
@@ -65,7 +65,7 @@ export interface RateLimitResult {
 /**
  * Base rate limiter configuration
  */
-export interface BaseRate limiterConfig {
+export interface BaseRateLimiterConfig {
     /** Time window size in milliseconds */
     windowSizeMs: number;
     /** Maximum requests allowed in the window */
@@ -121,7 +121,7 @@ export interface MultiLevelConfig {
 /**
  * Sliding window rate limiter configuration
  */
-export interface SlidingWindowConfig extends BaseRate limiterConfig {
+export interface SlidingWindowConfig extends BaseRateLimiterConfig {
     /** Cleanup interval in milliseconds (default: 60000) */
     cleanupIntervalMs?: number;
     /** Inactive client timeout in milliseconds (default: 300000) */
@@ -143,12 +143,12 @@ const DEFAULT_SLIDING_WINDOW_CONFIG: SlidingWindowConfig = {
 };
 
 /**
- * SlidingWindowRate limiter - Uses sliding window algorithm for precise rate limiting
+ * SlidingWindowRateLimiter - Uses sliding window algorithm for precise rate limiting
  *
  * The sliding window algorithm maintains a history of requests within the time window,
  * providing more accurate rate limiting compared to fixed window approaches.
  */
-export class SlidingWindowRate limiter {
+export class SlidingWindowRateLimiter {
     private config: SlidingWindowConfig;
     private clients: Map<string, SlidingWindowState> = new Map();
     private cleanupInterval: NodeJS.Timeout | null = null;
@@ -162,7 +162,7 @@ export class SlidingWindowRate limiter {
 
         if (this.config.enabled) {
             this.startCleanup();
-            logger.info('SlidingWindowRate limiter initialized', { config: this.config });
+            logger.info('SlidingWindowRateLimiter initialized', { config: this.config });
         }
     }
 
@@ -414,7 +414,7 @@ export class SlidingWindowRate limiter {
     destroy(): void {
         this.stopCleanup();
         this.clients.clear();
-        logger.info('SlidingWindowRate limiter destroyed');
+        logger.info('SlidingWindowRateLimiter destroyed');
     }
 }
 
@@ -427,7 +427,7 @@ export class SlidingWindowRate limiter {
 /**
  * IP rate limiter configuration
  */
-export interface IPRate limiterConfig extends SlidingWindowConfig {
+export interface IPRateLimiterConfig extends SlidingWindowConfig {
     /** Whitelist of IPs that bypass rate limiting */
     whitelist: string[];
     /** Blacklist of IPs that are always blocked */
@@ -439,7 +439,7 @@ export interface IPRate limiterConfig extends SlidingWindowConfig {
 /**
  * Default IP rate limiter configuration
  */
-const DEFAULT_IP_CONFIG: IPRate limiterConfig = {
+const DEFAULT_IP_CONFIG: IPRateLimiterConfig = {
     ...DEFAULT_SLIDING_WINDOW_CONFIG,
     whitelist: [],
     blacklist: [],
@@ -447,18 +447,18 @@ const DEFAULT_IP_CONFIG: IPRate limiterConfig = {
 };
 
 /**
- * IPRate limiter - Rate limiting based on IP addresses
+ * IPRateLimiter - Rate limiting based on IP addresses
  *
  * Supports IPv4 and IPv6 addresses, with whitelist/blacklist functionality.
  */
-export class IPRate limiter extends SlidingWindowRate limiter {
-    private ipConfig: IPRate limiterConfig;
+export class IPRateLimiter extends SlidingWindowRateLimiter {
+    private ipConfig: IPRateLimiterConfig;
 
     /**
      * Create a new IP rate limiter
      * @param config IP rate limiter configuration
      */
-    constructor(config: Partial<IPRate limiterConfig> = {}) {
+    constructor(config: Partial<IPRateLimiterConfig> = {}) {
         super(config);
         this.ipConfig = { ...DEFAULT_IP_CONFIG, ...config };
     }
@@ -663,7 +663,7 @@ const DEFAULT_USER_CONFIG: UserRate limiterConfig = {
  */
 export class UserRate limiter {
     private config: UserRate limiterConfig;
-    private limiters: Map<string, SlidingWindowRate limiter> = new Map();
+    private limiters: Map<string, SlidingWindowRateLimiter> = new Map();
 
     /**
      * Create a new user rate limiter
@@ -677,11 +677,11 @@ export class UserRate limiter {
         };
 
         // Initialize default limiter
-        this.limiters.set('default', new SlidingWindowRate limiter(this.config.default));
+        this.limiters.set('default', new SlidingWindowRateLimiter(this.config.default));
 
         // Initialize role limiters
         for (const [role, roleConfig] of Array.from(this.config.roles.entries())) {
-            this.limiters.set(role, new SlidingWindowRate limiter({
+            this.limiters.set(role, new SlidingWindowRateLimiter({
                 windowSizeMs: roleConfig.windowSizeMs,
                 maxRequests: roleConfig.maxRequests,
                 enabled: this.config.default.enabled
@@ -731,7 +731,7 @@ export class UserRate limiter {
      */
     addRole(role: string, config: RoleConfig): void {
         this.config.roles.set(role, { ...config, name: role });
-        this.limiters.set(role, new SlidingWindowRate limiter({
+        this.limiters.set(role, new SlidingWindowRateLimiter({
             windowSizeMs: config.windowSizeMs,
             maxRequests: config.maxRequests,
             enabled: this.config.default.enabled
@@ -804,8 +804,8 @@ export class UserRate limiter {
      * Get all limiter statistics
      * @returns Statistics for all roles
      */
-    getStats(): Map<string, ReturnType<SlidingWindowRate limiter['getStats']>> {
-        const stats = new Map<string, ReturnType<SlidingWindowRate limiter['getStats']>>();
+    getStats(): Map<string, ReturnType<SlidingWindowRateLimiter['getStats']>> {
+        const stats = new Map<string, ReturnType<SlidingWindowRateLimiter['getStats']>>();
         for (const [role, limiter] of Array.from(this.limiters.entries())) {
             stats.set(role, limiter.getStats());
         }
@@ -881,8 +881,8 @@ const DEFAULT_WS_CONFIG: WebSocketRate limiterConfig = {
  */
 export class WebSocketRate limiter {
     private config: WebSocketRate limiterConfig;
-    private overallLimiter: SlidingWindowRate limiter;
-    private typeLimiters: Map<string, SlidingWindowRate limiter> = new Map();
+    private overallLimiter: SlidingWindowRateLimiter;
+    private typeLimiters: Map<string, SlidingWindowRateLimiter> = new Map();
 
     /**
      * Create a new WebSocket rate limiter
@@ -895,11 +895,11 @@ export class WebSocketRate limiter {
             messageTypes: config.messageTypes || DEFAULT_WS_CONFIG.messageTypes
         };
 
-        this.overallLimiter = new SlidingWindowRate limiter(this.config.overall);
+        this.overallLimiter = new SlidingWindowRateLimiter(this.config.overall);
 
         // Initialize message type limiters
         for (const [type, typeConfig] of Array.from(this.config.messageTypes.entries())) {
-            this.typeLimiters.set(type, new SlidingWindowRate limiter({
+            this.typeLimiters.set(type, new SlidingWindowRateLimiter({
                 windowSizeMs: typeConfig.windowSizeMs,
                 maxRequests: typeConfig.maxMessages,
                 enabled: typeConfig.enabled && this.config.overall.enabled
@@ -982,7 +982,7 @@ export class WebSocketRate limiter {
     addMessageType(type: string, config: Omit<MessageTypeConfig, 'type'>): void {
         const fullConfig: MessageTypeConfig = { ...config, type };
         this.config.messageTypes.set(type, fullConfig);
-        this.typeLimiters.set(type, new SlidingWindowRate limiter({
+        this.typeLimiters.set(type, new SlidingWindowRateLimiter({
             windowSizeMs: config.windowSizeMs,
             maxRequests: config.maxMessages,
             enabled: config.enabled && this.config.overall.enabled
@@ -1086,10 +1086,10 @@ export class WebSocketRate limiter {
      * @returns Statistics object
      */
     getStats(): {
-        overall: ReturnType<SlidingWindowRate limiter['getStats']>;
-        byType: Map<string, ReturnType<SlidingWindowRate limiter['getStats']>>;
+        overall: ReturnType<SlidingWindowRateLimiter['getStats']>;
+        byType: Map<string, ReturnType<SlidingWindowRateLimiter['getStats']>>;
     } {
-        const byType = new Map<string, ReturnType<SlidingWindowRate limiter['getStats']>>();
+        const byType = new Map<string, ReturnType<SlidingWindowRateLimiter['getStats']>>();
         for (const [type, limiter] of Array.from(this.typeLimiters.entries())) {
             byType.set(type, limiter.getStats());
         }
@@ -1126,10 +1126,10 @@ export class WebSocketRate limiter {
  */
 export class MultiLevelRate limiter {
     private config: MultiLevelConfig;
-    private secondLimiter?: SlidingWindowRate limiter;
-    private minuteLimiter?: SlidingWindowRate limiter;
-    private hourLimiter?: SlidingWindowRate limiter;
-    private dayLimiter?: SlidingWindowRate limiter;
+    private secondLimiter?: SlidingWindowRateLimiter;
+    private minuteLimiter?: SlidingWindowRateLimiter;
+    private hourLimiter?: SlidingWindowRateLimiter;
+    private dayLimiter?: SlidingWindowRateLimiter;
 
     /**
      * Create a new multi-level rate limiter
@@ -1139,7 +1139,7 @@ export class MultiLevelRate limiter {
         this.config = config;
 
         if (config.perSecond?.enabled) {
-            this.secondLimiter = new SlidingWindowRate limiter({
+            this.secondLimiter = new SlidingWindowRateLimiter({
                 windowSizeMs: 1000,
                 maxRequests: config.perSecond.maxRequests,
                 enabled: true
@@ -1147,7 +1147,7 @@ export class MultiLevelRate limiter {
         }
 
         if (config.perMinute?.enabled) {
-            this.minuteLimiter = new SlidingWindowRate limiter({
+            this.minuteLimiter = new SlidingWindowRateLimiter({
                 windowSizeMs: 60000,
                 maxRequests: config.perMinute.maxRequests,
                 enabled: true
@@ -1155,7 +1155,7 @@ export class MultiLevelRate limiter {
         }
 
         if (config.perHour?.enabled) {
-            this.hourLimiter = new SlidingWindowRate limiter({
+            this.hourLimiter = new SlidingWindowRateLimiter({
                 windowSizeMs: 3600000,
                 maxRequests: config.perHour.maxRequests,
                 enabled: true
@@ -1163,7 +1163,7 @@ export class MultiLevelRate limiter {
         }
 
         if (config.perDay?.enabled) {
-            this.dayLimiter = new SlidingWindowRate limiter({
+            this.dayLimiter = new SlidingWindowRateLimiter({
                 windowSizeMs: 86400000,
                 maxRequests: config.perDay.maxRequests,
                 enabled: true
@@ -1177,7 +1177,7 @@ export class MultiLevelRate limiter {
      * @returns Rate limit check result
      */
     checkLimit(clientId: string): RateLimitResult {
-        const limiters: { name: string; limiter: SlidingWindowRate limiter; limit: number }[] = [];
+        const limiters: { name: string; limiter: SlidingWindowRateLimiter; limit: number }[] = [];
 
         if (this.secondLimiter) {
             limiters.push({ name: 'second', limiter: this.secondLimiter, limit: this.config.perSecond!.maxRequests });
@@ -1250,7 +1250,7 @@ export class MultiLevelRate limiter {
  */
 export interface CombinedRate limiterConfig {
     /** IP rate limiter configuration */
-    ip?: Partial<IPRate limiterConfig>;
+    ip?: Partial<IPRateLimiterConfig>;
     /** User rate limiter configuration */
     user?: Partial<UserRate limiterConfig>;
     /** WebSocket rate limiter configuration */
@@ -1263,7 +1263,7 @@ export interface CombinedRate limiterConfig {
  * This is the main rate limiter that should be used by the application.
  */
 export class CombinedRate limiter {
-    ipLimiter: IPRate limiter;
+    ipLimiter: IPRateLimiter;
     userLimiter: UserRate limiter;
     wsLimiter: WebSocketRate limiter;
 
@@ -1272,7 +1272,7 @@ export class CombinedRate limiter {
      * @param config Combined rate limiter configuration
      */
     constructor(config: CombinedRate limiterConfig = {}) {
-        this.ipLimiter = new IPRate limiter(config.ip);
+        this.ipLimiter = new IPRateLimiter(config.ip);
         this.userLimiter = new UserRate limiter(config.user);
         this.wsLimiter = new WebSocketRate limiter(config.websocket);
 
@@ -1373,7 +1373,7 @@ export class CombinedRate limiter {
      * @returns Statistics object
      */
     getStats(): {
-        ip: ReturnType<IPRate limiter['getStats']>;
+        ip: ReturnType<IPRateLimiter['getStats']>;
         user: ReturnType<UserRate limiter['getStats']>;
         websocket: ReturnType<WebSocketRate limiter['getStats']>;
     } {

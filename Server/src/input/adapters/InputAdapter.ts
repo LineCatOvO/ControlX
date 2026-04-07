@@ -11,7 +11,7 @@ import { InputState, InputDelta, InputEvent } from '../../types/ws';
  * - All adapters must implement applyState, applyDelta, applyEvent, reset methods
  * - Ensure adapters can be directly used by executorManager
  */
-export interface Input adapter {
+export interface InputAdapter {
     /**
      * Apply complete input state
      * @param state Input state
@@ -39,7 +39,7 @@ export interface Input adapter {
 /**
  * Keyboard adapter interface
  */
-export interface KeyboardAdapter extends Input adapter {
+export interface KeyboardAdapter extends InputAdapter {
     /**
      * Apply keyboard state
      * @param pressedKeys Set of pressed keys
@@ -56,7 +56,7 @@ export interface KeyboardAdapter extends Input adapter {
 /**
  * Gamepad adapter interface
  */
-export interface GamepadAdapter extends Input adapter {
+export interface GamepadAdapter extends InputAdapter {
     /**
      * Apply gamepad state
      * @param buttons Button state
@@ -83,7 +83,7 @@ export interface GamepadAdapter extends Input adapter {
 /**
  * Mouse adapter interface
  */
-export interface MouseAdapter extends Input adapter {
+export interface MouseAdapter extends InputAdapter {
     /**
      * Apply mouse state
      * @param x Mouse X coordinate
@@ -116,7 +116,7 @@ export interface MouseAdapter extends Input adapter {
 /**
  * Joystick adapter interface
  */
-export interface JoystickAdapter extends Input adapter {
+export interface JoystickAdapter extends InputAdapter {
     /**
      * Apply joystick state
      * @param x X axis value

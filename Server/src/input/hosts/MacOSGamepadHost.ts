@@ -48,7 +48,7 @@ export interface GamepadState {
     triggers: { [key: string]: number };
 }
 
-export class macOS gamepad host extends InputHost {
+export class MacOSGamepadHost extends InputHost {
     /** GCController Instance（PendingImplementation） */
     private controller: any = null;
 

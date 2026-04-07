@@ -19,7 +19,7 @@ import { InputState } from '../../types/ws';
 /**
  * Input routerManager
  */
-export class Input router {
+export class InputRouter {
     /** Host registration table */
     private hosts: Map<InputDeviceType, InputHost> = new Map();
     

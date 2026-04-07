@@ -14,7 +14,7 @@ import { InputDeviceType, HostStatus, PlatformType, detectPlatform } from './typ
 /**
  * Input hostAbstractBaseClass
  */
-export abstract class Input host {
+export abstract class InputHost {
     /** Device type */
     protected readonly deviceType: InputDeviceType;
     

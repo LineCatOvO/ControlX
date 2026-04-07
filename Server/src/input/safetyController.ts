@@ -129,7 +129,7 @@ interface SafetyConfig {
  * - This is a temporary compatibility mechanism，Official runtime must ensure ApplyScheduler starts first
  * ============================================================================
  */
-export class Safety controller {
+export class SafetyController {
     // Executor manager reference
     private readonly executorManager: InputExecutorManager;
 

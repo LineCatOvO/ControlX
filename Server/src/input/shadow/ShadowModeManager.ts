@@ -98,7 +98,7 @@ export interface ShadowModeStats {
 /**
  * ShadowModeManageManager
  */
-export class Shadow mode manager {
+export class ShadowModeManager {
     /** Config */
     private readonly config: ShadowModeConfig;
 

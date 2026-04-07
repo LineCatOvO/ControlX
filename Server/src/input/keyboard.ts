@@ -23,7 +23,7 @@ let lastErrorTime = 0;
 /**
  * Check whether error count should be reset
  */
-function shouldReset error count(): boolean {
+function shouldResetErrorCount(): boolean {
     const now = Date.now();
     if (now - lastErrorTime > ERROR_CONFIG.errorResetInterval) {
         consecutiveErrors = 0;
@@ -37,7 +37,7 @@ function shouldReset error count(): boolean {
  * @returns boolean Whether keyboard function needs to be disabled
  */
 function recordError(): boolean {
-    shouldReset error count();
+    shouldResetErrorCount();
     consecutiveErrors++;
     lastErrorTime = Date.now();
     return consecutiveErrors >= ERROR_CONFIG.maxConsecutiveErrors;

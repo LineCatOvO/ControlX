@@ -37,7 +37,7 @@
 import { InputHost } from './InputHost';
 import { InputDeviceType } from './types';
 
-export class macOS keyboard host extends InputHost {
+export class MacOSKeyboardHost extends InputHost {
     /** Quartz EventSource（PendingImplementation） */
     private eventSource: any = null;
 

@@ -53,7 +53,7 @@ export interface GamepadState {
     triggers: { [key: string]: number };
 }
 
-export class Linux gamepad host extends InputHost {
+export class LinuxGamepadHost extends InputHost {
     /** uinput DeviceHandle（PendingImplementation） */
     private uinputDevice: any = null;
 
