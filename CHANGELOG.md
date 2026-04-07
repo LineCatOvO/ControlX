@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Fixed (P1 Functional Defects)
+- **P1 功能缺陷修复**: 完善功能缺陷修复
+  - **WebSocket 连接数限制**: 实现全局连接数限制
+    - 默认最大连接数 100，可通过环境变量配置
+    - 新增 `getConnectionLimit()` 和 `setConnectionLimit()` 接口
+    - 连接超限返回 `MAX_CONNECTIONS_REACHED` 错误码
+    - 完善的连接数限制测试用例
+  - **鼠标执行器增强**: 坐标验证和滚动事件支持
+    - 新增坐标有效性验证（检查 NaN、Infinity、非数字类型）
+    - 坐标范围限制和边界处理
+    - 新增 `mouse_scroll` 事件类型支持
+    - 滚动参数验证（amount 范围 1-1000，direction 仅允许 up/down）
+    - 完善的错误处理和日志记录
+  - **键盘执行器错误处理**: 全面的错误处理机制
+    - 新增错误配置和连续错误追踪
+    - 输入状态验证函数 `validateInputState()`
+    - 按键名验证函数 `validateKey()`（长度、非法字符检查）
+    - 带上下文的错误日志 `logError()`
+    - 所有公共方法添加 try-catch 保护
+    - 完善的边界条件和错误处理测试用例
+
 ### Fixed (Security)
 - **P0 Security Fixes**: 修复关键安全漏洞
   - **Auth Module**: 新增完整的WebSocket连接认证系统
