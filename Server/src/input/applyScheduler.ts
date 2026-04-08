@@ -51,6 +51,7 @@ import { InputExecutorManager } from './interfaces';
 import { getSafetyController } from './executor';
 import { executeInputWithShadow, isShadowModeEnabled } from './executor_shadow';
 import { executeInputRouterOnly, isRouterOnlyModeEnabled } from './RouterOnlyExecutor';
+import { TimeSyncManager, getTimeSyncManager } from './timeSyncManager';
 
 /**
  * ApplyScheduler config
@@ -58,6 +59,8 @@ import { executeInputRouterOnly, isRouterOnlyModeEnabled } from './RouterOnlyExe
 interface ApplySchedulerConfig {
   applyIntervalMs: number; // Apply interval time，Default 8ms（125Hz）
   tickTime?: number; // Tick timestamp，for time consistency guarantee
+  enableTimeSync?: boolean; // Enable time synchronization (default: true)
+  enableLatencyCompensation?: boolean; // Enable latency compensation (default: true)
 }
 
 /**
@@ -113,6 +116,17 @@ export class ApplyScheduler {
   private lastApplyTime: number = 0;
   private lastReceiveTime: number = 0;
 
+  // Time sync manager reference
+  private readonly timeSyncManager: TimeSyncManager;
+
+  // Latency statistics
+  private latencyStats = {
+    totalCompensatedDelay: 0,
+    compensationCount: 0,
+    averageCompensation: 0,
+    lastDriftCheck: 0,
+  };
+
   /**
    * Constructor
    * @param executorManager Executor manager
@@ -128,8 +142,18 @@ export class ApplyScheduler {
     this.stateStore = stateStore;
     this.config = {
       applyIntervalMs: 8, // Default 8ms，correspond to 125Hz
+      enableTimeSync: true,
+      enableLatencyCompensation: true,
       ...config
     };
+
+    // Initialize time sync manager
+    this.timeSyncManager = getTimeSyncManager();
+
+    // Configure time sync manager based on settings
+    this.timeSyncManager.updateConfig({
+      enableDelayCompensation: this.config.enableLatencyCompensation ?? true,
+    });
   }
 
   /**
@@ -193,7 +217,7 @@ export class ApplyScheduler {
    */
   private applyCurrentState(): void {
     try {
-      // Record tick time
+      // Record tick time (authoritative server time)
       const tickTime = Date.now();
       this.lastTickTime = tickTime;
 
@@ -204,14 +228,36 @@ export class ApplyScheduler {
       const safetyController = getSafetyController();
       safetyController.updateTickTime(tickTime);
 
+      // Perform clock drift detection every 5 seconds
+      if (tickTime - this.latencyStats.lastDriftCheck > 5000) {
+        this.performClockDriftDetection();
+        this.latencyStats.lastDriftCheck = tickTime;
+      }
+
       // Get latest state
       const latestState = this.stateStore.getLatestState();
 
       if (latestState) {
-        // Extract sequence number
+        // Extract sequence number and client timestamp
         const sequenceNumber = this.extractSequenceNumber(latestState);
+        const clientTimestamp = this.extractClientTimestamp(latestState);
 
-        // Record reception time
+        // Validate timestamp consistency if client timestamp is present
+        if (clientTimestamp && this.config.enableTimeSync) {
+          const validation = this.timeSyncManager.validateTimestamp(clientTimestamp);
+          if (!validation.isValid) {
+            console.warn(`ApplyScheduler: Timestamp validation failed: ${validation.error}`);
+          }
+        }
+
+        // Apply latency compensation if enabled and client timestamp is present
+        let compensationResult = null;
+        if (clientTimestamp && this.config.enableLatencyCompensation) {
+          compensationResult = this.timeSyncManager.compensateDelay(clientTimestamp);
+          this.updateLatencyStats(compensationResult);
+        }
+
+        // Record reception time (server authoritative time)
         this.lastReceiveTime = tickTime;
 
         // Apply state to all executors（Support multiple modes）
@@ -225,24 +271,38 @@ export class ApplyScheduler {
           // Normal mode: only write to Executor
           this.executorManager.applyState(latestState);
 
-          // Record application time
+          // Record application time (compensated time if applicable)
           const applyTime = Date.now();
           this.lastApplyTime = applyTime;
-          this.stateStore.recordAppliedState(sequenceNumber, applyTime);
+
+          // Use compensated time for state recording if compensation was applied
+          const recordedTime = compensationResult?.isCompensated
+            ? applyTime - compensationResult.compensationMs
+            : applyTime;
+
+          this.stateStore.recordAppliedState(sequenceNumber, recordedTime);
 
           // Record valid state time to safety controller（Use tickTime to ensure time consistency）
           safetyController.recordValidState(latestState, tickTime);
         }
 
-        // Calculate time difference
-        const timeDiff = Date.now() - tickTime;
+        // Calculate processing time
+        const processingTime = Date.now() - tickTime;
 
         this.applyCount++;
 
         // Output log every 100 applications
         if (this.applyCount % 100 === 0) {
-          const rtt = tickTime - this.lastReceiveTime;
-          console.log(`ApplyScheduler: Applied ${this.applyCount} states, last sequence: ${sequenceNumber}, time diff: ${timeDiff}ms, RTT: ${rtt}ms`);
+          const rtt = this.timeSyncManager.isSynced() ? this.timeSyncManager.getAverageRttMs() : 0;
+          const offset = this.timeSyncManager.isSynced() ? this.timeSyncManager.getCurrentOffsetMs() : 0;
+          console.log(
+            `ApplyScheduler: Applied ${this.applyCount} states, ` +
+            `last sequence: ${sequenceNumber}, ` +
+            `processing: ${processingTime}ms, ` +
+            `RTT: ${rtt.toFixed(2)}ms, ` +
+            `offset: ${offset.toFixed(2)}ms, ` +
+            `synced: ${this.timeSyncManager.isSynced()}`
+          );
         }
       } else {
         // No latest state, no operation
@@ -255,6 +315,52 @@ export class ApplyScheduler {
       const safetyController = getSafetyController();
       safetyController.triggerExceptionClear('ApplyScheduler error');
     }
+  }
+
+  /**
+   * Extract client timestamp from state object
+   * @param state State object
+   * @returns Client timestamp or undefined
+   */
+  private extractClientTimestamp(state: any): number | undefined {
+    // Support multiple timestamp field names for flexibility
+    return state.timestamp || state.clientTimestamp || state.ts || undefined;
+  }
+
+  /**
+   * Perform clock drift detection
+   */
+  private performClockDriftDetection(): void {
+    if (!this.config.enableTimeSync || !this.timeSyncManager.isSynced()) {
+      return;
+    }
+
+    const driftResult = this.timeSyncManager.detectClockDrift();
+
+    if (driftResult.exceedsThreshold) {
+      console.warn(
+        `ApplyScheduler: Clock drift detected: ${driftResult.driftMs.toFixed(2)}ms, ` +
+        `rate: ${driftResult.driftRatePpm.toFixed(2)}ppm, ` +
+        `applying correction: ${driftResult.recommendedCorrectionMs.toFixed(2)}ms`
+      );
+
+      this.timeSyncManager.applyDriftCorrection(driftResult.recommendedCorrectionMs);
+    }
+  }
+
+  /**
+   * Update latency statistics
+   * @param result Delay compensation result
+   */
+  private updateLatencyStats(result: { isCompensated: boolean; compensationMs: number }): void {
+    if (!result.isCompensated) {
+      return;
+    }
+
+    this.latencyStats.compensationCount++;
+    this.latencyStats.totalCompensatedDelay += result.compensationMs;
+    this.latencyStats.averageCompensation =
+      this.latencyStats.totalCompensatedDelay / this.latencyStats.compensationCount;
   }
 
   /**
@@ -282,5 +388,50 @@ export class ApplyScheduler {
    */
   getApplyCount(): number {
     return this.applyCount;
+  }
+
+  /**
+   * Get time sync state
+   * @returns Current time sync state
+   */
+  getTimeSyncState() {
+    return this.timeSyncManager.getState();
+  }
+
+  /**
+   * Get latency statistics
+   * @returns Latency statistics
+   */
+  getLatencyStats() {
+    return { ...this.latencyStats };
+  }
+
+  /**
+   * Record time sync sample (called from latency probe handler)
+   * @param clientSendTime Client timestamp when sending ping
+   * @param serverReceiveTime Server timestamp when receiving ping
+   * @param serverSendTime Server timestamp when sending pong
+   * @param clientReceiveTime Client timestamp when receiving pong
+   */
+  recordTimeSyncSample(
+    clientSendTime: number,
+    serverReceiveTime: number,
+    serverSendTime: number,
+    clientReceiveTime: number
+  ): void {
+    this.timeSyncManager.recordSample(
+      clientSendTime,
+      serverReceiveTime,
+      serverSendTime,
+      clientReceiveTime
+    );
+  }
+
+  /**
+   * Get time sync manager
+   * @returns Time sync manager instance
+   */
+  getTimeSyncManager(): TimeSyncManager {
+    return this.timeSyncManager;
   }
 }
