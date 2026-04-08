@@ -2,7 +2,8 @@
 
 **创建时间**：2026-04-10
 **优先级**：P0
-**状态**：pending
+**状态**：completed
+**完成时间**：2026-04-08 18:43
 **项目**：ControlX
 **预计时间**：10 分钟
 **父任务**：用户请求 - ControlX项目下一步任务规划
@@ -21,6 +22,7 @@
 ### 2.1 问题描述
 
 根据规划报告分析，以下任务实际已完成但任务文档仍显示为active/pending状态：
+
 1. task-P1-create-docs-directory-structure - Git历史显示已完成并合并（commit 895693e）
 2. task-P1-migrate-core-documents - Git历史显示已完成并合并（commit 66977b5）
 3. task-P2-create-adr-001-websocket - Git历史显示已完成并合并（commit 77cf732）
@@ -71,6 +73,7 @@ git mv .agent_tasks/active/task-P2-create-adr-001-websocket.md .agent_tasks/comp
 **修改内容**：将每个任务文档内的 `**状态**：active/pending` 改为 `**状态**：completed`
 
 需要修改的文件：
+
 1. .agent_tasks/completed/task-P1-create-docs-directory-structure.md
 2. .agent_tasks/completed/task-P1-migrate-core-documents.md
 3. .agent_tasks/completed/task-P2-create-adr-001-websocket.md
@@ -84,18 +87,18 @@ git mv .agent_tasks/active/task-P2-create-adr-001-websocket.md .agent_tasks/comp
 ```markdown
 ## 核心文档
 
-| 文档 | 描述 | 状态 |
-|------|------|------|
-| SRS.md | 软件需求规格 | 待迁移 |
-| function.md | 功能文档 | 待迁移 |
-| HLD.md | 高层设计文档 | 待创建 |
+| 文档        | 描述         | 状态   |
+| ----------- | ------------ | ------ |
+| SRS.md      | 软件需求规格 | 待迁移 |
+| function.md | 功能文档     | 待迁移 |
+| HLD.md      | 高层设计文档 | 待创建 |
 
 ## 架构决策记录
 
-| 文档 | 描述 | 状态 |
-|------|------|------|
-| ADR-001-websocket-protocol.md | WebSocket 协议决策 | 待创建 |
-| ADR-002-vigembus-gamepad.md | ViGEmBus 手柄方案决策 | 待创建 |
+| 文档                          | 描述                  | 状态   |
+| ----------------------------- | --------------------- | ------ |
+| ADR-001-websocket-protocol.md | WebSocket 协议决策    | 待创建 |
+| ADR-002-vigembus-gamepad.md   | ViGEmBus 手柄方案决策 | 待创建 |
 
 ## 其他文档
 
@@ -107,18 +110,18 @@ git mv .agent_tasks/active/task-P2-create-adr-001-websocket.md .agent_tasks/comp
 ```markdown
 ## 核心文档
 
-| 文档 | 描述 | 状态 |
-|------|------|------|
-| SRS.md | 软件需求规格 | ✅ 已完成 |
-| function.md | 功能文档 | ✅ 已完成 |
-| HLD.md | 高层设计文档 | ✅ 已完成 |
+| 文档        | 描述         | 状态      |
+| ----------- | ------------ | --------- |
+| SRS.md      | 软件需求规格 | ✅ 已完成 |
+| function.md | 功能文档     | ✅ 已完成 |
+| HLD.md      | 高层设计文档 | ✅ 已完成 |
 
 ## 架构决策记录
 
-| 文档 | 描述 | 状态 |
-|------|------|------|
-| ADR-001-websocket-protocol.md | WebSocket 协议决策 | ✅ 已完成 |
-| ADR-002-vigembus-gamepad.md | ViGEmBus 手柄方案决策 | ✅ 已完成 |
+| 文档                          | 描述                  | 状态      |
+| ----------------------------- | --------------------- | --------- |
+| ADR-001-websocket-protocol.md | WebSocket 协议决策    | ✅ 已完成 |
+| ADR-002-vigembus-gamepad.md   | ViGEmBus 手柄方案决策 | ✅ 已完成 |
 
 ## 其他文档
 
@@ -165,10 +168,10 @@ git checkout -- docs/INDEX.md
 
 ## 五、风险评估
 
-| 风险项 | 可能性 | 影响程度 | 缓解策略 |
-|--------|--------|----------|----------|
-| 任务文档内容有误 | 低 | 中 | 仔细检查任务文档内容 |
-| docs/INDEX.md其他部分被误改 | 低 | 低 | 精确匹配修改内容 |
+| 风险项                      | 可能性 | 影响程度 | 缓解策略             |
+| --------------------------- | ------ | -------- | -------------------- |
+| 任务文档内容有误            | 低     | 中       | 仔细检查任务文档内容 |
+| docs/INDEX.md其他部分被误改 | 低     | 低       | 精确匹配修改内容     |
 
 ---
 
@@ -193,24 +196,28 @@ git push origin task/P0-update-task-status
 ## 七、执行进度（实时更新区域）
 
 ### 步骤一：移动任务文档到completed
-**状态**：待执行
-**开始时间**：
-**完成时间**：
-**执行结果**：
-**备注**：
+
+**状态**：已完成
+**开始时间**：2026-04-08 18:42
+**完成时间**：2026-04-08 18:42
+**执行结果**：成功移动3个任务文档到completed/目录，使用git mv保留历史
+**备注**：移动的文档包括task-P1-create-docs-directory-structure.md、task-P1-migrate-core-documents.md、task-P2-create-adr-001-websocket.md
 
 ### 步骤二：更新任务文档内部状态
-**状态**：待执行
-**开始时间**：
-**完成时间**：
-**执行结果**：
-**备注**：
+
+**状态**：已完成
+**开始时间**：2026-04-08 18:42
+**完成时间**：2026-04-08 18:42
+**执行结果**：成功更新3个任务文档的状态字段，从active/pending改为completed，并添加完成时间
+**备注**：所有任务文档状态字段已更新，符合验收标准
 
 ### 步骤三：更新docs/INDEX.md状态标记
-**状态**：待执行
-**开始时间**：
-**完成时间**：
-**执行结果**：
+
+**状态**：已完成
+**开始时间**：2026-04-08 18:42
+**完成时间**：2026-04-08 18:42
+**执行结果**：成功更新docs/INDEX.md，将所有"待迁移"、"待创建"状态改为"✅ 已完成"
+**备注**：验证结果显示6处"已完成"标记，包括核心文档3个、架构决策记录2个、其他文档1个
 **备注**：
 
 ---
