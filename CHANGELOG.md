@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added (Web Monitor Dashboard)
+
+- **网页监控面板**: 替换blessed终端UI为网页监控面板
+  - **HTTP静态文件服务**: 提供HTML/CSS/JS文件服务
+  - **WebSocket状态推送**: 实时推送输入状态到前端（10 FPS）
+  - **健康检查API**: `/health`端点返回服务器状态
+  - **端口可配置**: 通过`WEB_PORT`环境变量配置端口（默认8080）
+  - **前端功能**: 实时显示键盘、游戏手柄、鼠标、摇杆状态
+
+### Removed (Blessed Terminal UI)
+
+- **blessed终端UI**: 移除blessed依赖和terminalViewer.ts
+  - 删除`@types/blessed`和`blessed`依赖
+  - 删除terminalViewer.ts文件
+  - 移除app.ts中的blessed相关代码
+
 ### Changed (P1 Document Cleanup)
 
 - **文档目录整理**: 清理doc/目录残留内容，迁移文档到docs/目录
