@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Changed (P1 Document Cleanup)
+
+- **文档目录整理**: 清理doc/目录残留内容，迁移文档到docs/目录
+  - **BDD测试文档迁移**: doc/bdd/内容迁移到docs/tech/bdd/
+    - 9个.feature文件（01-08-app-lifecycle等）
+    - README.md文档
+  - **测试文档迁移**: doc/docs/内容迁移到docs/
+    - test-goals.md测试目标文档
+    - test-matrix.md测试矩阵文档
+  - **Android布局定义迁移**: doc/LayoutFileStructureDefinition/迁移到docs/tech/android/
+    - LayoutFileStructureDefinition.md布局文件结构定义文档
+  - **测试文档分类**: doc/tests/内容迁移到docs/tech/
+    - tests-AndroidClient.md Android客户端测试文档
+    - tests-main.md 服务端测试文档
+  - **目录清理**: doc/目录及其所有子目录已删除，文档结构更整洁
+
+### Removed (P1 Branch Cleanup)
+
+- **Git分支整理**: 清理已合并的任务分支，保持Git分支整洁
+  - **删除develop分支**: 本地和远程分支已删除（与master无差异）
+  - **删除task/P1-migrate-core-documents分支**: 本地和远程分支已删除（与master无差异）
+  - **删除task/p0-android-build-config分支**: 本地和远程分支已删除（与master无差异）
+  - **删除task/p2-observability分支**: 本地和远程分支已删除（与master无差异）
+
 ### Added (P1 ApplyScheduler Time Authority)
 
 - **ApplyScheduler 时间权威明确**: 完整的时间同步机制实现
