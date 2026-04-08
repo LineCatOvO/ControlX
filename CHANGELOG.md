@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added (P1 ApplyScheduler Time Authority)
+
 - **ApplyScheduler 时间权威明确**: 完整的时间同步机制实现
   - **时间同步管理器** (`Server/src/input/timeSyncManager.ts`, 537 行):
     - 实现客户端-服务器时间偏移计算
@@ -57,6 +58,7 @@
       - 延迟补偿配置开关测试
 
 ### Added (P0 WebSocket Input Event Handler)
+
 - **WebSocket 输入事件处理器完整实现**: `Server/src/ws/handlers/inputEvent.ts`
   - **输入事件消息格式定义** (4.2.1):
     - 增强 `InputEventMessage` 接口，添加 `eventId` 和 `clientSendTs` 字段
@@ -106,6 +108,7 @@
     - 代码覆盖率：91.16% 语句，83.69% 分支
 
 ### Added (P2 Integration Tests)
+
 - **集成测试和性能测试完善**: 全面的测试覆盖
   - **Xbox Channel 集成测试**: `Server/tests/integration/xboxChannel.test.ts` (716行)
     - 游戏手柄按钮输入流测试（单键、多键、释放、序列、所有Xbox按钮）
@@ -158,6 +161,7 @@
     - 包含测试类别、运行命令、性能基线、结果解读指南
 
 ### Added (P2 Metrics Observability)
+
 - **指标模块重构与实现**: 完整的可观测性指标系统
   - **MetricsCollector 迁移**: 将 `Server/src/utils/metrics.ts` (872行) 重构为专门的指标模块
     - 创建 `Server/src/metrics/collector.ts` - 核心指标收集器实现 (1018行)
@@ -192,6 +196,7 @@
     - 完整的 API 参考文档
 
 ### Changed (P1 Module Boundary Refactoring)
+
 - **模块边界重构**: 解耦输入系统模块，提取统一接口层
   - 创建 `Server/src/interfaces/` 目录作为接口定义中心
   - 提取 `IInputAdapter` 接口，支持键盘、鼠标、手柄、摇杆适配器
@@ -222,6 +227,7 @@
   - 48 个 SafetyController 单元测试全部通过
 
 ### Added (P0 Server Build Config)
+
 - **服务端构建配置**: 完整的构建和部署配置
   - 创建 `Dockerfile` 支持多阶段构建，支持 Linux x64/ARM64 多平台
   - 创建 `.dockerignore` 优化 Docker 镜像大小
@@ -235,6 +241,7 @@
   - 更新 `BUILDING.md` 和 `BUILD_CONFIG.md` 完整构建文档
 
 ### Added (P0 Android Build Config)
+
 - **Android 客户端构建配置**: 完善的 CI/CD 和自动化构建
   - 创建 `local.properties.template` 本地 SDK 路径配置模板
   - 创建 `signing.properties.template` 签名配置模板
@@ -256,6 +263,7 @@
   - 更新 `AndroidClient/BUILD_CONFIG.md` 添加 CI/CD 配置说明
 
 ### Changed
+
 - **注释英文化**: 将所有中文注释翻译为英文
   - Batch 1: 翻译 input adapters 和 executors 模块中的中文注释
   - Batch 2: 翻译 input 和 utils 模块中的中文注释
@@ -265,6 +273,7 @@
   - 共更新 32 个文件，涉及输入适配器、执行器、工具函数等
 
 ### Fixed (P1 Functional Defects)
+
 - **P1 功能缺陷修复**: 完善功能缺陷修复
   - **WebSocket 连接数限制**: 实现全局连接数限制
     - 默认最大连接数 100，可通过环境变量配置
@@ -286,7 +295,8 @@
     - 完善的边界条件和错误处理测试用例
 
 ### Fixed (Security)
-- **P0 Security Fixes**: 修复关键安全漏洞
+
+- **P0 Security Fixes**: 修复关键安全漏洞（推送时间：2026-04-09）
   - **Auth Module**: 新增完整的WebSocket连接认证系统
     - Token-based 认证机制
     - IP 白名单/黑名单支持
@@ -307,12 +317,14 @@
     - 所有配置变更必须通过本地配置文件进行
 
 ### Security Impact
+
 - 防止未授权WebSocket连接
 - 防止DoS攻击（多层限流保护）
 - 防止敏感配置信息泄露
 - 防止远程配置篡改
 
 ### Test Coverage
+
 - Auth模块: 27个测试用例，覆盖率89.74%
 - RateLimiter模块: 59个测试用例，覆盖率83.41%
 - Config Handler: 23个测试用例，覆盖率91.66%
@@ -320,6 +332,7 @@
 ## [2026-04-05] docs: 添加构建文档和多客户端架构设计 (task-P2-build-docs, task-P2-optimization-enhancement)
 
 ### Changes
+
 - **BUILDING.md**: 新建项目构建指南文档
   - 项目结构说明
   - 服务端和客户端系统要求
@@ -348,6 +361,7 @@
 - **TASKS.md**: 更新任务文档，标记 P2 文档任务为已完成
 
 ### Impact
+
 - 构建文档完善，降低新开发者上手难度
 - CI/CD 配置文档为自动化构建提供指导
 - 多客户端架构设计为后续功能开发提供技术蓝图
@@ -356,6 +370,7 @@
 ## [2026-04-05] test: 补充 WebSocket Handlers 测试 (task-P2-integration-tests)
 
 ### Changes
+
 - **Server/tests/ws/handlers/config.test.ts**: 新建 Config Handler 单元测试（多个测试用例）
   - handleConfigGet 测试：配置获取、敏感信息过滤
   - handleConfigSet 测试：权限验证、配置修改
@@ -378,6 +393,7 @@
   - 性能测试：高频状态更新处理
 
 ### Impact
+
 - WebSocket Handlers 测试覆盖率提升
 - 补充了 config 和 state 处理器的完整测试场景
 - 测试用例覆盖正常流程、边界条件、错误处理
@@ -386,6 +402,7 @@
 ## [2026-04-03] refactor: 优化历史记录内存管理 (task-P2-optimize-history-memory)
 
 ### Changes
+
 - **Server/src/input/stateStore.ts**: 使用环形缓冲区优化历史记录内存管理
   - 添加环形缓冲区索引字段：historyHead、historyTail、historyFull
   - 预分配历史记录数组，避免动态扩容
@@ -395,6 +412,7 @@
   - 修改 clear 方法，重置环形缓冲区索引
 
 ### Impact
+
 - 高频输入场景下内存占用显著降低
 - 避免了 push 和 shift 操作带来的内存分配和释放开销
 - 减少 GC 压力，提升系统性能
@@ -403,12 +421,14 @@
 ## [2026-04-05] fix: 完善键盘执行器错误传播机制 (task-P1-improve-error-handling)
 
 ### Changes
+
 - **Server/src/input/keyboard.ts**: 在 updateKeyboardState 方法中添加错误抛出
   - 释放按键失败时抛出 `Failed to release keys` 错误
   - 按下按键失败时抛出 `Failed to press keys` 错误
   - 错误消息包含具体的按键列表信息
 
 ### Impact
+
 - 键盘执行器错误现在能够传播到调用者
 - 调用者可以感知操作失败，避免状态不一致
 - 错误日志包含详细的按键信息，便于调试
@@ -416,9 +436,10 @@
 ## [2026-02-21] feat: 悬浮球添加连接状态指示器
 
 ### Changes
+
 - **RuntimeEvents.java**: 添加 `ACTION_WS_CONNECTING` 连接中状态广播常量
 - **WebSocketClient.java**: 在 connect() 方法开始处发送连接中广播
-- **FloatWindowManager.java**: 
+- **FloatWindowManager.java**:
   - 添加 `ConnectionState` 枚举（DISCONNECTED, CONNECTING, CONNECTED, ERROR）
   - 添加连接状态广播接收器，监听所有连接状态变化
   - 实现 `updateConnectionState()` 方法，根据状态更新悬浮球背景色
@@ -430,6 +451,7 @@
   - `circle_button_error.xml` (红色) - 连接失败
 
 ### Impact
+
 - 用户现在可以通过悬浮球的背景颜色直观看到连接状态
 - 灰色 = 未连接
 - 黄色 = 连接中
@@ -440,15 +462,18 @@
 ## [2026-02-20] docs: 更新 Appium MCP 测试任务记录
 
 ### Changes
+
 - TASKS_CURRENT.md: 更新为 Appium MCP 工具测试 Android 端基础操作任务
 
 ### Impact
+
 - 记录 Appium MCP 测试任务背景、目标和方案
 - 为后续测试执行提供文档参考
 
 ## [2026-02-20] test: 为 loadConfig 添加单元测试（24 个测试用例）
 
 ### Changes
+
 - Server/tests/cases/loadConfig.test.ts: 新建 loadConfig 单元测试（24 个测试用例）
   - defaultConfig 默认配置测试（1 个测试）
   - loadConfigFromFile() 从文件加载配置测试（10 个测试）
@@ -457,6 +482,7 @@
   - 边界条件测试（4 个测试）
 
 ### Impact
+
 - config 模块覆盖率从 73.91% 提升到 90%+
 - loadConfig.ts 覆盖率从 52% 提升到 76%
 - 总测试用例数增加到 401 个（391 个通过，7 个跳过）
@@ -465,6 +491,7 @@
 ## [2026-02-20] test: 为 validateConfig 添加单元测试（54 个测试用例）
 
 ### Changes
+
 - Server/tests/cases/validateConfig.test.ts: 新建 validateConfig 单元测试（54 个测试用例）
   - inputUpdateInterval 验证测试（5 个测试）
   - heartbeatInterval 验证测试（5 个测试）
@@ -480,6 +507,7 @@
 - Server/src/config/validate.ts: 添加 null/undefined 处理
 
 ### Impact
+
 - validateConfig 覆盖率从 5.55% 提升到 100%
 - config 模块覆盖率从 34.09% 提升到 100%
 - 总测试用例数增加到 377 个（369 个通过，7 个跳过）
@@ -488,6 +516,7 @@
 ## [2026-02-20] test: 为 ShadowModeManager 添加单元测试
 
 ### Changes
+
 - Server/tests/cases/shadowModeManager.test.ts: 新建 ShadowModeManager 单元测试（26 个测试用例）
   - 构造函数和初始化测试
   - applyState() 影子模式双写测试
@@ -500,6 +529,7 @@
   - 边界条件测试
 
 ### Impact
+
 - ShadowModeManager 覆盖率从 1.02% 提升到 95%+
 - 总测试用例数增加到 323 个（315 个通过，7 个跳过）
 - 测试套件总数 13 个（12 个通过）
@@ -507,6 +537,7 @@
 ## [2026-02-20] test: 为 InputRouter 和 latencyProbe 添加单元测试
 
 ### Changes
+
 - Server/tests/cases/inputRouter.test.ts: 新建 InputRouter 单元测试（30 个测试用例）
   - registerHost() 注册宿主测试
   - getHost() 获取宿主测试
@@ -528,6 +559,7 @@
 - Server/src/ws/handlers/latencyProbe.ts: 导出 getRttStats() 和 resetRttStats() 函数
 
 ### Impact
+
 - InputRouter 覆盖率提升到 93.65%
 - latencyProbe 覆盖率提升到 97.29%
 - 总测试用例数增加到 297 个（289 个通过，7 个跳过）
@@ -536,6 +568,7 @@
 ## [2026-02-20] fix: 修复 SafetyController.recordValidState 调用参数错误
 
 ### Changes
+
 - Server/src/input/executor.ts: 更新 recordValidState 函数签名
   - 添加 tickTime 参数
   - 传递给 SafetyController.recordValidState(state, tickTime)
@@ -546,6 +579,7 @@
 - TASKS_CURRENT.md: 记录测试覆盖率提升任务执行过程
 
 ### Impact
+
 - 修复 TypeScript 编译错误
 - 所有 10 个测试套件通过（247 个测试用例）
 - 核心模块覆盖率保持高水平（>85%）
@@ -553,6 +587,7 @@
 ## [2026-02-20] feat: 明确 ApplyScheduler 时间权威 - SafetyController 重构
 
 ### Changes
+
 - Server/src/input/applyScheduler.ts: 明确 ApplyScheduler 为唯一时间权威
   - 添加类注释说明时间权威性
   - 每 tick 调用 safetyController.updateTickTime(tickTime)
@@ -568,6 +603,7 @@
 - TASKS_CURRENT.md: 记录 ApplyScheduler 时间权威明确任务执行过程
 
 ### Impact
+
 - 时间一致性保证：所有时间戳都来自 ApplyScheduler
 - 消除时间不一致风险：SafetyController 不再使用独立的 Date.now()
 - 提高代码质量：明确的时间权威性设计
@@ -576,6 +612,7 @@
 ## [2026-02-20] feat: 完善 WebSocket 状态处理器 - 序列号验证、错误处理、日志增强
 
 ### Changes
+
 - Server/src/ws/handlers/state.ts: 增强 WebSocket 状态处理器功能
   - 集成序列号单调性验证（自动调用 validator.validate()）
   - 添加序列号错误检测和自动重置验证器
@@ -586,6 +623,7 @@
   - 重构 handleState() 函数，统一错误处理路径
 
 ### Impact
+
 - 序列号验证自动集成，支持重传场景处理
 - 错误码统一，便于客户端解析和处理
 - 错误日志清晰可读，带 emoji 标记和统一前缀
@@ -595,6 +633,7 @@
 ## [2026-02-20] feat: 完善键盘映射规则 - 边界测试、日志系统、文档
 
 ### Changes
+
 - Server/src/input/keyboard.ts: 增强日志系统和统计功能
   - 添加 LOG_CONFIG 配置（enabled/verbose/statsInterval）
   - 添加 keyboardStats 统计系统（presses/releases/redundant/resets/errors）
@@ -626,6 +665,7 @@
 - TASKS_CURRENT.md: 记录键盘映射规则完善任务执行过程
 
 ### Impact
+
 - 键盘测试覆盖率提升到 100%（27 个测试用例）
 - 所有边界条件测试通过（12 个边界测试）
 - 日志清晰可读，支持分级输出和统计监控
@@ -635,6 +675,7 @@
 ## [2026-02-20] refactor: 完善 InputValidator 验证器功能
 
 ### Changes
+
 - Server/src/input/validator.ts: 重构验证器，添加完整的验证规则
   - 添加 VALID_KEY_CODES 和 VALID_GAMEPAD_BUTTONS 常量
   - 改进 validateKeyboardState 支持 ValidationResult 返回类型
@@ -647,6 +688,7 @@
   - 添加 warnings 支持，提供验证警告信息
 
 ### Impact
+
 - 验证器测试覆盖率提升到 70%
 - 60 个验证器测试全部通过
 - 支持更详细的错误报告和警告信息
@@ -655,6 +697,7 @@
 ## [2026-02-19] test: 为 Android 客户端添加全面的单元测试和集成测试
 
 ### Changes
+
 - AndroidClient/app/src/test/java/com/linecat/controlx/model/InputStateTest.java: 新建输入状态模型测试（24 个用例）
 - AndroidClient/app/src/test/java/com/linecat/controlx/model/RawInputTest.java: 新建原始输入模型测试（22 个用例）
 - AndroidClient/app/src/test/java/com/linecat/controlx/input/ScriptProfileTest.java: 新建脚本配置测试（23 个用例）
@@ -667,6 +710,7 @@
 - TASKS_CURRENT.md: 记录 Android 测试实施详情
 
 ### Impact
+
 - Android 客户端测试覆盖率达到显著提升
 - 新增 7 个测试文件，147 个测试用例
 - 覆盖模型层、输入层、Profile 管理等核心模块
@@ -676,6 +720,7 @@
 ## [2026-02-19] fix: 修复 E2E 测试无法结束的问题
 
 ### Changes
+
 - appium-e2e/tests/run-e2e-pipeline.js: 修复 WebSocket 连接未关闭问题，添加进程超时强制退出机制
 - appium-e2e/tests/simple-e2e-test.js: 添加进程等待退出机制和异常处理器
 - appium-e2e/tests/run-e2e-pipeline.js: 添加 waitForProcessExit 辅助函数，确保子进程完全终止
@@ -683,6 +728,7 @@
 - appium-e2e/tests/run-e2e-pipeline.js: 添加 SIGINT/SIGTERM 信号处理器，实现优雅退出
 
 ### Impact
+
 - 解决 E2E 测试完成后进程无法退出的问题
 - 改进资源清理逻辑，防止资源泄漏
 - 提高测试脚本的健壮性和可靠性
@@ -690,6 +736,7 @@
 ## [2026-02-19] feat: 创建跨平台 Host 空类（阶段 4-空类）
 
 ### Changes
+
 - Server/src/input/hosts/LinuxKeyboardHost.ts: 新建 Linux 键盘宿主空类（待制作，uinput 技术方案）
 - Server/src/input/hosts/LinuxGamepadHost.ts: 新建 Linux 游戏手柄宿主空类（待制作，uinput 技术方案）
 - Server/src/input/hosts/MacOSKeyboardHost.ts: 新建 MacOS 键盘宿主空类（待制作，Quartz Event Services 技术方案）
@@ -698,6 +745,7 @@
 - TASKS_CURRENT.md: 记录阶段 4 空类创建详情和待办清单
 
 ### Impact
+
 - 为跨平台支持奠定代码基础
 - 所有空类继承自 InputHost 抽象基类，保持架构一致性
 - 详细的 TODO 注释和技术选型说明，便于后续开发
@@ -706,12 +754,14 @@
 ## [2026-02-19] feat: 实现 Router-only 流量切换（阶段 3）
 
 ### Changes
+
 - Server/src/input/RouterOnlyExecutor.ts: 新建 Router-only 执行器（260 行），使用适配器模式将 InputRouter 适配为 InputExecutorManager 接口
 - Server/src/input/applyScheduler.ts: 修改 applyCurrentState 方法，添加 Router-only 模式支持（优先级：Router-only > Shadow > Executor）
 - Server/src/app.ts: 添加 initRouterOnlyMode 调用，启用 Router-only 模式初始化
 - TASKS_CURRENT.md: 记录阶段 3 实施细节和配置说明
 
 ### Impact
+
 - 实现主流量切换到 InputRouter，通过环境变量 ROUTER_ONLY=true 控制
 - 适配器模式保持向后兼容，无需修改现有调用代码
 - 自动降级保护：连续 3 次失败自动回退到 Executor 模式
@@ -724,6 +774,7 @@
 ## [2026-02-19] feat: 实现影子模式双写验证机制（阶段 2）
 
 ### Changes
+
 - Server/src/input/shadow/ShadowModeManager.ts: 新建影子模式管理器（501 行），实现双写调度、日志记录、一致性比对、自动降级
 - Server/src/input/shadow/index.ts: shadow 模块统一导出
 - Server/src/input/ShadowModeExecutor.ts: 新建影子模式执行器包装器，使用装饰器模式包装 InputExecutorManager
@@ -734,6 +785,7 @@
 - TASKS_CURRENT.md: 记录阶段 2 实施细节和配置说明
 
 ### Impact
+
 - 实现新旧链路双写机制，同时调用旧 Executor 和新 Router，验证行为一致性
 - 提供环境变量控制：SHADOW_MODE=true 启用，SHADOW_MODE_VERBOSE=true 详细日志
 - 一致性检查系统：比对执行状态、耗时差异（阈值 50ms）、错误信息
@@ -744,6 +796,7 @@
 ## [2026-02-19] feat: 实现统一输入路由抽象架构（阶段 1）
 
 ### Changes
+
 - Server/src/input/hosts/types.ts: 新建 InputDeviceType 枚举、HostStatus 接口、平台检测工具函数
 - Server/src/input/hosts/InputHost.ts: 新建输入宿主抽象基类，定义统一 lifecycle 接口
 - Server/src/input/hosts/WindowsKeyboardHost.ts: 新建 Windows 键盘宿主实现，使用 node-key-sender
@@ -754,6 +807,7 @@
 - TASKS_CURRENT.md: 记录架构重构方案和执行进度
 
 ### Impact
+
 - 引入策略模式 + 门面模式，解决路由逻辑分散、状态分裂、平台耦合问题
 - 为跨平台支持（Linux/Mac）奠定架构基础
 - 新架构编译通过，现有代码不受影响（阶段 1 不破坏现有代码）
@@ -762,9 +816,11 @@
 ## [2026-02-19] fix: 修复验证器集成中的安全清零触发 bug
 
 ### Changes
+
 - Server/src/ws/handlers/state.ts: 添加验证统计功能（updateValidationStats、getValidationStats），修复验证失败时安全清零触发代码在 return 之后无法执行的问题
 
 ### Impact
+
 - 验证失败时现在会正确触发安全清零，确保系统回到安全状态
 - 新增验证统计功能，每 100 次验证输出一次统计报告
 - 统计信息包括总验证次数、通过率、错误分布等指标
@@ -772,12 +828,14 @@
 ## [2026-02-19] test: 添加游戏手柄 ViGEmBus 测试跳过机制
 
 ### Changes
+
 - Server/tests/common/vigemDetector.ts: 新建 ViGEmBus 检测工具，提供平台检测、可用性检测、跳过原因说明
 - Server/tests/cases/gamepad.test.ts: 新建游戏手柄集成测试，使用 test.skip() 在非 Windows 环境下自动跳过相关测试
 - TASKS.md: 更新任务 1.6 为完成状态
 - TASKS_CURRENT.md: 记录手柄测试跳过机制实现详情和测试结果
 
 ### Impact
+
 - 在 Linux/macOS 等非 Windows 环境下运行测试时，手柄相关测试会自动跳过并显示清晰原因
 - 避免了在没有 ViGEmBus 驱动的环境下测试失败
 - 测试报告清晰显示 7 个跳过、10 个通过
@@ -785,6 +843,7 @@
 ## [2026-02-19] feat: 实现游戏手柄 ViGEmBus 检测和降级方案
 
 ### Changes
+
 - Server/src/input/adapters/GamepadXInputAdapter.ts: 重构文件，移除循环导入，实现 ViGEmBus 动态加载、检测、连接管理和 XInput 状态映射
 - Server/src/input/adapters/GamepadAdapter.ts: 新建文件，封装 GamepadXInputAdapter，实现初始化检测和优雅降级
 - Server/src/input/gamepad.ts: 集成 GamepadAdapter，实现 ViGEmBus 不可用时跳过游戏手柄执行
@@ -794,6 +853,7 @@
 - TASKS_CURRENT.md: 新建文件，记录当前任务执行详情
 
 ### Impact
+
 - 游戏手柄功能现在支持 ViGEmBus 检测和优雅降级
 - ViGEmBus 不可用时，系统会提示用户安装并自动降级到键盘映射
 - 代码编译通过，为 Windows 环境下的实际测试做好准备
@@ -801,6 +861,7 @@
 ## [2026-02-19] test: 修复服务端单元测试和集成测试
 
 ### Changes
+
 - Server/src/input/heartbeat.ts: 修改 checkTimeout 方法，每次超时都触发回调，每 5 次输出警告日志
 - Server/src/ws/handlers/latencyProbe.ts: 修复 TypeScript 类型错误，使用空值合并操作符处理可选的 timestamp
 - Server/src/ws/handlers/ping.ts: 移除心跳模块初始化检查，允许在没有初始化时发送 pong 响应
@@ -810,6 +871,7 @@
 - Server/jest.config.js: 配置跳过复杂的集成测试（websocket-messages、executors、e2e-integration）
 
 ### Impact
+
 - 服务端测试通过率从 42% 提升到 100%（9 个测试套件，204 个测试全部通过）
 - 修复了 TypeScript 编译错误，确保代码质量
 - 改进了测试稳定性和执行速度
