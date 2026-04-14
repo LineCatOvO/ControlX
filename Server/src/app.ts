@@ -81,7 +81,7 @@ console.log("  ControlX Server");
 console.log("=".repeat(60));
 console.log(`  Mode:         ${dryRunMode ? "DRY RUN" : isTestMode ? "TEST" : "PRODUCTION"}`);
 console.log(`  WebSocket:    ws://localhost:${process.env.WS_PORT || 3000}`);
-console.log(`  Web Monitor:  http://localhost:${process.env.WEB_PORT || 8080}`);
+console.log(`  Web Monitor:  http://localhost:${process.env.WEB_PORT || 28080}`);
 console.log("=".repeat(60));
 console.log("  Features:");
 console.log("    • Real-time input monitoring via web dashboard");

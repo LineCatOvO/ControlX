@@ -20,14 +20,14 @@ scrape_configs:
   # ControlX Server 指标抓取
   - job_name: 'controlx-server'
     static_configs:
-      - targets: ['localhost:8080']  # 健康检查服务器端口
+      - targets: ['localhost:28080']  # 健康检查服务器端口
     metrics_path: '/metrics/prometheus'  # Prometheus 格式端点
     scheme: http
 
   # 可选：抓取 Node.js 进程指标
   - job_name: 'controlx-server-json'
     static_configs:
-      - targets: ['localhost:8080']
+      - targets: ['localhost:28080']
     metrics_path: '/metrics'  # JSON 格式端点（仅供参考）
     scheme: http
 

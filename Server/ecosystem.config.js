@@ -25,12 +25,12 @@ module.exports = {
             env: {
                 NODE_ENV: 'development',
                 WS_PORT: 3000,
-                WEB_PORT: 8080,
+                WEB_PORT: 28080,
             },
             env_production: {
                 NODE_ENV: 'production',
                 WS_PORT: 3000,
-                WEB_PORT: 8080,
+                WEB_PORT: 28080,
             },
             env_test: {
                 NODE_ENV: 'test',
@@ -107,7 +107,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'development',
                 WS_PORT: 3000,
-                WEB_PORT: 8080,
+                WEB_PORT: 28080,
             },
             watch: true,
             ignore_watch: [

@@ -167,14 +167,14 @@ start_docker() {
     docker run -d \
         --name controlx-server \
         -p 3000:3000 \
-        -p 8080:8080 \
+        -p 28080:28080 \
         -e NODE_ENV=production \
         --restart unless-stopped \
         controlx-server:latest
 
     print_success "Docker 容器已启动"
     print_info "WebSocket: ws://localhost:3000"
-    print_info "Web Monitor: http://localhost:8080"
+    print_info "Web Monitor: http://localhost:28080"
     print_info "使用 'docker logs controlx-server' 查看日志"
 }
 

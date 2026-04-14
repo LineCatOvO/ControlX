@@ -54,7 +54,7 @@ FROM node:20-alpine AS runner
 # 设置环境变量
 ENV NODE_ENV=production
 ENV WS_PORT=3000
-ENV WEB_PORT=8080
+ENV WEB_PORT=28080
 
 # 安装必要的系统依赖
 RUN apk add --no-cache \
@@ -86,7 +86,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD node -e "require('http').get('http://localhost:' + (process.env.WEB_PORT || 8080) + '/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))" || exit 1
 
 # 暴露端口
-EXPOSE 3000 8080
+EXPOSE 3000 28080
 
 # 启动命令
 CMD ["node", "dist/app.js"]

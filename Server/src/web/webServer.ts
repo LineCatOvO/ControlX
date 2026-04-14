@@ -15,7 +15,7 @@ import {
 const WebSocket = require('ws');
 
 // Configuration
-const WEB_PORT = parseInt(process.env.WEB_PORT || '8080', 10);
+const WEB_PORT = parseInt(process.env.WEB_PORT || '28080', 10);
 const STATIC_DIR = join(__dirname, 'static');
 
 // MIME type mapping

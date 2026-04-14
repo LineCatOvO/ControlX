@@ -151,7 +151,7 @@ docker buildx build --platform linux/amd64,linux/arm64 -t controlx-server:latest
 ### 端口映射
 
 - `3000` - WebSocket 服务
-- `8080` - Web 监控面板
+- `28080` - Web 监控面板
 
 ---
 
@@ -295,7 +295,7 @@ pnpm run start:pm2
 ```bash
 cd Server
 docker build -t controlx-server:latest .
-docker run -d -p 3000:3000 -p 8080:8080 controlx-server:latest
+docker run -d -p 3000:3000 -p 28080:28080 controlx-server:latest
 ```
 
 ---

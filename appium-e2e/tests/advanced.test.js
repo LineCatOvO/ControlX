@@ -29,7 +29,7 @@ test.describe("Advanced Integration Tests", () => {
 
         // 3. Configure server connection
         await device.typeText("et_address", "localhost");
-        await device.typeText("et_port", "8080");
+        await device.typeText("et_port", "28080");
 
         // 4. Connect to server
         await device.tapElement("btn_start_connect");
@@ -128,7 +128,7 @@ test.describe("Advanced Integration Tests", () => {
 
         // Test recovery with valid address
         await device.typeText("et_address", "localhost");
-        await device.typeText("et_port", "8080");
+        await device.typeText("et_port", "28080");
 
         await device.tapElement("btn_start_connect");
         await device.sleep(3000);

@@ -43,7 +43,7 @@ public class RuntimeConfig {
             return DatabaseHelper.getWebSocketUrl(connectionInfo);
         } else {
             // 数据库中没有连接信息，返回默认URL
-            return "ws://localhost:8080/ws/input";
+            return "ws://localhost:28080/ws/input";
         }
     }
     
@@ -54,7 +54,7 @@ public class RuntimeConfig {
     public void setWebSocketUrl(String url) {
         // 解析URL，获取地址和端口
         String address = "localhost";
-        int port = 8080;
+        int port = 28080;
         boolean useTls = url.startsWith("wss://");
         
         // 解析地址和端口

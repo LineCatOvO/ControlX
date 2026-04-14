@@ -18,7 +18,7 @@ ControlX Server 通过健康检查服务器提供以下端点：
 | `/ready` | JSON | 就绪探针 |
 | `/stats` | JSON | 详细统计信息 |
 
-**默认端口**: 8080（可通过环境变量 WEB_PORT 配置）
+**默认端口**: 28080（可通过环境变量 WEB_PORT 配置）
 
 ---
 
@@ -58,7 +58,7 @@ cp Server/monitoring/prometheus.yml /etc/prometheus/prometheus.yml
 scrape_configs:
   - job_name: 'controlx-server'
     static_configs:
-      - targets: ['<your-server-ip>:8080']
+      - targets: ['<your-server-ip>:28080']
 ```
 
 如果需要告警规则：
@@ -270,14 +270,14 @@ spec:
 livenessProbe:
   httpGet:
     path: /health
-    port: 8080
+    port: 28080
   initialDelaySeconds: 30
   periodSeconds: 10
 
 readinessProbe:
   httpGet:
     path: /ready
-    port: 8080
+    port: 28080
   initialDelaySeconds: 5
   periodSeconds: 5
 ```
@@ -309,7 +309,7 @@ readinessProbe:
 ### Prometheus 无法抓取指标
 1. 检查健康检查服务器是否运行
 2. 检查防火墙规则
-3. 验证端点可访问性：`curl http://localhost:8080/metrics/prometheus`
+3. 验证端点可访问性：`curl http://localhost:28080/metrics/prometheus`
 
 ### Grafana 无法显示数据
 1. 检查 Prometheus 数据源配置

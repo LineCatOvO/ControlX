@@ -72,7 +72,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private void insertDefaultConnectionInfo(SQLiteDatabase db) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_ADDRESS, "localhost");
-        values.put(COLUMN_PORT, 8080);
+        values.put(COLUMN_PORT, 28080);
         values.put(COLUMN_USE_TLS, 0);
         values.put(COLUMN_IS_DEFAULT, 1);
         values.put(COLUMN_CREATE_TIME, System.currentTimeMillis());

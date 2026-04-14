@@ -148,7 +148,7 @@ test.describe("ControlX E2E Tests", () => {
 
         // Set server address (using localhost for testing)
         await device.typeText("et_address", "localhost");
-        await device.typeText("et_port", "8080");
+        await device.typeText("et_port", "28080");
 
         // Connect to server
         await device.tapElement("btn_start_connect");

@@ -362,7 +362,7 @@ public class FloatWindowManager {
             cbUseTls.setChecked(connectionInfo.isUseTls());
         } else {
             etAddress.setText("localhost");
-            etPort.setText("8080");
+            etPort.setText("28080");
             cbUseTls.setChecked(false);
         }
     }
@@ -386,11 +386,11 @@ public class FloatWindowManager {
             port = Integer.parseInt(portStr);
             if (port < 1 || port > 65535) {
                 Log.w(TAG, "Invalid port, using default");
-                port = 8080;
+                port = 28080;
             }
         } catch (NumberFormatException e) {
             Log.w(TAG, "Invalid port format, using default");
-            port = 8080;
+            port = 28080;
         }
 
         ConnectionInfo connectionInfo = new ConnectionInfo(address, port);

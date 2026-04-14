@@ -16,7 +16,7 @@
  * ```typescript
  * import { createHealthServer } from './health/healthCheck';
  * 
- * const healthServer = createHealthServer(8080);
+ * const healthServer = createHealthServer(28080);
  * healthServer.start();
  * ```
  *
@@ -402,7 +402,7 @@ export function createHealthServer(config: HealthCheckConfig): {
  * Start health check server (convenience function)
  * @param port Port number
  */
-export function startHealthServer(port: number = 8080): Promise<void> {
+export function startHealthServer(port: number = 28080): Promise<void> {
     const healthServer = createHealthServer({ port });
     return healthServer.start();
 }

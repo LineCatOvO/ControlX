@@ -270,7 +270,7 @@ pm2 delete controlx-server
 ```bash
 cd Server
 docker build -t controlx-server:latest .
-docker run -d -p 3000:3000 -p 8080:8080 --name controlx-server controlx-server:latest
+docker run -d -p 3000:3000 -p 28080:28080 --name controlx-server controlx-server:latest
 ```
 
 ### 多平台构建
@@ -293,14 +293,14 @@ services:
     container_name: controlx-server
     ports:
       - "3000:3000"
-      - "8080:8080"
+      - "28080:28080"
     environment:
       - NODE_ENV=production
       - WS_PORT=3000
-      - WEB_PORT=8080
+      - WEB_PORT=28080
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health')"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:28080/health')"]
       interval: 30s
       timeout: 3s
       retries: 3
