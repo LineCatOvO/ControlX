@@ -229,5 +229,65 @@ function getStatusPayload(): object {
     };
 }
 
+export function startWebMonitorServer(port: number = 28080): Promise<void> {
+    return new Promise((resolve, reject) => {
+        if (httpServer) {
+            console.warn('Web monitor server already running');
+            resolve();
+            return;
+        }
+
+        initializeHttpMetrics();
+
+        httpServer = createServer((req, res) => {
+            requestMetricsMiddleware(req, res, () => {
+                handleHttpRequest(req, res);
+            });
+        });
+
+        wsServer = new WebSocket.WebSocketServer({ server: httpServer });
+        wsServer.on('connection', (ws: any) => {
+            handleWsConnection(ws);
+        });
+
+        httpServer.on('error', (error: Error) => {
+            console.error('Web monitor server error:', error);
+            reject(error);
+        });
+
+        httpServer.listen(port, () => {
+            console.log(`🌐 Web Monitor Server started`);
+            console.log(`📊 Dashboard: http://localhost:${port}`);
+            console.log(`🔌 WebSocket: ws://localhost:${port}/ws`);
+            statusInterval = setInterval(broadcastStatus, 100);
+            resolve();
+        });
+    });
+}
+
+export function stopWebMonitorServer(): Promise<void> {
+    return new Promise((resolve) => {
+        if (statusInterval) {
+            clearInterval(statusInterval);
+            statusInterval = null;
+        }
+
+        if (wsServer) {
+            wsServer.close();
+            wsServer = null;
+        }
+
+        if (httpServer) {
+            httpServer.close(() => {
+                console.log('Web Monitor Server stopped');
+                httpServer = null;
+                resolve();
+            });
+        } else {
+            resolve();
+        }
+    });
+}
+
 // Export port information
 export { WEB_PORT };

@@ -7,7 +7,7 @@ import { initRouterOnlyMode } from "./input/RouterOnlyExecutor";
 import { StateStore } from "./input/stateStore";
 import { ApplyScheduler } from "./input/applyScheduler";
 import { HeartbeatModule } from "./input/heartbeat";
-import { startWebMonitor } from "./web/webServer";
+import { startWebMonitorServer, stopWebMonitorServer } from "./web/webServer";
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -73,7 +73,14 @@ applyScheduler.start(Date.now());
 (global as any).stateStore = stateStore;
 
 // Start web monitor server
-startWebMonitor();
+const webPort = parseInt(process.env.WEB_PORT || '28080', 10);
+startWebMonitorServer(webPort)
+    .then(() => {
+        console.log(`Web monitor panel available at http://localhost:${webPort}`);
+    })
+    .catch((error) => {
+        console.error("Failed to start web monitor server:", error);
+    });
 
 // Print startup info
 console.log("=".repeat(60));
@@ -119,7 +126,9 @@ try {
 
         applyScheduler.stop();
         heartbeatModule.stop();
-        process.exit(0);
+        stopWebMonitorServer().then(() => {
+            process.exit(0);
+        });
     });
 } catch (error) {
     console.error("Error setting up process handlers:", error);
