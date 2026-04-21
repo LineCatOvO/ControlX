@@ -6,6 +6,7 @@
 /AndroidClient/app/build/
 /AndroidClient/local.properties
 /Server/dist/
+Server/.pnpm-store/
 
 # Environment variables
 .env
