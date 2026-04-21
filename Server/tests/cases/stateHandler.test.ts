@@ -210,7 +210,7 @@ describe("StateHandler Tests", () => {
                 expect(storedState?.gamepad?.has("X")).toBe(false);
             });
 
-            test("should handle joystick values", () => {
+            test("should handle gamepad axes and triggers values", () => {
                 const message: StateMessage = {
                     type: "state",
                     stateId: 1,
@@ -230,8 +230,17 @@ describe("StateHandler Tests", () => {
                 handleState(mockWs, message);
 
                 const storedState = mockStateStore.getLatestState();
-                expect(storedState?.joystick.x).toBe(0.5);
-                expect(storedState?.joystick.y).toBe(-0.5);
+                // Verify gamepadAxes (left and right joysticks)
+                expect(storedState?.gamepadAxes?.LX).toBe(0.5);
+                expect(storedState?.gamepadAxes?.LY).toBe(-0.5);
+                expect(storedState?.gamepadAxes?.RX).toBe(0.3);
+                expect(storedState?.gamepadAxes?.RY).toBe(0.7);
+                // Verify gamepadTriggers
+                expect(storedState?.gamepadTriggers?.LT).toBe(0.8);
+                expect(storedState?.gamepadTriggers?.RT).toBe(0.2);
+                // Verify joystick is for independent device (default values)
+                expect(storedState?.joystick.x).toBe(0);
+                expect(storedState?.joystick.y).toBe(0);
             });
         });
 
