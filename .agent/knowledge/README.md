@@ -1,8 +1,8 @@
 # ControlX 知识库索引
 
 ## 元信息
-- 版本：1.0.0
-- 最后更新：2026-04-21
+- 版本：1.1.0
+- 最后更新：2026-04-29
 - 维护者：Learner
 
 ## 知识库结构
@@ -32,6 +32,13 @@
 | 文件名 | 描述 | 标签 |
 |--------|------|------|
 | gamepad-state-mapping-solution.md | 游戏手柄状态映射完整实现 | gamepad, xinput, state-mapping |
+| web-monitor-implementation.md | Web监控面板实现与Blessed迁移 | web-monitor, websocket, blessed-migration |
+
+### 配置说明 (configs/)
+
+| 文件名 | 描述 | 标签 |
+|--------|------|------|
+| android-rename-config.md | Android应用重命名完整指南 | rename, android, package-refactor |
 
 ### 代码片段 (snippets/)
 
@@ -44,6 +51,8 @@
 | 文件名 | 描述 | 日期 |
 |--------|------|------|
 | 2026-04-21-gamepad-input-state-mapping.md | 游戏手柄输入状态映射原始记录 | 2026-04-21 |
+| 2026-04-29-web-monitor-implementation.md | Web监控面板实现与Blessed迁移原始记录 | 2026-04-29 |
+| 2026-04-29-wmmt-to-controlx-rename.md | WMMT到ControlX项目重命名原始记录 | 2026-04-29 |
 
 ## 知识分级说明
 
@@ -53,6 +62,12 @@
 - **user**：由用户显式提供或确认的最高优先级知识
 
 ## 最近更新
+
+### 2026-04-29
+- 添加Web监控面板实现解决方案
+- 添加Android重命名配置说明
+- 添加Web监控实现原始记录
+- 添加WMMT到ControlX重命名原始记录
 
 ### 2026-04-21
 - 创建知识库目录结构
