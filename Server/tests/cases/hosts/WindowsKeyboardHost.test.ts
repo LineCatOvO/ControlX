@@ -55,11 +55,20 @@ describe('WindowsKeyboardHost', () => {
         });
 
         test('should handle driver load failure gracefully', async () => {
-            // 重新Mock加载Failure
-            jest.doMock('node-key-sender', () => {
-                throw new Error('Module not found');
-            });
+            let shouldThrow = true;
+            const throwingFactory = () => {
+                return function() {
+                    if (shouldThrow) {
+                        throw new Error('Module not found');
+                    }
+                    return { sendKey: jest.fn() };
+                };
+            };
 
+            jest.doMock('node-key-sender', throwingFactory);
+            jest.resetModules();
+
+            const WindowsKeyboardHost = require('../../../src/input/hosts/WindowsKeyboardHost').WindowsKeyboardHost;
             const failedHost = new WindowsKeyboardHost();
             const result = await failedHost.initialize();
 
@@ -68,6 +77,8 @@ describe('WindowsKeyboardHost', () => {
             expect(failedHost.getLastError()).toBeDefined();
 
             failedHost.destroy();
+            shouldThrow = false;
+            jest.unmock('node-key-sender');
         });
 
         test('should return correct status after initialization', async () => {
