@@ -6,6 +6,22 @@ related_files: [Server/Dockerfile, docker-compose.yml]
 tags: [docker, nodejs, multi-stage-build, build-optimization]
 ---
 
+## 知识库索引信息
+
+- **文件来源**: 从 `raw/experiences/2026-05-02-docker-multi-stage-build-001.md` 迁移
+- **迁移日期**: 2026-05-02
+- **迁移任务**: task-P2-002
+
+## 相关知识文件交叉引用
+
+### 设计模式 (patterns/)
+- `sorted/patterns/docker-multi-stage-dev-test-prod.md` - Docker多阶段构建Dev/Test/Prod分离模式
+
+### 配置说明 (configs/)
+- `sorted/configs/docker-entry-scripts-pattern.md` - Docker入口Shell脚本标准化模式
+
+---
+
 ## Problem Description
 Building a Node.js application resulted in large Docker images (over 1GB). Need to optimize image size for faster deployments and better resource utilization.
 

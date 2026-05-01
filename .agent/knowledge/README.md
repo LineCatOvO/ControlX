@@ -51,6 +51,12 @@
 |--------|------|------|
 | agent-task-document-sync.md | 代理任务中的文档与代码同步 | document-sync, task-management, checklist |
 
+### 经验记录 (experiences/)
+
+| 文件名 | 描述 | 日期 | 标签 |
+|--------|------|------|------|
+| 2026-05-02-docker-multi-stage-build-001.md | Docker multi-stage build 优化经验 | 2026-05-02 | docker, nodejs, multi-stage-build |
+
 ### 代码片段 (snippets/)
 
 | 文件名 | 描述 | 标签 |
