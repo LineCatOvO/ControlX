@@ -1,0 +1,106 @@
+# ControlX Docker Compose Configuration
+# 支持 dev / test / prod 三种 profile
+#
+# 使用方式:
+#   开发模式:  docker compose --profile dev up
+#   测试模式:  docker compose --profile test run --rm controlx-test
+#   生产模式:  docker compose --profile prod up -d
+#
+# 端口可通过环境变量覆盖:
+#   WS_HOST_PORT  - 宿主机 WebSocket 端口映射 (默认: 3000)
+#   WEB_HOST_PORT - 宿主机 Web 监控 HTTP 端口映射 (默认: 28080)
+#   WS_PORT       - 容器内 WebSocket 服务端口 (默认: 3000)
+#   WEB_PORT      - 容器内 Web 监控 HTTP 端口 (默认: 28080)
+
+services:
+  # ==========================================
+  # 开发服务 (profile: dev)
+  # 热重载开发模式，源码卷挂载
+  # ==========================================
+  controlx-dev:
+    profiles: ["dev"]
+    build:
+      context: ./Server
+      dockerfile: Dockerfile
+      target: dev
+    container_name: controlx-dev
+    ports:
+      # WebSocket 服务端口 (容器内默认 3000，宿主机可通过 WS_HOST_PORT 覆盖)
+      - "${WS_HOST_PORT:-3000}:${WS_PORT:-3000}"
+      # Web 监控 HTTP 端口 (容器内默认 28080，宿主机可通过 WEB_HOST_PORT 覆盖)
+      - "${WEB_HOST_PORT:-28080}:${WEB_PORT:-28080}"
+    volumes:
+      # 源码卷挂载，支持热重载
+      - ./Server/src:/app/src
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - WS_PORT=${WS_PORT:-3000}
+      - WEB_PORT=${WEB_PORT:-28080}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + (process.env.WEB_PORT || 28080) + '/health', function(r) { process.exit(r.statusCode === 200 ? 0 : 1); }).on('error', function() { process.exit(1); })\""]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================
+  # 测试服务 (profile: test)
+  # 前台运行测试用例，执行完毕后自动退出并删除容器
+  # ==========================================
+  controlx-test:
+    profiles: ["test"]
+    build:
+      context: ./Server
+      dockerfile: Dockerfile
+      target: test
+    container_name: controlx-test
+    # 测试容器不暴露端口到宿主机
+    environment:
+      - NODE_ENV=test
+      - WS_PORT=${WS_PORT:-3000}
+      - WEB_PORT=${WEB_PORT:-28080}
+    # 测试容器为前台命令容器，不使用 healthcheck（执行完毕即退出）
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================
+  # 生产服务 (profile: prod)
+  # 构建并运行生产镜像
+  # ==========================================
+  controlx-prod:
+    profiles: ["prod"]
+    build:
+      context: ./Server
+      dockerfile: Dockerfile
+      target: runner
+    container_name: controlx-prod
+    ports:
+      # WebSocket 服务端口 (容器内默认 3000，宿主机可通过 WS_HOST_PORT 覆盖)
+      - "${WS_HOST_PORT:-3000}:${WS_PORT:-3000}"
+      # Web 监控 HTTP 端口 (容器内默认 28080，宿主机可通过 WEB_HOST_PORT 覆盖)
+      - "${WEB_HOST_PORT:-28080}:${WEB_PORT:-28080}"
+    environment:
+      - NODE_ENV=production
+      - WS_PORT=${WS_PORT:-3000}
+      - WEB_PORT=${WEB_PORT:-28080}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + (process.env.WEB_PORT || 28080) + '/health', function(r) { process.exit(r.statusCode === 200 ? 0 : 1); }).on('error', function() { process.exit(1); })\""]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
