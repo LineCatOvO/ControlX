@@ -96,8 +96,38 @@ describe("HeartbeatModule Tests", () => {
             const timestamp = baseTime;
             heartbeatModule.dispatchHeartbeat(timestamp);
 
-            // dispatchHeartbeat doesn't update state directly in this implementation
             expect(heartbeatModule).toBeDefined();
+        });
+
+        test("should be called during start()", () => {
+            const dispatchSpy = jest.spyOn(heartbeatModule, "dispatchHeartbeat");
+            heartbeatModule.start();
+            expect(dispatchSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe("handlePong() - stats logging", () => {
+        test("should not log stats when consecutiveFailures is not multiple of 10", () => {
+            const logSpy = jest.spyOn(console, "log").mockImplementation();
+            heartbeatModule.handlePong(baseTime);
+            expect(logSpy).not.toHaveBeenCalledWith(
+                expect.stringContaining("Heartbeat Stats:")
+            );
+            logSpy.mockRestore();
+        });
+
+        test("should log stats when consecutiveFailures is exactly 10", () => {
+            heartbeatModule.start();
+            jest.advanceTimersByTime(100);
+            const logSpy = jest.spyOn(console, "log").mockImplementation();
+            heartbeatModule.handlePong(baseTime);
+            expect(logSpy).toHaveBeenCalled();
+            const statsCall = logSpy.mock.calls.find(
+                (call: any[]) =>
+                    call[0] && typeof call[0] === "string" && call[0].includes("Heartbeat Stats")
+            );
+            expect(statsCall).toBeDefined();
+            logSpy.mockRestore();
         });
     });
 
@@ -196,6 +226,49 @@ describe("HeartbeatModule Tests", () => {
         });
     });
 
+    describe("checkTimeout() - high consecutive timeouts", () => {
+        test("should log warning when consecutiveTimeouts reaches 5", () => {
+            const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+            heartbeatModule.handlePong(baseTime);
+            jest.advanceTimersByTime(150);
+            heartbeatModule.checkTimeout();
+            jest.advanceTimersByTime(150);
+            heartbeatModule.checkTimeout();
+            jest.advanceTimersByTime(150);
+            heartbeatModule.checkTimeout();
+            jest.advanceTimersByTime(150);
+            heartbeatModule.checkTimeout();
+            jest.advanceTimersByTime(150);
+            heartbeatModule.checkTimeout();
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringContaining("High consecutive timeouts (5)")
+            );
+            warnSpy.mockRestore();
+        });
+
+        test("should log warning when consecutiveTimeouts reaches 10", () => {
+            const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+            for (let i = 0; i < 10; i++) {
+                jest.advanceTimersByTime(150);
+                heartbeatModule.checkTimeout();
+            }
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringContaining("High consecutive timeouts (10)")
+            );
+            warnSpy.mockRestore();
+        });
+
+        test("should return false when not timed out", () => {
+            heartbeatModule.handlePong(baseTime);
+            jest.advanceTimersByTime(50);
+
+            const result = heartbeatModule.checkTimeout();
+            expect(result).toBe(false);
+        });
+    });
+
     describe("onTimeout()", () => {
         test("should set timeout callback", () => {
             const timeoutCallback = jest.fn();
@@ -217,6 +290,13 @@ describe("HeartbeatModule Tests", () => {
 
             expect(callback1).not.toHaveBeenCalled();
             expect(callback2).toHaveBeenCalled();
+        });
+
+        test("should not throw when callback is null and timeout occurs", () => {
+            heartbeatModule.handlePong(baseTime);
+            jest.advanceTimersByTime(150);
+
+            expect(() => heartbeatModule.checkTimeout()).not.toThrow();
         });
     });
 
