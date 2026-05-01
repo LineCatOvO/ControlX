@@ -453,14 +453,14 @@ cd AndroidClient
 #### 10.3 异常场景测试 ✅
 - [x] 10.3.1 测试序列号倒退（stateStore.test.ts, validator.test.ts）
 - [x] 10.3.2 测试非法状态（validator.test.ts）
-- [x] 10.3.3 测试网络中断（待实现）
-- [x] 10.3.4 测试应用崩溃（待实现）
+- [x] 10.3.3 测试网络中断（network-disconnection.test.ts, 800行）
+- [x] 10.3.4 测试应用崩溃（app-crash-recovery.test.ts, 546行）
 
 #### 10.4 性能测试 ✅
 - [x] 10.4.1 测试 125Hz 应用频率（applyScheduler.test.ts, e2e-integration.test.ts）
 - [x] 10.4.2 测试延迟（RTT）（heartbeat.test.ts, websocket-messages.test.ts）
 - [x] 10.4.3 测试吞吐量（e2e-integration.test.ts）
-- [x] 10.4.4 测试资源占用（待实现）
+- [x] 10.4.4 测试资源占用（metrics.test.ts, 361行）
 
 ---
 
