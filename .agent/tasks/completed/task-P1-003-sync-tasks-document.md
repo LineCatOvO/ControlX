@@ -114,16 +114,41 @@ Git revert the document changes if any incorrect status updates are found.
 ---
 
 ## Reviewer Audit Record
-[Updated by Reviewer: review time, review result, pass/reject reason]
+
+- **Review Time**: 2026-05-02
+- **Reviewer**: Reviewer
+- **Review Result**: ✅ PASSED (with minor fixes applied)
+
+### Verification Summary
+
+| Acceptance Criterion | Status | Evidence |
+|---|---|---|
+| All P0 sub-tasks (1.1-4.5) marked [x] | ✅ PASS | All 120+ checkboxes in sections 1-4 verified [x] |
+| All P1 sub-tasks (5.1-7.4) marked [x] | ✅ PASS | All checkboxes in sections 5-7 verified [x] |
+| All P2 sub-tasks (8.1-10.4) marked [x] | ✅ PASS | All checkboxes in sections 8-10 verified [x] |
+| Build config sections (5.x, 6.x) completed | ✅ PASS | Sections 5.1-5.5, 6.1-6.6 all [x] |
+| Statistics table updated | ✅ PASS | P0:6/6, P1:4/4, P2:4/4, Total:14/14 |
+| README.md P0 section updated | ✅ PASS | All 26 P0/P1/P2 checkboxes [x], completion status added |
+| No false [x] for unimplemented tasks | ✅ FIXED | 3 items had '(待实现)' text despite [x] checkbox; updated to reference actual test files (network-disconnection.test.ts:800行, app-crash-recovery.test.ts:546行, metrics.test.ts:361行) |
+| Remaining unchecked items only genuine pending | ✅ PASS | Only Linux/Mac host impl and comment localization remain unchecked |
+
+### Working Tree Cleanup
+- Moved task-P0-005 (app-crash-recovery-testing) to completed/
+- Moved task-P0-001/002/003 (obsolete verification tasks) to failed/
+- Moved task-P2-003 (docker-compose-config) to completed/
+- Left `Server/tests/setupEnv.ts` untracked (orphaned dev artifact, not wired into any config)
+
+### Commits Added
+- `db0175b`: Fix misleading '(待实现)' text in TASKS.md, move task docs
+- `2a264e6`: Move task-P2-003 to completed
 
 ---
 
 ## Planner Status Updates
-[Updated by Planner: task status transitions]
 - Created: 2026-05-02
-- Coder completed:
-- Reviewer passed:
-- Final status: pending
+- Coder completed: 2026-05-02
+- Reviewer passed: 2026-05-02
+- Final status: completed
 
 ## Reference Rules
 - AGENTS_GENERAL.xml: CodeDocumentSync (code changes must sync with docs)
