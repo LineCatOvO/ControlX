@@ -44,7 +44,7 @@ const XINPUT_BUTTON_MAP: Record<string, number> = {
 /**
  * Gamepad state interface
  */
-interface GamepadState {
+export interface GamepadState {
     buttons: Set<string>;
     axes?: {
         leftX?: number;

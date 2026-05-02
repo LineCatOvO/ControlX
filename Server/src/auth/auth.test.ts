@@ -87,7 +87,7 @@ describe('AuthManager', () => {
         });
 
         it('should reject blacklisted IP', () => {
-            const blacklistManager = new AuthManager({ blacklist: ['192.168.1.100'] });
+            const blacklistManager = new AuthManager({ enabled: true, blacklist: ['192.168.1.100'] });
             const tokenInfo = blacklistManager.generateToken('client-1');
             const result = blacklistManager.authenticate(tokenInfo.token, '192.168.1.100');
             expect(result.success).toBe(false);
@@ -95,7 +95,7 @@ describe('AuthManager', () => {
         });
 
         it('should reject IP not in whitelist', () => {
-            const whitelistManager = new AuthManager({ whitelist: ['127.0.0.1'] });
+            const whitelistManager = new AuthManager({ enabled: true, whitelist: ['127.0.0.1'] });
             const tokenInfo = whitelistManager.generateToken('client-1');
             const result = whitelistManager.authenticate(tokenInfo.token, '192.168.1.100');
             expect(result.success).toBe(false);
@@ -103,14 +103,14 @@ describe('AuthManager', () => {
         });
 
         it('should accept IP in whitelist', () => {
-            const whitelistManager = new AuthManager({ whitelist: ['127.0.0.1', '192.168.1.100'] });
+            const whitelistManager = new AuthManager({ enabled: true, whitelist: ['127.0.0.1', '192.168.1.100'] });
             const tokenInfo = whitelistManager.generateToken('client-1');
             const result = whitelistManager.authenticate(tokenInfo.token, '192.168.1.100');
             expect(result.success).toBe(true);
         });
 
         it('should reject when max connections reached', () => {
-            const limitedManager = new AuthManager({ maxConnectionsPerToken: 2 });
+            const limitedManager = new AuthManager({ enabled: true, maxConnectionsPerToken: 2 });
             const tokenInfo = limitedManager.generateToken('client-1');
 
             // First two connections should succeed

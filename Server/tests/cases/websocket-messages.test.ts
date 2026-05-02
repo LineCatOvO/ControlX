@@ -192,9 +192,10 @@ describe("WebSocket Message Handling Integration Tests", () => {
             await client.connect();
             await client.waitForMessage("welcome", 2000);
 
-            const ackPromise = client.waitForMessage("ack");
+            const ackPromise = client.waitForMessage("input_event_ack");
             await client.send({
                 type: "input_event",
+                eventId: 1,
                 data: {
                     type: "keyboard",
                     key: "W",
@@ -203,8 +204,8 @@ describe("WebSocket Message Handling Integration Tests", () => {
             });
 
             const ack = await ackPromise;
-            expect(ack.type).toBe("ack");
-            expect(ack.data.status).toBe("success");
+            expect(ack.type).toBe("input_event_ack");
+            expect(ack.status).toBe("success");
         });
 
         test("should return error for missing data", async () => {
@@ -212,14 +213,15 @@ describe("WebSocket Message Handling Integration Tests", () => {
             await client.connect();
             await client.waitForMessage("welcome", 2000);
 
-            const errorPromise = client.waitForMessage("error");
+            const ackPromise = client.waitForMessage("input_event_ack");
             await client.send({
                 type: "input_event",
+                eventId: 1,
             });
 
-            const error = await errorPromise;
-            expect(error.type).toBe("error");
-            expect(error.code).toBe("INVALID_MESSAGE");
+            const ack = await ackPromise;
+            expect(ack.type).toBe("input_event_ack");
+            expect(ack.status).toBe("rejected");
         });
     });
 

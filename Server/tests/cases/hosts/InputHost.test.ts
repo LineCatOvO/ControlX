@@ -32,6 +32,7 @@ class TestableInputHost extends InputHost {
             (this as any).isEnabled = false;
             return false;
         }
+        (this as any).lastError = undefined;
         (this as any).isEnabled = true;
         return true;
     }

@@ -10,7 +10,7 @@
  */
 
 import { InputRouter } from '../../src/input/router/InputRouter';
-import { InputDeviceType } from '../../src/input/hosts/types';
+import { InputDeviceType, PlatformType } from '../../src/input/hosts/types';
 import { InputState } from '../../src/types/ws';
 import { InputHost } from '../../src/input/hosts/InputHost';
 
@@ -23,6 +23,8 @@ class MockHost implements InputHost {
     private initialized: boolean = false;
     private applyCount: number = 0;
     private lastState: any = null;
+    deviceType: InputDeviceType = InputDeviceType.KEYBOARD;
+    platform: PlatformType = 'windows' as PlatformType;
 
     async initialize(): Promise<boolean> {
         this.initialized = true;
@@ -59,6 +61,14 @@ class MockHost implements InputHost {
 
     getApplyCount(): number {
         return this.applyCount;
+    }
+
+    getDeviceType(): InputDeviceType {
+        return this.deviceType;
+    }
+
+    getLastError(): string | undefined {
+        return undefined;
     }
 }
 
@@ -466,17 +476,26 @@ describe('InputRouter Performance - Multi-Device Parallel Processing', () => {
         const iterations = 1000;
         const state = createStandardState();
 
+        const fullState: InputState = {
+            keyboard: new Set(),
+            mouse: { x: 0, y: 0, left: false, right: false, middle: false },
+            joystick: { x: 0, y: 0, deadzone: 0.1, smoothing: 0.5 },
+            gamepad: new Set()
+        };
+
         // Single device performance
         const singleHost = new MockHost();
         router.registerHost(InputDeviceType.KEYBOARD, singleHost);
-        const singleTime = measureAverageTime(() => router.applyState({ keyboard: state.keyboard }), iterations);
+        const singleState = { ...fullState, keyboard: state.keyboard };
+        const singleTime = measureAverageTime(() => router.applyState(singleState), iterations);
         router.destroyAll();
 
         // Dual-device performance
         const dualHosts = [new MockHost(), new MockHost()];
         router.registerHost(InputDeviceType.KEYBOARD, dualHosts[0]);
         router.registerHost(InputDeviceType.MOUSE, dualHosts[1]);
-        const dualTime = measureAverageTime(() => router.applyState({ keyboard: state.keyboard, mouse: state.mouse }), iterations);
+        const dualState = { ...fullState, keyboard: state.keyboard, mouse: state.mouse };
+        const dualTime = measureAverageTime(() => router.applyState(dualState), iterations);
         router.destroyAll();
 
         // Four-device performance

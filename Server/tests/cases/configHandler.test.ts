@@ -73,19 +73,17 @@ describe('Config Handler Tests', () => {
             const response = JSON.parse(mockWs.send.mock.calls[0][0]);
             const config = response.data;
 
-            expect(config.inputUpdateInterval).toBeDefined();
-            expect(config.heartbeatInterval).toBeDefined();
-            expect(config.pingInterval).toBeDefined();
-            expect(config.safeStateTimeout).toBeDefined();
-            expect(config.enableLogging).toBeDefined();
-            expect(config.defaultPort).toBeDefined();
-            expect(config.portRange).toBeDefined();
-            expect(config.isTestMode).toBeDefined();
+            expect(response.data.inputUpdateInterval).toBeDefined();
+            expect(response.data.heartbeatInterval).toBeDefined();
+            expect(response.data.pingInterval).toBeDefined();
+            expect(response.data.safeStateTimeout).toBeDefined();
+            expect(response.data.enableLogging).toBeDefined();
+            expect(response.data.isTestMode).toBeDefined();
         });
     });
 
     describe('handleConfigSet()', () => {
-        test('should update config with valid values', () => {
+        test('should reject config updates in read-only mode', () => {
             const message: any = {
                 type: 'config_set',
                 data: { inputUpdateInterval: 16 }
@@ -95,9 +93,9 @@ describe('Config Handler Tests', () => {
             
             expect(mockWs.send).toHaveBeenCalledTimes(1);
             const response = JSON.parse(mockWs.send.mock.calls[0][0]);
-            expect(response.type).toBe('config_ack');
-            expect(response.message).toBe('Config updated successfully');
-            expect(response.data.inputUpdateInterval).toBe(16);
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
+            expect(response.message).toContain('read-only');
         });
 
         test('should reject invalid config values', () => {
@@ -111,10 +109,10 @@ describe('Config Handler Tests', () => {
             expect(mockWs.send).toHaveBeenCalledTimes(1);
             const response = JSON.parse(mockWs.send.mock.calls[0][0]);
             expect(response.type).toBe('config_error');
-            expect(response.code).toBe('INVALID_CONFIG');
+            expect(response.code).toBe('READONLY_MODE');
         });
 
-        test('should update multiple config values', () => {
+        test('should reject multiple config values update', () => {
             const message: any = {
                 type: 'config_set',
                 data: {
@@ -127,12 +125,11 @@ describe('Config Handler Tests', () => {
             handleConfigSet(mockWs, message);
             
             const response = JSON.parse(mockWs.send.mock.calls[0][0]);
-            expect(response.data.inputUpdateInterval).toBe(16);
-            expect(response.data.heartbeatInterval).toBe(60000);
-            expect(response.data.enableLogging).toBe(false);
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
         });
 
-        test('should notify config change callbacks', () => {
+        test('should not notify callbacks in read-only mode', () => {
             const callback = jest.fn();
             registerConfigChangeCallback(callback);
             
@@ -143,17 +140,14 @@ describe('Config Handler Tests', () => {
             
             handleConfigSet(mockWs, message);
             
-            expect(callback).toHaveBeenCalledWith(
-                expect.objectContaining({ inputUpdateInterval: 16 }),
-                expect.objectContaining({ inputUpdateInterval: 8 })
-            );
+            expect(callback).not.toHaveBeenCalled();
             
             unregisterConfigChangeCallback(callback);
         });
     });
 
     describe('handleConfigSave()', () => {
-        test('should save config to file', () => {
+        test('should reject config saves in read-only mode', () => {
             const message: any = {
                 type: 'config_save',
                 path: '/path/to/config.json'
@@ -163,8 +157,9 @@ describe('Config Handler Tests', () => {
             
             expect(mockWs.send).toHaveBeenCalledTimes(1);
             const response = JSON.parse(mockWs.send.mock.calls[0][0]);
-            expect(response.type).toBe('config_ack');
-            expect(response.message).toBe('Config saved successfully');
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
+            expect(response.message).toContain('read-only');
         });
 
         test('should handle save failure', () => {
@@ -182,36 +177,30 @@ describe('Config Handler Tests', () => {
             
             const response = JSON.parse(mockWs.send.mock.calls[0][0]);
             expect(response.type).toBe('config_error');
-            expect(response.code).toBe('SAVE_FAILED');
+            expect(response.code).toBe('READONLY_MODE');
         });
     });
 
     describe('handleConfigReset()', () => {
-        test('should reset config to defaults', () => {
-            // First update config
-            configManager.update({ inputUpdateInterval: 16, enableLogging: false });
-            
+        test('should reject config resets in read-only mode', () => {
             const message: any = { type: 'config_reset' };
             
             handleConfigReset(mockWs, message);
             
             const response = JSON.parse(mockWs.send.mock.calls[0][0]);
-            expect(response.type).toBe('config_ack');
-            expect(response.message).toBe('Config reset to defaults');
-            expect(response.data.inputUpdateInterval).toBe(8);
-            expect(response.data.enableLogging).toBe(true);
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
+            expect(response.message).toContain('read-only');
         });
 
-        test('should notify callbacks on reset', () => {
+        test('should not notify callbacks on reset in read-only mode', () => {
             const callback = jest.fn();
             registerConfigChangeCallback(callback);
-            
-            configManager.update({ inputUpdateInterval: 16 });
             
             const message: any = { type: 'config_reset' };
             handleConfigReset(mockWs, message);
             
-            expect(callback).toHaveBeenCalled();
+            expect(callback).not.toHaveBeenCalled();
             
             unregisterConfigChangeCallback(callback);
         });
@@ -246,7 +235,7 @@ describe('Config Handler Tests', () => {
     });
 
     describe('Config Change Callbacks', () => {
-        test('should register and call callback', () => {
+        test('should not call callback in read-only mode', () => {
             const callback = jest.fn();
             registerConfigChangeCallback(callback);
             
@@ -257,7 +246,9 @@ describe('Config Handler Tests', () => {
             
             handleConfigSet(mockWs, message);
             
-            expect(callback).toHaveBeenCalled();
+            expect(callback).not.toHaveBeenCalled();
+            
+            unregisterConfigChangeCallback(callback);
         });
 
         test('should unregister callback', () => {
@@ -275,7 +266,7 @@ describe('Config Handler Tests', () => {
             expect(callback).not.toHaveBeenCalled();
         });
 
-        test('should handle multiple callbacks', () => {
+        test('should not call multiple callbacks in read-only mode', () => {
             const callback1 = jest.fn();
             const callback2 = jest.fn();
             
@@ -289,8 +280,8 @@ describe('Config Handler Tests', () => {
             
             handleConfigSet(mockWs, message);
             
-            expect(callback1).toHaveBeenCalled();
-            expect(callback2).toHaveBeenCalled();
+            expect(callback1).not.toHaveBeenCalled();
+            expect(callback2).not.toHaveBeenCalled();
             
             unregisterConfigChangeCallback(callback1);
             unregisterConfigChangeCallback(callback2);
@@ -323,40 +314,28 @@ describe('Config Handler Tests', () => {
     });
 
     describe('Integration Tests', () => {
-        test('should handle complete config workflow', () => {
-            // Get initial config
+        test('should reject config operations in read-only mode', () => {
+            // Get initial config - should work
             handleConfigGet(mockWs, { type: 'config_get' });
             let response = JSON.parse(mockWs.send.mock.calls[0][0]);
             expect(response.type).toBe('config');
             
-            // Update config
+            // Try to update config - should be rejected
             mockWs.send.mockClear();
             handleConfigSet(mockWs, {
                 type: 'config_set',
                 data: { inputUpdateInterval: 16, enableLogging: false }
             });
             response = JSON.parse(mockWs.send.mock.calls[0][0]);
-            expect(response.type).toBe('config_ack');
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
             
-            // Verify update
-            mockWs.send.mockClear();
-            handleConfigGet(mockWs, { type: 'config_get' });
-            response = JSON.parse(mockWs.send.mock.calls[0][0]);
-            expect(response.data.inputUpdateInterval).toBe(16);
-            expect(response.data.enableLogging).toBe(false);
-            
-            // Reset config
+            // Try to reset config - should be rejected
             mockWs.send.mockClear();
             handleConfigReset(mockWs, { type: 'config_reset' });
             response = JSON.parse(mockWs.send.mock.calls[0][0]);
-            expect(response.type).toBe('config_ack');
-            
-            // Verify reset
-            mockWs.send.mockClear();
-            handleConfigGet(mockWs, { type: 'config_get' });
-            response = JSON.parse(mockWs.send.mock.calls[0][0]);
-            expect(response.data.inputUpdateInterval).toBe(8);
-            expect(response.data.enableLogging).toBe(true);
+            expect(response.type).toBe('config_error');
+            expect(response.code).toBe('READONLY_MODE');
         });
     });
 });

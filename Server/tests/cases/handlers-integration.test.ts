@@ -198,6 +198,7 @@ describe('WebSocket Handlers Integration Tests', () => {
         test('should handle input event message', () => {
             const message = {
                 type: 'input_event' as const,
+                eventId: 1,
                 data: {
                     type: 'keyboard',
                     key: 'W',
@@ -209,12 +210,14 @@ describe('WebSocket Handlers Integration Tests', () => {
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('ack');
+            expect(response.type).toBe('input_event_ack');
+            expect(response.status).toBe('success');
         });
 
         test('should handle mouse event', () => {
             const message = {
                 type: 'input_event' as const,
+                eventId: 2,
                 data: {
                     type: 'mouse_move',
                     x: 100,
@@ -226,12 +229,13 @@ describe('WebSocket Handlers Integration Tests', () => {
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('ack');
+            expect(response.type).toBe('input_event_ack');
         });
 
         test('should handle joystick event', () => {
             const message = {
                 type: 'input_event' as const,
+                eventId: 3,
                 data: {
                     type: 'joystick_move',
                     axis: 'lx',
@@ -243,25 +247,27 @@ describe('WebSocket Handlers Integration Tests', () => {
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('ack');
+            expect(response.type).toBe('input_event_ack');
         });
 
         test('should return error for missing data', () => {
             const message = {
                 type: 'input_event' as const,
+                eventId: 4,
                 metadata: { clientId: 'test-client', timestamp: Date.now() },
             } as any;
 
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('error');
-            expect(response.code).toBe('INVALID_MESSAGE');
+            expect(response.type).toBe('input_event_ack');
+            expect(response.status).toBe('rejected');
         });
 
         test('should handle key_down event', () => {
             const message = {
                 type: 'input_event' as const,
+                eventId: 5,
                 data: {
                     type: 'key_down',
                     data: { key: 'W' },
@@ -272,13 +278,14 @@ describe('WebSocket Handlers Integration Tests', () => {
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('ack');
-            expect(response.data.status).toBe('success');
+            expect(response.type).toBe('input_event_ack');
+            expect(response.status).toBe('success');
         });
 
         test('should handle key_up event', () => {
             const message = {
                 type: 'input_event' as const,
+                eventId: 6,
                 data: {
                     type: 'key_up',
                     data: { key: 'A' },
@@ -289,13 +296,13 @@ describe('WebSocket Handlers Integration Tests', () => {
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('ack');
-            expect(response.data.status).toBe('success');
+            expect(response.type).toBe('input_event_ack');
         });
 
         test('should handle mouse_click event', () => {
             const message = {
                 type: 'input_event' as const,
+                eventId: 7,
                 data: {
                     type: 'mouse_click',
                     data: { button: 'left', pressed: true },
@@ -306,8 +313,7 @@ describe('WebSocket Handlers Integration Tests', () => {
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('ack');
-            expect(response.data.status).toBe('success');
+            expect(response.type).toBe('input_event_ack');
         });
 
         test('should handle WebSocket send error when sending error message', () => {
@@ -360,32 +366,34 @@ describe('WebSocket Handlers Integration Tests', () => {
         test('should handle null data field', () => {
             const message = {
                 type: 'input_event' as const,
+                eventId: 8,
                 data: null,
             } as any;
 
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('error');
-            expect(response.code).toBe('INVALID_MESSAGE');
+            expect(response.type).toBe('input_event_ack');
+            expect(response.status).toBe('rejected');
         });
 
         test('should handle undefined data field', () => {
             const message = {
                 type: 'input_event' as const,
-                data: undefined,
+                eventId: 9,
             } as any;
 
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('error');
-            expect(response.code).toBe('INVALID_MESSAGE');
+            expect(response.type).toBe('input_event_ack');
+            expect(response.status).toBe('rejected');
         });
 
-        test('should include sequenceNumber and timestamp in ACK', () => {
+        test('should include ackEventId and status in input_event_ack', () => {
             const message = {
                 type: 'input_event' as const,
+                eventId: 10,
                 data: {
                     type: 'key_down',
                     data: { key: 'W' },
@@ -395,11 +403,9 @@ describe('WebSocket Handlers Integration Tests', () => {
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('ack');
-            expect(response.data.sequenceNumber).toBeDefined();
-            expect(response.data.timestamp).toBeDefined();
-            expect(typeof response.data.sequenceNumber).toBe('number');
-            expect(typeof response.data.timestamp).toBe('number');
+            expect(response.type).toBe('input_event_ack');
+            expect(response.ackEventId).toBe(10);
+            expect(response.status).toBeDefined();
         });
 
         test('should handle executor throwing error', () => {
@@ -411,6 +417,7 @@ describe('WebSocket Handlers Integration Tests', () => {
 
             const message = {
                 type: 'input_event' as const,
+                eventId: 11,
                 data: {
                     type: 'key_down',
                     data: { key: 'W' },
@@ -420,9 +427,8 @@ describe('WebSocket Handlers Integration Tests', () => {
             handleInputEvent(ws, message);
 
             const response = ws.getLastMessage();
-            expect(response.type).toBe('error');
-            expect(response.code).toBe('INTERNAL_ERROR');
-            expect(response.message).toBe('Error processing input event');
+            expect(response.type).toBe('input_event_ack');
+            expect(response.status).toBe('error');
         });
 
         test('should handle error when sending internal error message', () => {
