@@ -396,7 +396,7 @@ describe("InputDeltaHandler Tests", () => {
                 handleInputDelta(mockWs, message);
 
                 expect(consoleErrorSpy).toHaveBeenCalledWith(
-                    "InputDeltaHandlerError: Invalid message data"
+                    "Input delta handlerError: Invalid message data"
                 );
                 expect(mockWs.send).toHaveBeenCalled();
 

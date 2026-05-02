@@ -56,6 +56,7 @@
 | 文件名 | 描述 | 日期 | 标签 |
 |--------|------|------|------|
 | 2026-05-02-docker-multi-stage-build-001.md | Docker multi-stage build 优化经验 | 2026-05-02 | docker, nodejs, multi-stage-build |
+| controlx-heartbeat-test-coverage-20260502.md | Heartbeat模块测试覆盖率100%经验 | 2026-05-02 | jest, testing, coverage, heartbeat |
 
 ### 代码片段 (snippets/)
 
