@@ -71,23 +71,17 @@ export class GamepadExecutor implements InputExecutor {
      * Apply input delta
      * @param delta InputDelta
      */
-    applyDelta(delta: InputDelta): void {
+    applyDelta(_delta: InputDelta): void {
         if (!this.isInitialized) {
             return;
         }
-        // Gamepad does not support delta mode, skip directly
         console.log('GamepadEvent: Delta not supported, use full state instead');
     }
 
-    /**
-     * Apply input event
-     * @param event InputEvent
-     */
-    applyEvent(event: InputEvent): void {
+    applyEvent(_event: InputEvent): void {
         if (!this.isInitialized) {
             return;
         }
-        // Gamepad does not support event mode, skip directly
         console.log('GamepadEvent: Event not supported, use full state instead');
     }
 
