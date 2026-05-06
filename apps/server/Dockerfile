@@ -2,6 +2,8 @@
 # 多阶段构建: dev (热重载) / test (测试) / prod (生产部署)
 # 支持多平台构建：Linux x64/ARM64
 # 构建命令：docker buildx build --platform linux/amd64,linux/arm64 -t controlx-server:latest .
+#
+# 注意：构建上下文为 monorepo 根目录
 
 # ==========================================
 # Base 阶段：基础环境
@@ -18,25 +20,25 @@ WORKDIR /app
 # ==========================================
 FROM base AS dev
 
-# 环境变量（可在 docker-compose 中覆盖）
 ENV WS_PORT=3000
 ENV WEB_PORT=28080
 ENV NODE_ENV=development
 
-# 安装所有依赖（含 devDependencies）
-COPY package.json pnpm-lock.yaml* ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/tsconfig/package.json packages/tsconfig/
+COPY packages/eslint-config/package.json packages/eslint-config/
+COPY apps/server/package.json apps/server/
 RUN pnpm install --frozen-lockfile
 
-# 复制源码（开发时通过卷挂载覆盖实现热重载）
-COPY . .
+COPY packages/ packages/
+COPY apps/server/ apps/server/
 
-# 健康检查：验证 Web 监控 HTTP 端点可访问
 HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
     CMD node -e "require('http').get('http://localhost:' + (process.env.WEB_PORT || 28080) + '/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))" || exit 1
 
 EXPOSE 3000 28080
 
-# 启动开发服务器（tsc-watch 支持编译热重载）
+WORKDIR /app/apps/server
 CMD ["pnpm", "run", "dev"]
 
 # ==========================================
@@ -49,14 +51,16 @@ ENV NODE_ENV=test
 ENV WS_PORT=3000
 ENV WEB_PORT=28080
 
-# 安装所有依赖（含 devDependencies 如 jest）
-COPY package.json pnpm-lock.yaml* ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/tsconfig/package.json packages/tsconfig/
+COPY packages/eslint-config/package.json packages/eslint-config/
+COPY apps/server/package.json apps/server/
 RUN pnpm install --frozen-lockfile
 
-# 复制源码
-COPY . .
+COPY packages/ packages/
+COPY apps/server/ apps/server/
 
-# 运行测试（jest），容器执行后自动退出
+WORKDIR /app/apps/server
 CMD ["pnpm", "run", "test"]
 
 # ==========================================
@@ -64,7 +68,10 @@ CMD ["pnpm", "run", "test"]
 # ==========================================
 FROM base AS deps
 
-COPY package.json pnpm-lock.yaml* ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/tsconfig/package.json packages/tsconfig/
+COPY packages/eslint-config/package.json packages/eslint-config/
+COPY apps/server/package.json apps/server/
 RUN pnpm install --frozen-lockfile --prod
 
 # ==========================================
@@ -72,9 +79,16 @@ RUN pnpm install --frozen-lockfile --prod
 # ==========================================
 FROM base AS builder
 
-COPY package.json pnpm-lock.yaml* ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/tsconfig/package.json packages/tsconfig/
+COPY packages/eslint-config/package.json packages/eslint-config/
+COPY apps/server/package.json apps/server/
 RUN pnpm install --frozen-lockfile
-COPY . .
+
+COPY packages/ packages/
+COPY apps/server/ apps/server/
+
+WORKDIR /app/apps/server
 RUN pnpm run build
 RUN cp -r src/web/static dist/web/static 2>/dev/null || echo "No static files to copy"
 
@@ -98,8 +112,9 @@ RUN addgroup --system --gid 1001 controlx \
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
+COPY --from=deps /app/apps/server/node_modules ./apps/server/node_modules
+COPY --from=builder /app/apps/server/dist ./dist
+COPY --from=builder /app/apps/server/package.json ./
 
 RUN chown -R controlx:controlx /app
 

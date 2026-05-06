@@ -1,11 +1,6 @@
 packages:
-  - appium-e2e
-  - Server
-
-ignoredBuiltDependencies:
-  - appium
-  - sharp
+  - apps/*
+  - packages/*
 
 onlyBuiltDependencies:
-  - vigemclient
   - wd

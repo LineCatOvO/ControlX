@@ -39,7 +39,7 @@ services:
     networks:
       - controlx-network
     volumes:
-      - ../Server:/app/server
+      - ../../apps/server:/app/server
       - ./test-results:/app/test-results
     working_dir: /app/server
     environment:

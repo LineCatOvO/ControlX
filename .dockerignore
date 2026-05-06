@@ -1,0 +1,74 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Agent tasks
+.agent/
+.agent_tasks/
+
+# Android client (not needed for server Docker build)
+AndroidClient/
+
+# Appium E2E (not needed for server Docker build)
+apps/appium-e2e/tests/
+apps/appium-e2e/android/
+apps/appium-e2e/test-results/
+apps/appium-e2e/fixtures/
+
+# Server test files
+apps/server/tests/
+apps/server/coverage/
+apps/server/**/*.test.ts
+apps/server/**/*.spec.ts
+apps/server/jest.config.js
+
+# Node modules (will be installed during build)
+**/node_modules/
+.pnpm-store/
+
+# Build outputs (will be built during Docker build)
+**/dist/
+**/*.tsbuildinfo
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Docker files (avoid recursion)
+apps/server/Dockerfile*
+docker-compose*
+.dockerignore
+
+# CI/CD
+.github/
+
+# Scripts
+scripts/
+
+# Task files
+tasks/
+
+# Misc
+*.tgz
+*.tar.gz
+*.zip

@@ -1,11 +1,12 @@
 {
-  "name": "controlx-server",
+  "name": "@controlx/server",
   "version": "1.0.0",
   "description": "ControlX Server - WebSocket-based remote control server",
+  "private": true,
   "main": "dist/app.js",
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=10.0.0"
+    "pnpm": ">=9.0.0"
   },
   "scripts": {
     "start": "node dist/app.js",
@@ -20,13 +21,13 @@
     "monit:pm2": "pm2 monit",
     "dev": "tsc-watch --onSuccess \"node dist/app.js\"",
     "dev:debug": "tsc-watch --onSuccess \"node --inspect dist/app.js\"",
-    "build": "tsc && npm run copy:static",
-    "build:prod": "NODE_ENV=production tsc && npm run copy:static",
-    "build:clean": "npm run clean && npm run build",
+    "build": "tsc && pnpm run copy:static",
+    "build:prod": "NODE_ENV=production tsc && pnpm run copy:static",
+    "build:clean": "pnpm run clean && pnpm run build",
     "type-check": "tsc --noEmit",
     "copy:static": "cp -r src/web/static dist/web/static 2>/dev/null || true",
     "clean": "rm -rf dist coverage",
-    "rebuild": "npm run clean && npm run build",
+    "rebuild": "pnpm run clean && pnpm run build",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
@@ -68,11 +69,13 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@controlx/eslint-config": "workspace:*",
+    "@controlx/tsconfig": "workspace:*",
     "@types/jest": "^29.5.12",
     "@types/minimist": "^1.2.5",
     "@types/node": "^25.0.9",
     "@types/ws": "^8.18.1",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "nodemon": "^3.1.11",
     "ts-jest": "^29.1.5",
