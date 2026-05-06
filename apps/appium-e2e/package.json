@@ -1,10 +1,11 @@
 {
-  "name": "appium-e2e",
+  "name": "@controlx/appium-e2e",
   "version": "1.0.0",
   "description": "Appium E2E tests for ControlX",
+  "private": true,
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:all",
+    "test": "pnpm run test:all",
     "test:all": "node tests/run-e2e-pipeline.js",
     "test:full": "node tests/run-e2e-pipeline.js",
     "test:verbose": "node tests/run-e2e-pipeline.js -v",
@@ -13,7 +14,8 @@
     "test:ci": "node tests/run-e2e-pipeline.js --ci",
     "lint": "eslint tests/**/*.js",
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
   },
   "keywords": [
     "appium",
@@ -25,10 +27,14 @@
   "author": "ControlX Team",
   "license": "MIT",
   "devDependencies": {
+    "@controlx/tsconfig": "workspace:*",
+    "@types/node": "^25.0.9",
+    "@types/ws": "^8.18.1",
     "appium": "^3.2.0",
     "appium-uiautomator2-driver": "^6.8.0",
     "eslint": "^8.57.0",
-    "mocha": "^10.3.0"
+    "mocha": "^10.3.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "axios": "^1.13.5",

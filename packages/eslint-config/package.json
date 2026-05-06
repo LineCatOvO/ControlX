@@ -1,0 +1,17 @@
+{
+  "name": "@controlx/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "base.js",
+    "node.js"
+  ],
+  "devDependencies": {
+    "typescript-eslint": "^8.59.2"
+  },
+  "peerDependencies": {
+    "eslint": ">=8.0.0"
+  }
+}

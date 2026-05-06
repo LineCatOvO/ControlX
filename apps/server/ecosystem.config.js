@@ -155,7 +155,7 @@ module.exports = {
             ref: 'origin/main',
             repo: 'git@github.com:your-org/controlx.git',
             path: '/var/www/controlx',
-            'post-deploy': 'cd Server && pnpm install && pnpm run build && pm2 reload ecosystem.config.js --env production',
+            'post-deploy': 'cd apps/server && pnpm install && pnpm run build && pm2 reload ecosystem.config.js --env production',
             env: {
                 NODE_ENV: 'production'
             }
@@ -166,7 +166,7 @@ module.exports = {
             ref: 'origin/develop',
             repo: 'git@github.com:your-org/controlx.git',
             path: '/var/www/controlx-staging',
-            'post-deploy': 'cd Server && pnpm install && pnpm run build && pm2 reload ecosystem.config.js --env production',
+            'post-deploy': 'cd apps/server && pnpm install && pnpm run build && pm2 reload ecosystem.config.js --env production',
             env: {
                 NODE_ENV: 'staging'
             }

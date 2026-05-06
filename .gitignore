@@ -1,14 +1,38 @@
-/appium-e2e/node_modules/
-/node_modules/
-/appium-e2e/dist/
-/appium-e2e/android/
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Turborepo
+.turbo/
+
+# Coverage
+coverage/
+
+# Android
 /AndroidClient/.gradle/
 /AndroidClient/app/build/
 /AndroidClient/local.properties
-/Server/dist/
-Server/.pnpm-store/
+
+# Appium E2E
+/apps/appium-e2e/android/
 
 # Environment variables
 .env
 .env.local
 .env.*.local
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

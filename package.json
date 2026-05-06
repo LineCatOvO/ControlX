@@ -1,36 +1,28 @@
 {
   "name": "controlx",
   "version": "1.0.0",
-  "description": "ControlX Server Application",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "private": true,
+  "description": "ControlX - Remote Control Platform Monorepo",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "clean": "rm -rf dist",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src/**/*.ts",
-    "test": "vitest"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
-  "keywords": ["controlx", "server", "typescript"],
-  "author": "",
+  "keywords": ["controlx", "monorepo", "turborepo"],
+  "author": "ControlX Team",
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
+    "pnpm": ">=9.0.0"
   },
-  "dependencies": {
-    "dotenv": "^16.4.0",
-    "typescript": "^5.3.0"
-  },
+  "packageManager": "pnpm@9.15.4",
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "tsx": "^4.7.0",
-    "eslint": "^8.56.0",
-    "@typescript-eslint/eslint-plugin": "^6.16.0",
-    "@typescript-eslint/parser": "^6.16.0",
-    "vitest": "^1.1.0"
+    "turbo": "^2.4.4",
+    "prettier": "^3.4.2"
   }
 }
