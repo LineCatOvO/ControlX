@@ -9,10 +9,9 @@ import {
     handleConfigReset,
     handleConfigValidate 
 } from "./handlers/config";
-import { 
-    handleDebugConfigSet, 
-    handleDebugConfigGet,
-    debugManager 
+import {
+    handleDebugConfigSet,
+    handleDebugConfigGet
 } from "./handlers/debug";
 import { handlePing } from "./handlers/ping";
 import { handleWelcome } from "./handlers/welcome";

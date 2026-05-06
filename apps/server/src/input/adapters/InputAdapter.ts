@@ -16,11 +16,6 @@
  * @version 2.0.0
  */
 
-// Import from types for InputState, InputDelta, InputEvent
-type InputState = import('../../types/ws').InputState;
-type InputDelta = import('../../types/ws').InputDelta;
-type InputEvent = import('../../types/ws').InputEvent;
-
 // Re-export from new interfaces module for backward compatibility
 import {
     IInputAdapter,
@@ -29,6 +24,8 @@ import {
     IMouseAdapter,
     IJoystickAdapter,
 } from '../../interfaces/IInputAdapter';
+
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 /**
  * Input adapter base interface (legacy alias)
@@ -59,6 +56,8 @@ export interface MouseAdapter extends IMouseAdapter {}
  * @deprecated Use IJoystickAdapter from '../../interfaces' instead
  */
 export interface JoystickAdapter extends IJoystickAdapter {}
+
+/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 // Re-export type definitions for local usage
 export type {

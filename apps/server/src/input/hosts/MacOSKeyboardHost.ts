@@ -84,7 +84,7 @@ export class MacOSKeyboardHost extends InputHost {
      * ApplyState：Use Quartz Event Services SendKeyboardEvent
      * @param pressedKeys PressUnderOfKeySet
      */
-    applyState(pressedKeys: Set<string>): void {
+    applyState(_pressedKeys: Set<string>): void {
         // TODO: ImplementationDiffAlgorithm
         if (!this.isEnabled || !this.eventSource) {
             console.debug('[MacOSKB] TODO: Device not enabled');

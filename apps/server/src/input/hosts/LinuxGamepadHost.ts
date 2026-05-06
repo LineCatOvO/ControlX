@@ -102,7 +102,7 @@ export class LinuxGamepadHost extends InputHost {
      * ApplyState：Use uinput SendGameGamepadEvent
      * @param state GameGamepadState
      */
-    applyState(state: GamepadState): void {
+    applyState(_state: GamepadState): void {
         // TODO: ImplementationStateSubmit
         if (!this.isEnabled || !this.uinputDevice) {
             console.debug('[LinuxGP] TODO: Device not enabled');

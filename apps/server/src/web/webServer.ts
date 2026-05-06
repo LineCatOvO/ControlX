@@ -147,7 +147,7 @@ function handleHttpRequest(req: any, res: any): void {
             'Cache-Control': 'no-cache',
         });
         res.end(content);
-    } catch (error) {
+    } catch (_error) {
         res.writeHead(500);
         res.end('Internal Server Error');
     }

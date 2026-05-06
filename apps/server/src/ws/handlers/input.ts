@@ -1,5 +1,4 @@
 import { InputMessage } from "../../types/ws";
-import { formatInputMessageLog } from "../../utils/logInputData";
 import { getExecutorManager } from "../../input/executor";
 import { inputState } from "../../input/state";
 import { rateLimiter } from "../../utils/rateLimiter";
@@ -100,9 +99,9 @@ export function handleInput(ws: any, message: InputMessage) {
             // Commented, reduce log output
             // console.log("Sending ACK to client:", JSON.stringify(ackMessage));
             ws.send(JSON.stringify(ackMessage));
-        } catch (error) {
+        } catch (_error) {
             // Commented, reduce log output
-            // console.error("InputHandlerError: Error sending ACK:", error);
+            // console.error("InputHandlerError: Error sending ACK:", _error);
         }
     } else {
         // Send error ACK message
@@ -127,9 +126,9 @@ export function handleInput(ws: any, message: InputMessage) {
             // console.error(
             //     `InputHandlerError: Error ACK sent for sequence ${inputData?.frameId || Date.now()}`
             // );
-        } catch (error) {
+        } catch (_error) {
             // Commented, reduce log output
-            // console.error("InputHandlerError: Error sending error ACK:", error);
+            // console.error("InputHandlerError: Error sending error ACK:", _error);
         }
     }
 }

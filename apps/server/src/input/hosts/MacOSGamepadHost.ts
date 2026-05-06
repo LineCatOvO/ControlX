@@ -99,7 +99,7 @@ export class MacOSGamepadHost extends InputHost {
      * ApplyState：Use GCController SendGameGamepadEvent
      * @param state GameGamepadState
      */
-    applyState(state: GamepadState): void {
+    applyState(_state: GamepadState): void {
         // TODO: ImplementationStateSubmit
         if (!this.isEnabled || !this.controller) {
             console.debug('[MacOSGP] TODO: Device not enabled');
