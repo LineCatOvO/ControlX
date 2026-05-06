@@ -1,14 +1,15 @@
-// ControlX Server - Monitor Frontend
-// WebSocket连接和状态更新
+// ControlX Server Monitor v2.0 - Frontend
+// WebSocket connection, real-time status updates & enhanced interactions
 
-// 配置
 const WS_RECONNECT_INTERVAL = 3000;
-const UPDATE_RATE = 10; // Hz
+const UPDATE_RATE = 10;
+const MAX_LOG_ENTRIES = 100;
 
-// DOM元素
 const elements = {
+    connectionStatus: document.getElementById('connection-status'),
     connectionIndicator: document.getElementById('connection-indicator'),
     connectionText: document.getElementById('connection-text'),
+    clockDisplay: document.getElementById('clock-display'),
     keyboardStatus: document.getElementById('keyboard-status'),
     gamepadStatus: document.getElementById('gamepad-status'),
     mousePosition: document.getElementById('mouse-position'),
@@ -22,15 +23,29 @@ const elements = {
     updateRate: document.getElementById('update-rate'),
     lastUpdate: document.getElementById('last-update'),
     logContainer: document.getElementById('log-container'),
+    clearLogBtn: document.getElementById('clear-log-btn'),
 };
 
-// WebSocket连接
 let ws = null;
 let reconnectTimeout = null;
+let clockInterval = null;
+let logCounter = 0;
 
-/**
- * 初始化WebSocket连接
- */
+function initEntranceAnimations() {
+    const animatedElements = document.querySelectorAll('[data-animate]');
+    animatedElements.forEach(el => el.classList.add('animated'));
+}
+
+function initClock() {
+    function updateClock() {
+        if (elements.clockDisplay) {
+            elements.clockDisplay.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+        }
+    }
+    updateClock();
+    clockInterval = setInterval(updateClock, 1000);
+}
+
 function initWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -44,180 +59,121 @@ function initWebSocket() {
         updateConnectionStatus(true);
     };
 
-    ws.onclose = () => {
-        addLog('Disconnected from server', 'warning');
+    ws.onclose = (event) => {
+        const reason = event.reason || 'No reason provided';
+        addLog(`Disconnected from server (${event.code})`, 'warning');
         updateConnectionStatus(false);
         scheduleReconnect();
     };
 
-    ws.onerror = (error) => {
+    ws.onerror = (_error) => {
         addLog('WebSocket error', 'error');
-        console.error('WebSocket error:', error);
     };
 
     ws.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
             handleStatusUpdate(data);
-        } catch (error) {
-            console.error('Failed to parse message:', error);
+        } catch (_error) {
+            console.error('Failed to parse message');
         }
     };
 }
 
-/**
- * 安排重连
- */
 function scheduleReconnect() {
-    if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-    }
+    if (reconnectTimeout) clearTimeout(reconnectTimeout);
     reconnectTimeout = setTimeout(() => {
         addLog('Reconnecting...', 'info');
         initWebSocket();
     }, WS_RECONNECT_INTERVAL);
 }
 
-/**
- * 更新连接状态
- */
 function updateConnectionStatus(connected) {
-    if (elements.connectionIndicator) {
-        elements.connectionIndicator.classList.toggle('connected', connected);
-        elements.connectionIndicator.classList.toggle('disconnected', !connected);
-    }
+    if (!elements.connectionStatus) return;
+    elements.connectionStatus.classList.toggle('connected', connected);
+    elements.connectionStatus.classList.toggle('disconnected', !connected);
     if (elements.connectionText) {
-        elements.connectionText.textContent = connected ? 'Connected' : 'Disconnected';
+        elements.connectionText.textContent = connected ? 'CONNECTED' : 'DISCONNECTED';
     }
 }
 
-/**
- * 处理状态更新
- */
 function handleStatusUpdate(data) {
     const { timestamp, input, stats } = data;
 
-    // 更新键盘状态
     updateKeyboardStatus(input.keyboard);
-
-    // 更新游戏手柄状态
     updateGamepadStatus(input.gamepad);
-
-    // 更新鼠标状态
     updateMouseStatus(input.mouse);
-
-    // 更新摇杆状态
     updateJoystickStatus(input.joystick);
-
-    // 更新统计信息
     updateStats(stats, timestamp);
 }
 
-/**
- * 更新键盘状态
- */
 function updateKeyboardStatus(keys) {
     if (!elements.keyboardStatus) return;
 
     if (keys && keys.length > 0) {
         elements.keyboardStatus.innerHTML = keys
-            .map(key => `<span class="key-badge">${escapeHtml(key)}</span>`)
+            .map((key, i) => `<span class="key-badge" style="animation-delay:${i * 40}ms">${escapeHtml(key)}</span>`)
             .join('');
     } else {
-        elements.keyboardStatus.innerHTML = '<span class="no-input">No keys pressed</span>';
+        elements.keyboardStatus.innerHTML = '<span class="no-input-text">No keys pressed</span>';
     }
 }
 
-/**
- * 更新游戏手柄状态
- */
 function updateGamepadStatus(buttons) {
     if (!elements.gamepadStatus) return;
 
     if (buttons && buttons.length > 0) {
         elements.gamepadStatus.innerHTML = buttons
-            .map(btn => `<span class="key-badge">${escapeHtml(btn)}</span>`)
+            .map((btn, i) => `<span class="key-badge" style="animation-delay:${i * 40}ms">${escapeHtml(btn)}</span>`)
             .join('');
     } else {
-        elements.gamepadStatus.innerHTML = '<span class="no-input">No buttons pressed</span>';
+        elements.gamepadStatus.innerHTML = '<span class="no-input-text">No buttons pressed</span>';
     }
 }
 
-/**
- * 更新鼠标状态
- */
 function updateMouseStatus(mouse) {
     if (!mouse) {
-        if (elements.mousePosition) {
-            elements.mousePosition.textContent = 'x=0, y=0';
-        }
-        if (elements.mouseLeft) {
-            elements.mouseLeft.classList.remove('active');
-        }
-        if (elements.mouseRight) {
-            elements.mouseRight.classList.remove('active');
-        }
+        if (elements.mousePosition) elements.mousePosition.textContent = 'x=0, y=0';
+        if (elements.mouseLeft) elements.mouseLeft.classList.remove('active');
+        if (elements.mouseRight) elements.mouseRight.classList.remove('active');
         return;
     }
 
     if (elements.mousePosition) {
-        elements.mousePosition.textContent = `x=${mouse.x}, y=${mouse.y}`;
+        animateValue(elements.mousePosition, `x=${mouse.x}, y=${mouse.y}`);
     }
 
-    if (elements.mouseLeft) {
-        elements.mouseLeft.classList.toggle('active', mouse.left);
-    }
-
-    if (elements.mouseRight) {
-        elements.mouseRight.classList.toggle('active', mouse.right);
-    }
+    if (elements.mouseLeft) elements.mouseLeft.classList.toggle('active', mouse.left);
+    if (elements.mouseRight) elements.mouseRight.classList.toggle('active', mouse.right);
 }
 
-/**
- * 更新摇杆状态
- */
 function updateJoystickStatus(joystick) {
+    if (!elements.joystickDot) return;
+
     if (!joystick) {
-        if (elements.joystickDot) {
-            elements.joystickDot.style.transform = 'translate(-50%, -50%)';
-        }
-        if (elements.joystickX) {
-            elements.joystickX.textContent = '0.00';
-        }
-        if (elements.joystickY) {
-            elements.joystickY.textContent = '0.00';
-        }
+        elements.joystickDot.style.transform = 'translate(-50%, -50%)';
+        elements.joystickDot.classList.remove('active');
+        if (elements.joystickX) elements.joystickX.textContent = '0.00';
+        if (elements.joystickY) elements.joystickY.textContent = '0.00';
         return;
     }
 
-    // 更新摇杆位置（将-1到1映射到-40px到40px）
-    const dotX = joystick.x * 40;
-    const dotY = joystick.y * 40;
+    const dotX = joystick.x * 44;
+    const dotY = joystick.y * 44;
 
-    if (elements.joystickDot) {
-        // Y轴需要反转（屏幕坐标系Y轴向下）
-        elements.joystickDot.style.transform = `translate(calc(-50% + ${dotX}px), calc(-50% - ${dotY}px))`;
-    }
+    elements.joystickDot.style.transform = `translate(calc(-50% + ${dotX}px), calc(-50% - ${dotY}px))`;
 
-    if (elements.joystickX) {
-        elements.joystickX.textContent = joystick.x.toFixed(2);
-    }
+    const isActive = Math.abs(joystick.x) > 0.05 || Math.abs(joystick.y) > 0.05;
+    elements.joystickDot.classList.toggle('active', isActive);
 
-    if (elements.joystickY) {
-        elements.joystickY.textContent = joystick.y.toFixed(2);
-    }
-
-    if (elements.joystickDeadzone) {
-        elements.joystickDeadzone.textContent = joystick.deadzone.toFixed(2);
-    }
+    if (elements.joystickX) animateValue(elements.joystickX, joystick.x.toFixed(2));
+    if (elements.joystickY) animateValue(elements.joystickY, joystick.y.toFixed(2));
+    if (elements.joystickDeadzone) elements.joystickDeadzone.textContent = joystick.deadzone.toFixed(2);
 }
 
-/**
- * 更新统计信息
- */
 function updateStats(stats, timestamp) {
     if (elements.wsClients && stats) {
-        elements.wsClients.textContent = stats.wsClients;
+        animateValue(elements.wsClients, String(stats.wsClients));
     }
 
     if (elements.updateRate) {
@@ -226,51 +182,92 @@ function updateStats(stats, timestamp) {
 
     if (elements.lastUpdate && timestamp) {
         const date = new Date(timestamp);
-        elements.lastUpdate.textContent = date.toLocaleTimeString();
+        elements.lastUpdate.textContent = date.toLocaleTimeString('en-US', { hour12: false });
     }
 }
 
-/**
- * 添加日志
- */
+function animateValue(element, newValue) {
+    if (!element) return;
+    if (element.textContent !== newValue) {
+        element.style.transition = 'opacity 0.1s ease';
+        element.style.opacity = '0.4';
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                element.textContent = newValue;
+                element.style.opacity = '1';
+            });
+        });
+    }
+}
+
 function addLog(message, type = 'info') {
     if (!elements.logContainer) return;
 
     const entry = document.createElement('div');
-    entry.className = `log-entry ${type}`;
+    entry.className = `log-entry ${type}-entry`;
 
-    const time = new Date().toLocaleTimeString();
-    entry.textContent = `[${time}] ${message}`;
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'log-time';
+    timeSpan.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+    const msgSpan = document.createElement('span');
+    msgSpan.className = 'log-msg';
+    msgSpan.textContent = message;
+
+    entry.appendChild(timeSpan);
+    entry.appendChild(msgSpan);
+    entry.style.animationDelay = `${logCounter++ % 5 * 30}ms`;
 
     elements.logContainer.appendChild(entry);
 
-    // 自动滚动到底部
-    elements.logContainer.scrollTop = elements.logContainer.scrollHeight;
+    smoothScrollToBottom(elements.logContainer);
 
-    // 限制日志数量
-    while (elements.logContainer.children.length > 100) {
+    while (elements.logContainer.children.length > MAX_LOG_ENTRIES) {
         elements.logContainer.removeChild(elements.logContainer.firstChild);
     }
 }
 
-/**
- * HTML转义
- */
+function smoothScrollToBottom(container) {
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 60;
+    if (isNearBottom) {
+        requestAnimationFrame(() => {
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        });
+    }
+}
+
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// 页面加载完成后初始化
+function initClearLogButton() {
+    if (!elements.clearLogBtn) return;
+    elements.clearLogBtn.addEventListener('click', () => {
+        if (elements.logContainer) {
+            elements.logContainer.innerHTML = '';
+            addLog('Logs cleared', 'info');
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    initEntranceAnimations();
+    initClock();
+    initClearLogButton();
     addLog('Monitor initialized', 'success');
     initWebSocket();
 });
 
-// 页面卸载时关闭连接
 window.addEventListener('beforeunload', () => {
-    if (ws) {
-        ws.close();
+    if (clockInterval) clearInterval(clockInterval);
+    if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    if (ws) ws.close();
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && elements.clockDisplay) {
+        elements.clockDisplay.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
     }
 });
