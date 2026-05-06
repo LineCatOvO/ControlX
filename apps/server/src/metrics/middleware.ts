@@ -268,7 +268,7 @@ export function requestMetricsMiddleware(
         res.end = originalEnd;
 
         // Call original end
-        const result = res.end.apply(res, args as any);
+        const result = res.end(...args);
 
         // Calculate duration and record metrics
         const context = activeRequests.get(res);
@@ -357,10 +357,10 @@ function generateHttpMetricsWithLabels(): string {
         const [path, status] = key.split('|');
 
         // Calculate cumulative counts for each bucket
-        let cumulativeCount = 0;
+        let _cumulativeCount = 0;
         buckets.forEach((bucket) => {
             const count = data.durations.filter((d) => d <= bucket).length;
-            cumulativeCount = count; // Not cumulative per path/status
+            _cumulativeCount = count; // Not cumulative per path/status
             lines.push(`controlx_server_http_request_duration_seconds_bucket{path="${escapeLabel(path)}",status="${status}",le="${bucket}"} ${count}`);
         });
 

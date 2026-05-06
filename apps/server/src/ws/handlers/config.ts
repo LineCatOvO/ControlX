@@ -16,10 +16,8 @@ import {
     ConfigErrorMessage,
     Config
 } from "../messageTypes";
-import { ConfigManager, configManager } from "../../config/configManager";
-import { config } from "../../config/config";
+import { configManager } from "../../config/configManager";
 import { validateConfig } from "../../config/validate";
-import { authManager } from "../../auth/auth";
 
 /**
  * SensitiveConfigItemList
@@ -85,6 +83,7 @@ export function unregisterConfigChangeCallback(callback: ConfigChangeCallback): 
  * @param newConfig NewConfig
  * @param oldConfig OldConfig
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function notifyConfigChange(newConfig: Config, oldConfig: Config): void {
     for (const callback of configChangeCallbacks) {
         try {
@@ -113,7 +112,7 @@ function sendMessage(ws: any, message: ConfigMessage | ConfigAckMessage | Config
  * @param ws WebSocket connection
  * @param message ConfigGetMessage
  */
-export function handleConfigGet(ws: any, message: ConfigGetMessage): void {
+export function handleConfigGet(ws: any, _message: ConfigGetMessage): void {
     // Get current config
     const currentConfig = configManager.getConfig();
 
@@ -141,7 +140,7 @@ export function handleConfigGet(ws: any, message: ConfigGetMessage): void {
  * @param ws WebSocket connection
  * @param message ConfigSetMessage
  */
-export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
+export function handleConfigSet(ws: any, _message: ConfigSetMessage): void {
     // ConfigInReadOnlyMode，RejectAllRemoteConfigModificationRequests
     const errorMsg: ConfigErrorMessage = {
         type: "config_error",
@@ -163,7 +162,7 @@ export function handleConfigSet(ws: any, message: ConfigSetMessage): void {
  * @param ws WebSocket connection
  * @param message ConfigSaveMessage
  */
-export function handleConfigSave(ws: any, message: { type: "config_save"; path?: string }): void {
+export function handleConfigSave(ws: any, _message: { type: "config_save"; path?: string }): void {
     // ConfigInReadOnlyMode，RejectAllConfigSaveRequests
     const errorMsg: ConfigErrorMessage = {
         type: "config_error",
@@ -184,7 +183,7 @@ export function handleConfigSave(ws: any, message: { type: "config_save"; path?:
  * @param ws WebSocket connection
  * @param message ConfigResetMessage
  */
-export function handleConfigReset(ws: any, message: { type: "config_reset" }): void {
+export function handleConfigReset(ws: any, _message: { type: "config_reset" }): void {
     // ConfigInReadOnlyMode，RejectAllConfigResetRequests
     const errorMsg: ConfigErrorMessage = {
         type: "config_error",

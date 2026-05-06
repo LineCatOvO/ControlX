@@ -1,5 +1,4 @@
 import { setupHeartbeat } from "../heartbeat/heartbeat";
-import { handleMessage } from "./router";
 import { registerWsConnection } from "../utils/errorManager";
 
 /**

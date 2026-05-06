@@ -5,7 +5,7 @@ import { WelcomeMessage } from "../../types/ws";
  * @param ws WebSocket connection
  * @param message Welcome message
  */
-export function handleWelcome(ws: any, message: WelcomeMessage) {
+export function handleWelcome(ws: any, _message: WelcomeMessage) {
     // Send welcome message
     const welcomeMsg = {
         type: "welcome",

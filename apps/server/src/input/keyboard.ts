@@ -36,6 +36,7 @@ function shouldResetErrorCount(): boolean {
  * Record error and check whether keyboard function needs to be disabled
  * @returns boolean Whether keyboard function needs to be disabled
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function recordError(): boolean {
     shouldResetErrorCount();
     consecutiveErrors++;

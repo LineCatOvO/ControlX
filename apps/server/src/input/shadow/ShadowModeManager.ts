@@ -14,7 +14,7 @@
 
 import { InputExecutorManager } from '../interfaces';
 import { InputRouter } from '../router/InputRouter';
-import { InputState, InputDelta, InputEvent } from '../../types/ws';
+import { InputState } from '../../types/ws';
 import { InputDeviceType } from '../hosts/types';
 
 /**

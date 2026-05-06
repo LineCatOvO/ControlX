@@ -81,7 +81,7 @@ export class LinuxKeyboardHost extends InputHost {
      * ApplyState：Use uinput SendKeyboardEvent
      * @param pressedKeys PressUnderOfKeySet
      */
-    applyState(pressedKeys: Set<string>): void {
+    applyState(_pressedKeys: Set<string>): void {
         // TODO: ImplementationDiffAlgorithm
         if (!this.isEnabled || !this.uinputDevice) {
             console.debug('[LinuxKB] TODO: Device not enabled');

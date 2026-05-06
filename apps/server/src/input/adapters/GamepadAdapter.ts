@@ -100,7 +100,7 @@ export class GamepadAdapter implements IGamepadAdapter {
      * Apply input delta (InputAdapter interface method)
      * @param delta Input delta
      */
-    applyDelta(delta: InputDelta): void {
+    applyDelta(_delta: InputDelta): void {
         if (!this.isEnabled) {
             return;
         }
@@ -112,7 +112,7 @@ export class GamepadAdapter implements IGamepadAdapter {
      * Apply input event (InputAdapter interface method)
      * @param event Input event
      */
-    applyEvent(event: InputEvent): void {
+    applyEvent(_event: InputEvent): void {
         if (!this.isEnabled) {
             return;
         }

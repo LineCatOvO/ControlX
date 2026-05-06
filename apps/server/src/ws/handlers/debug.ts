@@ -99,7 +99,7 @@ export class DebugManager {
         for (const ws of this.wsClients) {
             try {
                 ws.send(messageStr);
-            } catch (error) {
+            } catch (_error) {
                 // ClientCanCanDisconnected，RemoveIt
                 this.wsClients.delete(ws);
             }

@@ -54,7 +54,6 @@
  * 5. sequence number monotonicity - validate frameId increment
  */
 
-import { InputState } from '../types/ws';
 
 /**
  * Standard key code list（legal keys）
