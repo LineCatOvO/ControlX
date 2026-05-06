@@ -1,7 +1,5 @@
 // Heartbeat Module
 
-import { InputState } from "../types/ws";
-
 /**
  * Heartbeat config
  */
@@ -115,7 +113,7 @@ export class HeartbeatModule {
      * Dispatch heartbeat message (called by WebSocket module)
      * @param timestamp Heartbeat timestamp
      */
-    dispatchHeartbeat(timestamp: number): void {
+    dispatchHeartbeat(_timestamp: number): void {
         // Implemented by WebSocket module, placeholder here
         // format: { type: 'ping', timestamp }
     }

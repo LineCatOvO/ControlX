@@ -44,7 +44,13 @@
     "script:all": "./scripts/build.sh all",
     "script:clean": "./scripts/build.sh clean"
   },
-  "keywords": ["websocket", "remote-control", "server", "gamepad", "input"],
+  "keywords": [
+    "websocket",
+    "remote-control",
+    "server",
+    "gamepad",
+    "input"
+  ],
   "author": "ControlX Team",
   "license": "MIT",
   "repository": {
@@ -62,6 +68,7 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/jest": "^29.5.12",
     "@types/minimist": "^1.2.5",
     "@types/node": "^25.0.9",
@@ -70,6 +77,7 @@
     "nodemon": "^3.1.11",
     "ts-jest": "^29.1.5",
     "tsc-watch": "^7.2.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.2"
   }
 }

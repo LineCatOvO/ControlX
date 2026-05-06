@@ -75,16 +75,11 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
     /**
      * Add input executor（Router mode does not need）
      */
-    addExecutor(executor: any): void {
-        // Router ModeNot use Executor
+    addExecutor(_executor: unknown): void {
         console.debug('[RouterOnly] addExecutor called but ignored (Router mode)');
     }
 
-    /**
-     * Remove input executor（Router mode does not need）
-     */
-    removeExecutor(executor: any): void {
-        // Router ModeNot use Executor
+    removeExecutor(_executor: unknown): void {
         console.debug('[RouterOnly] removeExecutor called but ignored (Router mode)');
     }
 
@@ -128,14 +123,11 @@ export class RouterOnlyExecutorManager implements InputExecutorManager {
     /**
      * Apply input delta（Temporarily not supported）
      */
-    applyDelta(delta: InputDelta): void {
+    applyDelta(_delta: InputDelta): void {
         console.debug('[RouterOnly] Delta execution not supported');
     }
 
-    /**
-     * Apply input event（Temporarily not supported）
-     */
-    applyEvent(event: InputEvent): void {
+    applyEvent(_event: InputEvent): void {
         console.debug('[RouterOnly] Event execution not supported');
     }
 

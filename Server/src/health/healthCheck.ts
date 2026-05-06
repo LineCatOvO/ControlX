@@ -70,7 +70,6 @@ export interface ReadinessStatus {
 // Health check server instance
 let server: http.Server | null = null;
 let isReady: boolean = false;
-let healthCheckConfig: HealthCheckConfig | null = null;
 
 // WebSocket server status check function
 let wsServerStatusChecker: (() => boolean) | null = null;
@@ -352,8 +351,6 @@ export function createHealthServer(config: HealthCheckConfig): {
     start: () => Promise<void>;
     stop: () => Promise<void>;
 } {
-    healthCheckConfig = config;
-
     return {
         start: () => {
             return new Promise((resolve, reject) => {

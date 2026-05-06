@@ -41,7 +41,6 @@ import { inputState } from "./state";
 import { KeyboardExecutor } from "./keyboard";
 import { MouseExecutor } from "./mouse";
 import { JoystickExecutor } from "./joystick";
-import { GamepadExecutor } from "./gamepad";
 import { SafetyController } from "./safetyController";
 import { IInputExecutor, IInputExecutorManager } from "../interfaces";
 import { TestModeKeyboardExecutor } from "./test-keyboard";
