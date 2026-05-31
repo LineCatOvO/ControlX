@@ -6,6 +6,7 @@
     "module": "commonjs",
     "lib": ["ES2020"],
     "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
     "allowSyntheticDefaultImports": true,
     "noUncheckedIndexedAccess": false,
     "noPropertyAccessFromIndexSignature": false,
